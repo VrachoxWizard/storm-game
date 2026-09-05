@@ -1,3 +1,4 @@
+class_name WeaponManager
 extends Node
 
 ## Manages weapon slots, switching, firing, and ammo for the player.

@@ -28,7 +28,7 @@ const POOL_SIZE: int = 100
 @onready var dodge_duration_timer: Timer = $DodgeDurationTimer
 @onready var hit_flash_timer: Timer = $HitFlashTimer
 @onready var camera: Camera2D = $Camera2D
-@onready var weapon_manager: Node = $WeaponManager
+@onready var weapon_manager: WeaponManager = $WeaponManager
 @onready var muzzle: Marker2D = $MuzzleMarker
 
 
@@ -135,7 +135,7 @@ func _on_hit_flash_finished() -> void:
 
 
 func _init_projectile_pool() -> void:
-	var pool_container := get_tree().root.get_node("Main/Projectiles")
+	var pool_container: Node2D = get_tree().root.get_node("Main/Projectiles")
 	for i in range(POOL_SIZE):
 		var bullet: Area2D = _projectile_scene.instantiate()
 		pool_container.add_child(bullet)
@@ -151,12 +151,12 @@ func _get_pooled_bullet() -> Area2D:
 
 func _on_weapon_fired() -> void:
 	ScoreManager.record_shot_fired()
-	var weapon := weapon_manager.get_current_weapon()
+	var weapon: WeaponResource = weapon_manager.get_current_weapon()
 	if weapon == null:
 		return
 
 	for i in range(weapon.projectile_count):
-		var bullet := _get_pooled_bullet()
+		var bullet: Area2D = _get_pooled_bullet()
 		if bullet == null:
 			break
 

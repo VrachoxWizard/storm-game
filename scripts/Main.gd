@@ -42,7 +42,11 @@ func _cleanup_projectiles() -> void:
 
 func _on_mission_briefing_requested(mission_index: int) -> void:
 	main_menu.visible = false
-	briefing_screen.show_briefing(mission_index)
+	if briefing_screen.has_method("show_briefing"):
+		briefing_screen.call("show_briefing", mission_index)
+	else:
+		push_error("BriefingScreen missing show_briefing(); starting gameplay directly.")
+		GameManager.begin_gameplay()
 
 
 func _on_mission_started(_mission_index: int) -> void:

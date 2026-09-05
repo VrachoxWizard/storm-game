@@ -23,7 +23,6 @@ find_godot() {
       return 0
     fi
   done
-  # Homebrew cask often installs versioned apps
   local app
   for app in /Applications/Godot*.app /opt/homebrew/Caskroom/godot/*/Godot.app; do
     if [[ -x "${app}/Contents/MacOS/Godot" ]]; then
@@ -42,4 +41,13 @@ GODOT="$(find_godot)" || {
 }
 
 echo "Using: $GODOT"
+
+# Fresh clones need an import pass so .godot/ class cache + audio samples exist.
+if [[ ! -d "$ROOT/.godot/imported" ]] || [[ ! -f "$ROOT/.godot/global_script_class_cache.cfg" ]]; then
+  echo "First-time setup: importing project assets (one-time)..."
+  "$GODOT" --headless --editor --import --quit-after 1 --path "$ROOT" >/dev/null 2>&1 \
+    || "$GODOT" --headless --editor --quit-after 2 --path "$ROOT" >/dev/null 2>&1 \
+    || true
+fi
+
 exec "$GODOT" --path "$ROOT"

@@ -71,9 +71,11 @@ res://
 **macOS**
 ```bash
 chmod +x Run_Game.sh Open_In_Godot.sh   # first time only
-./Run_Game.sh                           # play
-./Open_In_Godot.sh                      # editor
+./Run_Game.sh                           # play (auto-imports assets on first run)
+./Open_In_Godot.sh                      # editor (recommended once after clone)
 ```
+
+If audio or scripts fail on a fresh clone, run `./Open_In_Godot.sh` once so Godot finishes importing, then `./Run_Game.sh` again.
 
 ### Development
 

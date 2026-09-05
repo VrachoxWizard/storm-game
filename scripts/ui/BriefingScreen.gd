@@ -2,6 +2,8 @@ extends Control
 
 ## Journal-style mission briefing screen.
 
+const Briefings = preload("res://scripts/missions/MissionBriefings.gd")
+
 @onready var mission_title: Label = $MarginContainer/VBoxContainer/MissionTitle
 @onready var mission_desc: RichTextLabel = $MarginContainer/VBoxContainer/MissionDesc
 @onready var start_button: Button = $MarginContainer/VBoxContainer/StartButton
@@ -12,9 +14,9 @@ func _ready() -> void:
 
 
 func show_briefing(mission_index: int) -> void:
-	var briefing: Dictionary = MissionBriefings.get_briefing(mission_index)
-	mission_title.text = briefing["title"]
-	mission_desc.text = briefing["description"]
+	var briefing: Dictionary = Briefings.get_briefing(mission_index)
+	mission_title.text = str(briefing.get("title", "Mission"))
+	mission_desc.text = str(briefing.get("description", ""))
 	visible = true
 
 

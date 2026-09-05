@@ -9,22 +9,28 @@ var _music_player: AudioStreamPlayer
 var _low_pass_active: bool = false
 const POOL_SIZE: int = 8
 
+const _SFX_PATHS: Dictionary = {
+	"shoot": "res://assets/audio/shoot.wav",
+	"reload": "res://assets/audio/reload.wav",
+	"dry_fire": "res://assets/audio/dry_fire.wav",
+	"hit": "res://assets/audio/hit.wav",
+	"explosion": "res://assets/audio/explosion.wav",
+	"dodge": "res://assets/audio/dodge.wav",
+	"pickup": "res://assets/audio/pickup.wav",
+	"death": "res://assets/audio/death.wav",
+}
+
+const _MUSIC_PATHS: Dictionary = {
+	"title": "res://assets/audio/music_title.wav",
+	"combat": "res://assets/audio/music_combat.wav",
+}
+
 
 func _ready() -> void:
-	_sfx = {
-		"shoot": load("res://assets/audio/shoot.wav"),
-		"reload": load("res://assets/audio/reload.wav"),
-		"dry_fire": load("res://assets/audio/dry_fire.wav"),
-		"hit": load("res://assets/audio/hit.wav"),
-		"explosion": load("res://assets/audio/explosion.wav"),
-		"dodge": load("res://assets/audio/dodge.wav"),
-		"pickup": load("res://assets/audio/pickup.wav"),
-		"death": load("res://assets/audio/death.wav"),
-	}
-	_music = {
-		"title": load("res://assets/audio/music_title.wav"),
-		"combat": load("res://assets/audio/music_combat.wav"),
-	}
+	for id in _SFX_PATHS:
+		_sfx[id] = _safe_load_stream(_SFX_PATHS[id])
+	for id in _MUSIC_PATHS:
+		_music[id] = _safe_load_stream(_MUSIC_PATHS[id])
 	_music_player = AudioStreamPlayer.new()
 	_music_player.bus = "Music"
 	add_child(_music_player)
@@ -37,6 +43,17 @@ func _ready() -> void:
 	play_music("title")
 
 
+func _safe_load_stream(path: String) -> AudioStream:
+	if not ResourceLoader.exists(path):
+		push_warning("SoundManager: missing audio %s" % path)
+		return null
+	var res: Resource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE)
+	if res is AudioStream:
+		return res as AudioStream
+	push_warning("SoundManager: failed to load audio %s" % path)
+	return null
+
+
 func apply_saved_volumes() -> void:
 	var settings: Dictionary = SaveManager.data.get("settings", {})
 	set_music_volume(float(settings.get("music_volume", 0.8)))
@@ -44,14 +61,18 @@ func apply_saved_volumes() -> void:
 
 
 func set_music_volume(linear: float) -> void:
-	var db := linear_to_db(clampf(linear, 0.0001, 1.0))
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), db)
+	var idx := AudioServer.get_bus_index("Music")
+	if idx < 0:
+		return
+	AudioServer.set_bus_volume_db(idx, linear_to_db(clampf(linear, 0.0001, 1.0)))
 	SaveManager.data["settings"]["music_volume"] = linear
 
 
 func set_sfx_volume(linear: float) -> void:
-	var db := linear_to_db(clampf(linear, 0.0001, 1.0))
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SFX"), db)
+	var idx := AudioServer.get_bus_index("SFX")
+	if idx < 0:
+		return
+	AudioServer.set_bus_volume_db(idx, linear_to_db(clampf(linear, 0.0001, 1.0)))
 	SaveManager.data["settings"]["sfx_volume"] = linear
 
 
@@ -68,6 +89,8 @@ func play_sfx(id: String) -> void:
 
 
 func play_music(id: String) -> void:
+	if _music_player == null:
+		return
 	if not _music.has(id) or _music[id] == null:
 		return
 	var stream: AudioStream = _music[id]

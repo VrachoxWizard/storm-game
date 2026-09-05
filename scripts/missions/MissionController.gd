@@ -26,6 +26,14 @@ func _ready() -> void:
 	# Save initial checkpoint at spawn
 	player.save_checkpoint(player.global_position)
 
+	var checkpoints_node := get_node_or_null("../Checkpoints")
+	if checkpoints_node:
+		for cp in checkpoints_node.get_children():
+			if cp.has_signal("checkpoint_reached"):
+				cp.checkpoint_reached.connect(func(checkpoint: Area2D) -> void:
+					player.save_checkpoint(checkpoint.global_position)
+				)
+
 
 func _start_wave(wave_index: int) -> void:
 	if wave_index >= WAVES.size():

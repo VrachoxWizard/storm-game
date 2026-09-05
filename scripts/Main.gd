@@ -8,20 +8,16 @@ extends Node
 @onready var hud: CanvasLayer = $HUD
 @onready var pause_menu: CanvasLayer = $PauseMenu
 @onready var world_container: Node2D = $WorldContainer
+@onready var projectiles: Node2D = $Projectiles
 
 var _current_world: Node2D = null
 
 
 func _ready() -> void:
+	GameManager.mission_briefing_requested.connect(_on_mission_briefing_requested)
 	GameManager.mission_started.connect(_on_mission_started)
 	GameManager.mission_completed.connect(_on_mission_completed)
 	_show_main_menu()
-
-
-func _process(_delta: float) -> void:
-	if GameManager.current_state == GameManager.GameState.BRIEFING and briefing_screen and not briefing_screen.visible:
-		main_menu.visible = false
-		briefing_screen.show_briefing(GameManager.current_mission)
 
 
 func _show_main_menu() -> void:
@@ -34,20 +30,28 @@ func _show_main_menu() -> void:
 		_current_world.queue_free()
 		_current_world = null
 
-	if not GameManager.is_connected("mission_started", _on_mission_started):
-		GameManager.mission_started.connect(_on_mission_started)
+	_cleanup_projectiles()
 
 
-func _on_game_state_changed() -> void:
-	match GameManager.current_state:
-		GameManager.GameState.BRIEFING:
-			main_menu.visible = false
-			briefing_screen.show_briefing(GameManager.current_mission)
+func _cleanup_projectiles() -> void:
+	if projectiles:
+		for child in projectiles.get_children():
+			child.queue_free()
+
+
+func _on_mission_briefing_requested(mission_index: int) -> void:
+	main_menu.visible = false
+	briefing_screen.show_briefing(mission_index)
 
 
 func _on_mission_started(_mission_index: int) -> void:
 	briefing_screen.visible = false
 	hud.visible = true
+
+	if _current_world:
+		_current_world.queue_free()
+		_current_world = null
+		_cleanup_projectiles()
 
 	# Load mission scene
 	var scene_path: String = GameManager.MISSION_SCENES[GameManager.current_mission]

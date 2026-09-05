@@ -2,6 +2,7 @@ extends Node
 
 ## Singleton — manages game state, scene transitions, and mission flow.
 
+signal mission_briefing_requested(mission_index: int)
 signal mission_started(mission_index: int)
 signal mission_completed(mission_index: int)
 signal game_paused(is_paused: bool)
@@ -21,6 +22,7 @@ func start_mission(mission_index: int) -> void:
 	current_mission = mission_index
 	current_state = GameState.BRIEFING
 	ScoreManager.reset()
+	mission_briefing_requested.emit(mission_index)
 
 
 func begin_gameplay() -> void:

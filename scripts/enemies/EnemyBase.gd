@@ -154,4 +154,7 @@ func _on_detection_body_exited(body: Node2D) -> void:
 
 func _flash_hit() -> void:
 	sprite.modulate = Color.RED
-	get_tree().create_timer(0.1).timeout.connect(func() -> void: sprite.modulate = Color.WHITE)
+	get_tree().create_timer(0.1).timeout.connect(func() -> void:
+		if is_instance_valid(sprite):
+			sprite.modulate = Color.WHITE
+	)

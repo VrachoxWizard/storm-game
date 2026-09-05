@@ -47,7 +47,8 @@ func deactivate() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
-		ScoreManager.record_shot_hit()
+		if (collision_layer & 4) != 0:
+			ScoreManager.record_shot_hit()
 	deactivate()
 
 

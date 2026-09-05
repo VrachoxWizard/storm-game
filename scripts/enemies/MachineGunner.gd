@@ -7,6 +7,7 @@ extends EnemyBase
 @export var shot_interval: float = 0.08
 
 var _shots_fired: int = 0
+var _planted: bool = false
 
 
 func _ready() -> void:
@@ -20,8 +21,23 @@ func _ready() -> void:
 	attack_cooldown = 2.0
 
 
+func _process_attack(delta: float) -> void:
+	if target == null or not is_instance_valid(target):
+		current_state = State.PATROL
+		_planted = false
+		return
+	_update_rig_aim(target.global_position)
+	# Planted: slower move, stays put while suppressing
+	velocity = Vector2.ZERO
+	_update_legs(delta)
+	if global_position.distance_to(target.global_position) > attack_range * 1.2:
+		_planted = false
+		_enter_chase()
+
+
 func _perform_attack() -> void:
 	_shots_fired = 0
+	_planted = true
 	_fire_next()
 
 
@@ -37,19 +53,27 @@ func _fire_next() -> void:
 
 
 func _spawn_enemy_bullet() -> void:
-	if bullet_scene == null:
+	if target == null:
 		return
-	var bullet: Area2D = bullet_scene.instantiate()
-	var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
-	if container:
-		container.add_child(bullet)
-	else:
-		get_tree().root.add_child(bullet)
-
 	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
 	var dir := (target.global_position - spawn_pos).normalized()
-	var fire_rot: float = dir.angle() + randf_range(-0.25, 0.25)
-	bullet.activate(spawn_pos, fire_rot, 420.0, damage)
+	# Tighter spread when planted
+	var spread: float = 0.12 if _planted else 0.25
+	var fire_rot: float = dir.angle() + randf_range(-spread, spread)
+	var pool := ProjectilePool.get_pool(get_tree())
+	if pool:
+		pool.spawn_enemy_bullet(spawn_pos, fire_rot, 420.0, damage)
+	elif bullet_scene:
+		var bullet: Area2D = bullet_scene.instantiate()
+		var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
+		if container:
+			container.add_child(bullet)
+		else:
+			get_tree().root.add_child(bullet)
+		bullet.activate(spawn_pos, fire_rot, 420.0, damage)
 	apply_recoil(3.5)
 	var flash_rot := torso_container.rotation if torso_container else fire_rot
 	CombatVfxScript.vfx_muzzle_flash(spawn_pos, flash_rot, "heavy")
+	var snd = get_node_or_null("/root/SoundManager")
+	if snd and snd.has_method("play_sfx"):
+		snd.play_sfx("shoot_enemy", 0.12, -8.0)

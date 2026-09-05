@@ -83,6 +83,10 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("6_badge")
 
+[node name="SlotLabel" type="Label" parent="MarginContainer/VBoxContainer/BottomBar"]
+layout_mode = 2
+text = ">1<  2   3 "
+
 [node name="WeaponLabel" type="Label" parent="MarginContainer/VBoxContainer/BottomBar"]
 layout_mode = 2
 text = "Zastava M70"
@@ -94,6 +98,24 @@ text = "G:0  M:0"
 [node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = ""
+
+[node name="ToastLabel" type="Label" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = 80.0
+offset_right = 120.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.85, 0.7, 0.35, 1)
+theme_override_font_sizes/font_size = 18
+text = ""
+horizontal_alignment = 1
+visible = false
 
 [node name="Minimap" type="Control" parent="."]
 anchors_preset = 1

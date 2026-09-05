@@ -3,6 +3,7 @@ extends EnemyBase
 ## Grenadier — lobs grenades at player position with warning circle and recoil.
 
 @export var grenade_scene: PackedScene
+@export var lead_factor: float = 0.35
 
 
 func _ready() -> void:
@@ -26,7 +27,10 @@ func _perform_attack() -> void:
 	else:
 		get_tree().root.add_child(grenade)
 	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
-	var dir := (target.global_position - global_position)
+	var aim_pos: Vector2 = target.global_position
+	if "velocity" in target:
+		aim_pos += target.velocity * lead_factor
+	var dir := aim_pos - global_position
 	grenade.explosion_damage = damage
 	grenade.throw_at(spawn_pos, dir, false)
 	apply_recoil(5.0)

@@ -112,10 +112,14 @@ func _fire_turret() -> void:
 		proj_container = get_parent()
 
 	if proj_container:
-		var bullet: Area2D = bullet_scene.instantiate()
-		proj_container.add_child(bullet)
-		if bullet.has_method("activate"):
-			bullet.activate(fire_pos, fire_rot, 450.0, turret_damage)
+		var pool := ProjectilePool.get_pool(get_tree())
+		if pool:
+			pool.spawn_enemy_bullet(fire_pos, fire_rot, 450.0, turret_damage)
+		elif bullet_scene:
+			var bullet: Area2D = bullet_scene.instantiate()
+			proj_container.add_child(bullet)
+			if bullet.has_method("activate"):
+				bullet.activate(fire_pos, fire_rot, 450.0, turret_damage)
 
 	# Visuals: Muzzle flash & cupola recoil kickback
 	CombatVfxScript.vfx_muzzle_flash(fire_pos, fire_rot, "heavy")

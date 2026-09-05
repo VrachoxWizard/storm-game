@@ -164,11 +164,11 @@ Always consult this spec before implementing gameplay features.
    - Sandbag Bunker / MG Nest (`Bunker.gd`, `Bunker.tscn`) & Mortar Pit (`Mortar.gd`, `Mortar.tscn`).
 
 3. **Phase 3: Full 5-Mission Campaign (Complete)**
-   - Mission 1: "The Staging" — Staging grounds holdout, defensive waves, airfield perimeter.
-   - Mission 2: "The Breakthrough" — Lika front, minefield navigation, fortified bunker line assault.
-   - Mission 3: "Highway Ambush" — Intercept retreating supply convoy with moving APCs and trucks.
-   - Mission 4: "Urban Assault — Petrinja" — Street-by-street clearing, tight sightlines, building prefabs.
-   - Mission 5: "The Fortress — Knin" — Summit assault, bunker clearing, T-55 tank boss duel, flag raising.
+   - Mission 1: "First Thunder" — Staging grounds holdout, defensive waves, airfield perimeter.
+   - Mission 2: "Breaking the Line" — Fortified bunker line assault with reinforcements.
+   - Mission 3: "Open Road" — Intercept APC convoy before escape, then T-55, liberate village.
+   - Mission 4: "The Heart" — Street-by-street clearing, mortar battery, fortress approach.
+   - Mission 5: "Victory" — Fortress climb, T-55 boss, courtyard clear, flag raise.
 
 4. **Phase 4: Audio System (Complete)**
    - `SoundManager.gd` autoload: Gunfire SFX, shell casing clatters, impact sounds, low-pass filter on low HP.
@@ -181,6 +181,12 @@ Always consult this spec before implementing gameplay features.
    - **Armored Vehicles & Destruction**: APC and Tank feature independent rotating turrets, continuous tread stamping, rear weak points, and destruction states with burning wreck sprites, fire/smoke emitters, and disabled collision.
    - **Mission Maps & Environments**: All 5 campaign missions upgraded with unique seamless 512x512 illustrated terrain, per-mission `CanvasModulate` atmospheric lighting, and hand-inked architectural prefabs (`BuildingTileRoof`, `BuildingTinRoof`, `BunkerEmplacement`).
    - **Paper Overlay Shader & UI Polish**: Fullscreen `paper_overlay.gdshader` with parchment grain, vignette, chromatic aberration combat shock, hand-drawn HUD frames, minimap compass, and ink-stamped mission completion reports.
+
+6. **Polish Elevation Pass (Complete)**
+   - Magazine + reserve ammo economy; wired enemy `detection_range`; Mission 5 stage gating.
+   - Enemy projectile pool; Sniper LOS; per-type combat behaviors; sequential mission objectives.
+   - Per-weapon/impact audio, music crossfade, journal Main Menu/Pause, HUD slots/toasts, per-mission ranks.
+   - Minimap/zoom throttle, muzzle-light caps, FX cleanup between missions.
 
 ## Testing & Verification
 

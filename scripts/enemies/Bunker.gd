@@ -69,18 +69,24 @@ func _die() -> void:
 
 
 func _perform_attack() -> void:
-	if target == null or not is_instance_valid(target) or bullet_scene == null:
+	if target == null or not is_instance_valid(target):
 		return
 	var to_target := (target.global_position - global_position).normalized()
 	var angle_diff := absf(angle_difference(_facing.angle(), to_target.angle()))
 	if rad_to_deg(angle_diff) > fire_arc_degrees * 0.5:
-		# Slowly rotate facing toward player
 		_facing = _facing.lerp(to_target, 0.15).normalized()
 		look_at(global_position + _facing)
 		return
 	_facing = to_target
 	look_at(target.global_position)
-	var bullet: Area2D = bullet_scene.instantiate()
-	get_tree().root.get_node("Main/Projectiles").add_child(bullet)
 	var spread := randf_range(-0.08, 0.08)
-	bullet.activate(global_position, to_target.angle() + spread, 500.0, damage)
+	var fire_rot := to_target.angle() + spread
+	var pool := ProjectilePool.get_pool(get_tree())
+	if pool:
+		pool.spawn_enemy_bullet(global_position, fire_rot, 500.0, damage)
+	elif bullet_scene:
+		var bullet: Area2D = bullet_scene.instantiate()
+		var container := get_tree().root.get_node_or_null("Main/Projectiles")
+		if container:
+			container.add_child(bullet)
+			bullet.activate(global_position, fire_rot, 500.0, damage)

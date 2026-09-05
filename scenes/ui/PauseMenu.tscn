@@ -1,11 +1,37 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/PauseMenu.gd" id="1_pause"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/paper_parchment_bg.png" id="2_paper"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
 visible = false
 script = ExtResource("1_pause")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.05, 0.04, 0.03, 0.55)
+
+[node name="Panel" type="TextureRect" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -200.0
+offset_right = 180.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_paper")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -18,13 +44,17 @@ grow_vertical = 2
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="CenterContainer/VBoxContainer"]
+theme_override_colors/font_color = Color(0.2, 0.12, 0.08, 1)
+theme_override_font_sizes/font_size = 28
 text = "PAUSED"
 horizontal_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(220, 32)
 text = "Resume"
 
 [node name="MusicLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+theme_override_colors/font_color = Color(0.25, 0.15, 0.1, 1)
 text = "Music Volume"
 
 [node name="MusicSlider" type="HSlider" parent="CenterContainer/VBoxContainer"]
@@ -34,6 +64,7 @@ step = 0.05
 value = 0.8
 
 [node name="SfxLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+theme_override_colors/font_color = Color(0.25, 0.15, 0.1, 1)
 text = "SFX Volume"
 
 [node name="SfxSlider" type="HSlider" parent="CenterContainer/VBoxContainer"]
@@ -42,5 +73,9 @@ max_value = 1.0
 step = 0.05
 value = 1.0
 
+[node name="ShakeCheck" type="CheckButton" parent="CenterContainer/VBoxContainer"]
+text = "Screen Shake"
+
 [node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer"]
-text = "Quit"
+custom_minimum_size = Vector2(220, 32)
+text = "Quit to Menu"

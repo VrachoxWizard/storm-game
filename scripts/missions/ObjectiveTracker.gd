@@ -2,6 +2,7 @@ class_name ObjectiveTracker
 extends Node
 
 ## Tracks mission objectives: destroy targets, enter areas, kill counts, survive timers.
+## Supports sequential gating so later objectives cannot complete until prior ones finish.
 
 signal objective_updated(completed: int, total: int)
 signal all_objectives_complete
@@ -11,6 +12,8 @@ enum ObjectiveType { DESTROY, AREA, KILL_COUNT, SURVIVE }
 var _objectives: Array[Dictionary] = []
 var _completed_count: int = 0
 var _mission_complete: bool = false
+## When true, objective N cannot complete until objectives 0..N-1 are done.
+var sequential: bool = false
 
 
 func add_destroy_objective(targets: Array, label: String = "Destroy targets") -> void:
@@ -41,7 +44,8 @@ func add_area_objective(area: Area2D, label: String = "Reach objective") -> void
 	})
 	area.body_entered.connect(func(body: Node2D) -> void:
 		if body.is_in_group("player") and not _objectives[idx]["done"]:
-			_complete_objective(idx)
+			if _can_complete(idx):
+				_complete_objective(idx)
 	)
 
 
@@ -64,7 +68,7 @@ func add_survive_objective(duration: float, label: String = "Survive") -> void:
 		"done": false,
 	})
 	get_tree().create_timer(duration).timeout.connect(func() -> void:
-		if idx < _objectives.size() and not _objectives[idx]["done"]:
+		if idx < _objectives.size() and not _objectives[idx]["done"] and _can_complete(idx):
 			_complete_objective(idx)
 	)
 
@@ -73,6 +77,8 @@ func register_enemy_kill() -> void:
 	for i in range(_objectives.size()):
 		var obj: Dictionary = _objectives[i]
 		if obj["type"] == ObjectiveType.KILL_COUNT and not obj["done"]:
+			if not _can_complete(i):
+				return
 			obj["current"] = int(obj["current"]) + 1
 			if int(obj["current"]) >= int(obj["required"]):
 				_complete_objective(i)
@@ -83,6 +89,22 @@ func register_enemy_kill() -> void:
 
 func get_progress() -> Dictionary:
 	return {"completed": _completed_count, "total": _objectives.size()}
+
+
+func get_current_label() -> String:
+	for obj in _objectives:
+		if not obj["done"]:
+			return str(obj.get("label", "Objective"))
+	return "Complete"
+
+
+func _can_complete(index: int) -> bool:
+	if not sequential:
+		return true
+	for i in range(index):
+		if not _objectives[i]["done"]:
+			return false
+	return true
 
 
 func _connect_destroy_target(target: Node, obj_idx: int) -> void:
@@ -103,7 +125,7 @@ func _on_destroy_progress(obj_idx: int) -> void:
 	if obj["type"] != ObjectiveType.DESTROY or obj["done"]:
 		return
 	obj["remaining"] = maxi(int(obj["remaining"]) - 1, 0)
-	if int(obj["remaining"]) <= 0:
+	if int(obj["remaining"]) <= 0 and _can_complete(obj_idx):
 		_complete_objective(obj_idx)
 
 
@@ -111,6 +133,8 @@ func _complete_objective(index: int) -> void:
 	if index < 0 or index >= _objectives.size():
 		return
 	if _objectives[index]["done"]:
+		return
+	if not _can_complete(index):
 		return
 	_objectives[index]["done"] = true
 	_completed_count += 1

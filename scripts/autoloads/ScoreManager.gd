@@ -69,7 +69,7 @@ func record_death() -> void:
 func get_accuracy() -> float:
 	if shots_fired == 0:
 		return 0.0
-	return float(shots_hit) / float(shots_fired) * 100.0
+	return mini(float(shots_hit) / float(shots_fired) * 100.0, 100.0)
 
 
 func get_total_score() -> int:
@@ -99,7 +99,11 @@ func get_total_score() -> int:
 
 func get_rank() -> String:
 	var score := get_total_score()
-	var max_possible := 5000
+	var gm = get_node_or_null("/root/GameManager")
+	var mission_idx: int = gm.current_mission if gm else 0
+	# Per-mission expected score targets for fair A–D grading
+	var targets: Array[int] = [2800, 3200, 4500, 4000, 5500]
+	var max_possible: int = targets[clampi(mission_idx, 0, targets.size() - 1)]
 	var percentage := float(score) / float(max_possible) * 100.0
 
 	if percentage >= 90.0:

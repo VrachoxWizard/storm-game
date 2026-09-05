@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-## In-game HUD — health, armor, ammo, weapon badges, gear, minimap, vignette.
+## In-game HUD — health, armor, ammo, weapon slots, gear, minimap, vignette, toasts.
 
 @onready var health_bar: ProgressBar = $MarginContainer/VBoxContainer/TopBar/HealthBar
 @onready var armor_label: Label = $MarginContainer/VBoxContainer/TopBar/ArmorLabel
@@ -13,10 +13,13 @@ extends CanvasLayer
 @onready var health_frame: Control = get_node_or_null("HealthFrame")
 @onready var ammo_frame: Control = get_node_or_null("AmmoFrame")
 @onready var weapon_badge: Control = get_node_or_null("MarginContainer/VBoxContainer/BottomBar/WeaponBadge")
+@onready var slot_label: Label = get_node_or_null("MarginContainer/VBoxContainer/BottomBar/SlotLabel")
+@onready var toast_label: Label = get_node_or_null("ToastLabel")
 
 var _player: CharacterBody2D = null
 var _weapon_manager: Node = null
 var _last_health: int = 100
+var _ammo_flash_tween: Tween = null
 
 
 func setup(player: CharacterBody2D) -> void:
@@ -34,6 +37,8 @@ func setup(player: CharacterBody2D) -> void:
 		_player.mines_changed.connect(_on_mines_changed)
 	if not _weapon_manager.ammo_changed.is_connected(_on_ammo_changed):
 		_weapon_manager.ammo_changed.connect(_on_ammo_changed)
+	if _weapon_manager.has_signal("reserve_changed") and not _weapon_manager.reserve_changed.is_connected(_on_reserve_changed):
+		_weapon_manager.reserve_changed.connect(_on_reserve_changed)
 	if not _weapon_manager.weapon_switched.is_connected(_on_weapon_switched):
 		_weapon_manager.weapon_switched.connect(_on_weapon_switched)
 
@@ -44,18 +49,36 @@ func setup(player: CharacterBody2D) -> void:
 	if minimap.has_method("setup"):
 		minimap.setup(player)
 	_on_health_changed(_player.health)
-
-	if _weapon_manager and "current_weapon" in _weapon_manager and _weapon_manager.current_weapon:
-		_on_weapon_switched(_weapon_manager.current_weapon)
+	_update_slots()
+	var weapon: WeaponResource = _weapon_manager.get_current_weapon()
+	if weapon:
+		_on_weapon_switched(weapon)
 
 
 func set_objective_text(text: String) -> void:
 	objective_label.text = text
+	objective_label.modulate = Color(1.0, 0.85, 0.4)
+	var tween := create_tween()
+	tween.tween_property(objective_label, "modulate", Color.WHITE, 0.5)
+	SoundManager.play_sfx("objective", 0.05, -4.0)
+
+
+func show_toast(text: String) -> void:
+	if toast_label == null:
+		return
+	toast_label.text = text
+	toast_label.modulate.a = 1.0
+	toast_label.visible = true
+	var tween := create_tween()
+	tween.tween_interval(1.2)
+	tween.tween_property(toast_label, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(func() -> void:
+		toast_label.visible = false
+	)
 
 
 func _on_health_changed(new_health: int) -> void:
 	if new_health < _last_health:
-		# Trigger combat shock twitch on paper overlay
 		get_tree().call_group("paper_overlay", "trigger_combat_shock", 0.025)
 	_last_health = new_health
 	health_bar.value = new_health
@@ -82,13 +105,61 @@ func _update_gear() -> void:
 
 
 func _on_ammo_changed(current: int, max_ammo: int) -> void:
+	_refresh_ammo_label(current, max_ammo)
+	if current >= 0 and max_ammo > 0 and float(current) / float(max_ammo) <= 0.25:
+		_flash_ammo()
+
+
+func _on_reserve_changed(_reserve: int) -> void:
+	if _weapon_manager == null:
+		return
+	var weapon: WeaponResource = _weapon_manager.get_current_weapon()
+	if weapon:
+		_refresh_ammo_label(_weapon_manager.ammo[_weapon_manager.current_slot], weapon.max_ammo)
+
+
+func _refresh_ammo_label(current: int, max_ammo: int) -> void:
 	if current < 0:
 		ammo_label.text = "∞"
-	else:
+		return
+	var reserve: int = 0
+	if _weapon_manager and _weapon_manager.has_method("get_current_reserve"):
+		reserve = _weapon_manager.get_current_reserve()
+	if reserve < 0:
 		ammo_label.text = "%d / %d" % [current, max_ammo]
+	else:
+		ammo_label.text = "%d / %d  (+%d)" % [current, max_ammo, reserve]
+
+
+func _flash_ammo() -> void:
+	if ammo_label == null:
+		return
+	if _ammo_flash_tween and _ammo_flash_tween.is_valid():
+		_ammo_flash_tween.kill()
+	_ammo_flash_tween = create_tween()
+	_ammo_flash_tween.tween_property(ammo_label, "modulate", Color(1.0, 0.3, 0.2), 0.15)
+	_ammo_flash_tween.tween_property(ammo_label, "modulate", Color.WHITE, 0.15)
 
 
 func _on_weapon_switched(weapon_resource: WeaponResource) -> void:
 	weapon_label.text = weapon_resource.weapon_name
 	if weapon_badge and weapon_badge.has_method("set_weapon"):
 		weapon_badge.set_weapon(weapon_resource.weapon_name)
+	_update_slots()
+	weapon_label.modulate = Color(1.0, 0.9, 0.5)
+	var tween := create_tween()
+	tween.tween_property(weapon_label, "modulate", Color.WHITE, 0.35)
+
+
+func _update_slots() -> void:
+	if slot_label == null or _weapon_manager == null:
+		return
+	var parts: PackedStringArray = []
+	for i in range(3):
+		var mark := "[%d]" % (i + 1)
+		if _weapon_manager.slots[i] == null:
+			mark = " %d " % (i + 1)
+		elif i == _weapon_manager.current_slot:
+			mark = ">%d<" % (i + 1)
+		parts.append(mark)
+	slot_label.text = " ".join(parts)

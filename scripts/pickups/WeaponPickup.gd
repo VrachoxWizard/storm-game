@@ -16,11 +16,12 @@ func _apply_effect(player: Node2D) -> void:
 
 	var actual_ammo := ammo_count
 	if actual_ammo < 0:
-		actual_ammo = weapon_resource.max_ammo
+		actual_ammo = weapon_resource.max_ammo + weapon_resource.starting_reserve
 
 	var result: Dictionary = weapon_manager.add_weapon(weapon_resource, actual_ammo)
 	if not result.is_empty() and result.get("weapon") != null:
-		_spawn_dropped_weapon(result["weapon"], int(result.get("ammo", 0)))
+		var dropped_total: int = int(result.get("ammo", 0)) + int(result.get("reserve", 0))
+		_spawn_dropped_weapon(result["weapon"], dropped_total)
 
 
 func _spawn_dropped_weapon(weapon: WeaponResource, dropped_ammo: int) -> void:

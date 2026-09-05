@@ -6,6 +6,7 @@ extends EnemyBase
 @export var aura_radius: float = 150.0
 @export var speed_bonus: float = 1.25
 @export var fire_rate_bonus: float = 1.2
+@export var hold_back_distance: float = 160.0
 
 var _aura: Area2D
 var _buffed: Dictionary = {}
@@ -39,9 +40,9 @@ func _setup_aura() -> void:
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-	if target and is_instance_valid(target) and current_state == State.CHASE:
+	if target and is_instance_valid(target) and (current_state == State.CHASE or current_state == State.ATTACK):
 		var dist := global_position.distance_to(target.global_position)
-		if dist < 120.0:
+		if dist < hold_back_distance:
 			var away := (global_position - target.global_position).normalized()
 			velocity = away * speed * speed_buff
 			move_and_slide()
@@ -52,39 +53,63 @@ func _on_aura_enter(body: Node2D) -> void:
 	if body == self:
 		return
 	if body is EnemyBase and body != self:
-		(body as EnemyBase).speed_buff = speed_bonus
-		(body as EnemyBase).fire_rate_buff = fire_rate_bonus
+		var enemy := body as EnemyBase
+		enemy.speed_buff = maxf(enemy.speed_buff, speed_bonus)
+		enemy.fire_rate_buff = maxf(enemy.fire_rate_buff, fire_rate_bonus)
 		_buffed[body] = true
 
 
 func _on_aura_exit(body: Node2D) -> void:
 	if body is EnemyBase and _buffed.has(body):
-		(body as EnemyBase).speed_buff = 1.0
-		(body as EnemyBase).fire_rate_buff = 1.0
 		_buffed.erase(body)
+		_refresh_buffs_on(body as EnemyBase)
+
+
+func _refresh_buffs_on(enemy: EnemyBase) -> void:
+	## Recompute buffs from any remaining living officers.
+	enemy.speed_buff = 1.0
+	enemy.fire_rate_buff = 1.0
+	if not is_inside_tree() or get_tree() == null:
+		return
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if node == enemy or not is_instance_valid(node):
+			continue
+		if node.get_script() == get_script() and node.has_method("_applies_aura_to"):
+			if node._applies_aura_to(enemy):
+				enemy.speed_buff = maxf(enemy.speed_buff, node.speed_bonus)
+				enemy.fire_rate_buff = maxf(enemy.fire_rate_buff, node.fire_rate_bonus)
+
+
+func _applies_aura_to(enemy: EnemyBase) -> bool:
+	return _buffed.has(enemy) and current_state != State.DEAD
 
 
 func _die() -> void:
-	for body in _buffed.keys():
-		if is_instance_valid(body) and body is EnemyBase:
-			(body as EnemyBase).speed_buff = 1.0
-			(body as EnemyBase).fire_rate_buff = 1.0
+	var affected: Array = _buffed.keys()
 	_buffed.clear()
+	for body in affected:
+		if is_instance_valid(body) and body is EnemyBase:
+			_refresh_buffs_on(body as EnemyBase)
 	super._die()
 
 
 func _perform_attack() -> void:
-	if bullet_scene == null or target == null:
+	if target == null:
 		return
-	var bullet: Area2D = bullet_scene.instantiate()
-	var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
-	if container:
-		container.add_child(bullet)
-	else:
-		get_tree().root.add_child(bullet)
 	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
 	var dir := (target.global_position - spawn_pos).normalized()
-	bullet.activate(spawn_pos, dir.angle(), 480.0, damage)
+	var fire_rot := dir.angle()
+	var pool := ProjectilePool.get_pool(get_tree())
+	if pool:
+		pool.spawn_enemy_bullet(spawn_pos, fire_rot, 480.0, damage)
+	elif bullet_scene:
+		var bullet: Area2D = bullet_scene.instantiate()
+		var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
+		if container:
+			container.add_child(bullet)
+		else:
+			get_tree().root.add_child(bullet)
+		bullet.activate(spawn_pos, fire_rot, 480.0, damage)
 	apply_recoil(3.0)
-	var flash_rot: float = torso_container.rotation if torso_container else dir.angle()
+	var flash_rot: float = torso_container.rotation if torso_container else fire_rot
 	CombatVfxScript.vfx_muzzle_flash(spawn_pos, flash_rot, "pistol")

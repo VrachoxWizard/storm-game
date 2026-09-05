@@ -1,6 +1,6 @@
 extends EnemyBase
 
-## Long-range sniper with red laser telegraph and heavy recoil.
+## Long-range sniper with red laser telegraph, LOS raycast, and heavy recoil.
 
 @export var aim_time: float = 1.5
 @export var bullet_damage: int = 35
@@ -32,6 +32,11 @@ func _physics_process(delta: float) -> void:
 		_laser.add_point(start_pt)
 		_laser.add_point(to_local(target.global_position))
 		_update_rig_aim(target.global_position)
+		# Cancel aim if LOS blocked
+		if not _has_line_of_sight():
+			_aiming = false
+			_laser.visible = false
+			_laser.clear_points()
 		return
 	super._physics_process(delta)
 
@@ -39,10 +44,26 @@ func _physics_process(delta: float) -> void:
 func _perform_attack() -> void:
 	if _aiming or target == null:
 		return
+	if not _has_line_of_sight():
+		return
 	_aiming = true
 	_laser.visible = true
 	velocity = Vector2.ZERO
 	get_tree().create_timer(aim_time).timeout.connect(_fire_sniper_shot)
+
+
+func _has_line_of_sight() -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	if not is_inside_tree() or get_world_2d() == null:
+		return true
+	var space := get_world_2d().direct_space_state
+	var from_pos: Vector2 = muzzle.global_position if muzzle else global_position
+	var query := PhysicsRayQueryParameters2D.create(from_pos, target.global_position)
+	query.collision_mask = 32  ## Environment layer 6
+	query.exclude = [self.get_rid()]
+	var result := space.intersect_ray(query)
+	return result.is_empty()
 
 
 func _fire_sniper_shot() -> void:
@@ -50,6 +71,8 @@ func _fire_sniper_shot() -> void:
 	_laser.visible = false
 	_laser.clear_points()
 	if target == null or not is_instance_valid(target) or current_state == State.DEAD:
+		return
+	if not _has_line_of_sight():
 		return
 	var fire_pos: Vector2 = muzzle.global_position if muzzle else global_position
 	apply_recoil(8.0)

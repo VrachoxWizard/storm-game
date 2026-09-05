@@ -2,6 +2,8 @@
 
 This file provides comprehensive instructions and roadmap context for **Claude Code** and other AI agents to continue implementing **Operation Storm**.
 
+**Current status:** Phases 1–5 plus the Polish Elevation Pass are complete. Canonical mission titles: First Thunder, Breaking the Line, Open Road, The Heart, Victory (`GameManager.MISSION_NAMES`). See `AGENTS.md` and `docs/ARCHITECTURE.md` for systems detail.
+
 ---
 
 ## 1. Project Overview & Current State
@@ -17,11 +19,12 @@ This file provides comprehensive instructions and roadmap context for **Claude C
   - Checkpoint state save/restore cycle with weapon slots/ammo persistence.
 - **Weapon System** (`scripts/weapons/WeaponResource.gd`, `scripts/player/WeaponManager.gd`):
   - 3 weapon slots: primary rifle, secondary pickup, permanent backup pistol.
+  - Magazine + reserve ammo economy; reload draws from reserve; pistol unlimited.
   - Switching (keys 1, 2, 3), reloading (R), semi-auto and automatic fire.
-  - 4 weapon resources created: Zastava M70 (`zastava_m70.tres`), PHP Pistol (`php_pistol.tres`), Hawk 12ga Shotgun (`hawk_shotgun.tres`), Skorpion vz.61 SMG (`skorpion_smg.tres`).
-- **Projectile System** (`scripts/weapons/Projectile.gd`, `scenes/weapons/`):
-  - 100-bullet pre-allocated object pool for player weapons.
-  - Area2D projectile physics with distinct Player (`layer 3`, mask `2,6,7`) and Enemy (`layer 4`, mask `1,6`) layers.
+  - Weapons: Zastava M70, PHP Pistol, Hawk 12ga, Skorpion SMG, M48 Mauser, RPG-7.
+- **Projectile System** (`scripts/weapons/Projectile.gd`, `ProjectilePool.gd`):
+  - Player pool (100) + shared enemy/vehicle pool under `Main/Projectiles`.
+  - Area2D projectile physics with distinct Player (`layer 3`) and Enemy (`layer 4`) layers.
   - Automatic cleanup on mission reload/exit.
 - **Enemy AI State Machine** (`scripts/enemies/EnemyBase.gd`):
   - States: `PATROL` → `ALERT` → `CHASE` → `ATTACK` → `DEAD`.
@@ -84,22 +87,18 @@ Implement new enemy types inheriting from `EnemyBase` or vehicle/emplacement bas
 
 Add mission scenes in `scenes/missions/` and register them in `GameManager.MISSION_SCENES`:
 
-1. **Mission 2: "The Breakthrough"** (`scenes/missions/Mission2.tscn`):
-   - Setting: Fortified Krajina defense line with minefields and trenches.
-   - Objectives: Neutralize 2 MG bunkers, eliminate sniper tower, breach fortified gate.
-   - Features: Anti-personnel mine hazard (explodes if stepped on without dodge-roll).
-2. **Mission 3: "Highway Ambush"** (`scenes/missions/Mission3.tscn`):
-   - Setting: Rural highway surrounded by pine forest.
-   - Objectives: Intercept and destroy a retreating enemy supply convoy (2 APCs + escorts) before they cross the map exit.
-3. **Mission 4: "Urban Combat — Petrinja"** (`scenes/missions/Mission4.tscn`):
-   - Setting: Ruined city streets, barricades, apartment buildings with interior sightlines.
-   - Objectives: Clear street-by-street checkpoints, rescue isolated friendly squad, eliminate mortar battery.
-4. **Mission 5: "The Fortress — Knin"** (`scenes/missions/Mission5.tscn`):
-   - Setting: Historical Knin fortress hill summit.
-   - Objectives: Multi-stage assault:
-     - Stage 1: Climb fortress approaches under sniper and mortar fire.
-     - Stage 2: Defeat the defending T-55 Tank boss.
-     - Stage 3: Clear inner courtyard and raise the flag (triggers campaign victory cutscene/results).
+1. **Mission 2: "Breaking the Line"** (`scenes/missions/Mission2.tscn`):
+   - Setting: Fortified defense line with bunkers.
+   - Objectives: Destroy bunkers (ordered), then breach east. Reinforcements on bunker damage.
+2. **Mission 3: "Open Road"** (`scenes/missions/Mission3.tscn`):
+   - Setting: Rural highway.
+   - Objectives: Stop APC convoy before escape, destroy T-55, liberate village.
+3. **Mission 4: "The Heart"** (`scenes/missions/Mission4.tscn`):
+   - Setting: Urban streets with building prefabs.
+   - Objectives: Clear street segments, destroy mortars, reach fortress approach.
+4. **Mission 5: "Victory"** (`scenes/missions/Mission5.tscn`):
+   - Setting: Knin fortress summit.
+   - Objectives: Approach climb → T-55 → courtyard → flag raise.
 
 ---
 

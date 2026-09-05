@@ -27,10 +27,13 @@ var grenade_count: int = 0
 var mine_count: int = 0
 var is_dodging: bool = false
 var can_dodge: bool = true
+var _is_dead: bool = false
 var _dodge_direction: Vector2 = Vector2.ZERO
 var _checkpoint_data: Dictionary = {}
 var _shake_amount: float = 0.0
 var _walk_cycle_time: float = 0.0
+var _enemy_scan_timer: float = 0.0
+var _nearby_enemy_count: int = 0
 
 var _projectile_pool: Array[Area2D] = []
 var _projectile_scene: PackedScene = preload("res://scenes/weapons/Projectile.tscn")
@@ -86,10 +89,14 @@ func _process(delta: float) -> void:
 		_shake_amount = lerpf(_shake_amount, 0.0, shake_decay * delta)
 		if _shake_amount < 0.1: _shake_amount = 0.0; camera.offset = Vector2.ZERO
 	if camera:
-		var enemy_count: int = 0
-		for n in get_tree().get_nodes_in_group("enemies"):
-			if is_instance_valid(n) and global_position.distance_to(n.global_position) < 400.0: enemy_count += 1
-		camera.zoom = camera.zoom.lerp(Vector2(0.85, 0.85) if enemy_count >= 4 else Vector2.ONE, 3.0 * delta)
+		_enemy_scan_timer += delta
+		if _enemy_scan_timer >= 0.25:
+			_enemy_scan_timer = 0.0
+			_nearby_enemy_count = 0
+			for n in get_tree().get_nodes_in_group("enemies"):
+				if is_instance_valid(n) and global_position.distance_to(n.global_position) < 400.0:
+					_nearby_enemy_count += 1
+		camera.zoom = camera.zoom.lerp(Vector2(0.85, 0.85) if _nearby_enemy_count >= 4 else Vector2.ONE, 3.0 * delta)
 
 
 func _physics_process(delta: float) -> void:
@@ -113,7 +120,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func take_damage(amount: int) -> void:
 	_ensure_rig()
-	if is_dodging: return
+	if _is_dead or is_dodging:
+		return
 	var remaining: int = amount
 	if armor > 0:
 		var absorbed: int = mini(armor, int(ceil(float(amount) * 0.5)))
@@ -124,9 +132,16 @@ func take_damage(amount: int) -> void:
 	if body_sprite: body_sprite.modulate = Color.RED
 	if hit_flash_timer: hit_flash_timer.start()
 	_shake_amount = shake_strength
+	var settings: Dictionary = {}
+	var save_m = get_node_or_null("/root/SaveManager")
+	if save_m:
+		settings = save_m.data.get("settings", {})
+	if not bool(settings.get("screen_shake", true)):
+		_shake_amount = 0.0
 	_play_sfx("hit")
 	_set_audio_low_pass(health < int(max_health * 0.25))
 	if health <= 0:
+		_is_dead = true
 		_play_sfx("death")
 		DecalManagerScript.stamp_blood(global_position)
 		DecalManagerScript.stamp_casualty(global_position, torso_container.rotation if torso_container else 0.0)
@@ -137,7 +152,14 @@ func heal(amount: int) -> void: health = clampi(health + amount, 0, max_health);
 func add_armor(amount: int) -> void: armor = clampi(armor + amount, 0, 100); armor_changed.emit(armor)
 func add_grenades(amount: int) -> void: grenade_count = clampi(grenade_count + amount, 0, MAX_GRENADES); grenades_changed.emit(grenade_count)
 func add_mines(amount: int) -> void: mine_count = clampi(mine_count + amount, 0, MAX_MINES); mines_changed.emit(mine_count)
-func shake_camera(intensity: float = -1.0) -> void: _shake_amount = intensity if intensity >= 0.0 else shake_strength
+func shake_camera(intensity: float = -1.0) -> void:
+	var settings: Dictionary = {}
+	var sm = get_node_or_null("/root/SaveManager")
+	if sm:
+		settings = sm.data.get("settings", {})
+	if not bool(settings.get("screen_shake", true)):
+		return
+	_shake_amount = intensity if intensity >= 0.0 else shake_strength
 
 
 func _start_dodge() -> void:
@@ -191,19 +213,27 @@ func _apply_recoil() -> void:
 
 
 func _on_weapon_fired() -> void:
-	var sm = get_node_or_null("/root/ScoreManager")
-	if sm and sm.has_method("record_shot_fired"): sm.record_shot_fired()
-	_play_sfx("shoot"); _apply_recoil()
+	_apply_recoil()
 	if weapon_manager == null: return
 	var weapon: WeaponResource = weapon_manager.get_current_weapon()
 	if weapon == null: return
 	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
 	var fire_rot: float = torso_container.global_rotation if torso_container else rotation
 	var wtype: String = weapon.weapon_name if ("weapon_name" in weapon and weapon.weapon_name != "") else "rifle"
+	var snd = get_node_or_null("/root/SoundManager")
+	if snd and snd.has_method("play_weapon_shoot"):
+		snd.play_weapon_shoot(wtype)
+	else:
+		_play_sfx("shoot")
 	CombatVfxScript.vfx_muzzle_flash(spawn_pos, fire_rot, wtype)
+	var sm = get_node_or_null("/root/ScoreManager")
 	if weapon.is_explosive:
-		_fire_rocket(weapon); _play_sfx("explosion"); return
+		if sm and sm.has_method("record_shot_fired"):
+			sm.record_shot_fired()
+		_fire_rocket(weapon); _play_sfx("shoot_rpg"); return
 	for i in range(weapon.projectile_count):
+		if sm and sm.has_method("record_shot_fired"):
+			sm.record_shot_fired()
 		var bullet: Area2D = null
 		for b in _projectile_pool:
 			if is_instance_valid(b) and not b._active: bullet = b; break
@@ -253,7 +283,10 @@ func _place_mine() -> void:
 func save_checkpoint(checkpoint_pos: Vector2) -> void:
 	_checkpoint_data = {
 		"position": checkpoint_pos, "health": health, "armor": armor, "grenades": grenade_count, "mines": mine_count,
-		"weapon_slots": weapon_manager.slots.duplicate() if weapon_manager else [], "weapon_ammo": weapon_manager.ammo.duplicate() if weapon_manager else [], "current_slot": weapon_manager.current_slot if weapon_manager else 0,
+		"weapon_slots": weapon_manager.slots.duplicate() if weapon_manager else [],
+		"weapon_ammo": weapon_manager.ammo.duplicate() if weapon_manager else [],
+		"weapon_reserve": weapon_manager.reserve.duplicate() if weapon_manager else [],
+		"current_slot": weapon_manager.current_slot if weapon_manager else 0,
 	}
 
 
@@ -265,8 +298,11 @@ func restore_checkpoint() -> void:
 	if weapon_manager:
 		weapon_manager.slots = _checkpoint_data["weapon_slots"].duplicate()
 		weapon_manager.ammo = _checkpoint_data["weapon_ammo"].duplicate()
+		weapon_manager.reserve = _checkpoint_data.get("weapon_reserve", weapon_manager.reserve).duplicate()
 		weapon_manager.switch_to_slot(_checkpoint_data["current_slot"])
-	is_dodging = false; can_dodge = true
+	is_dodging = false
+	can_dodge = true
+	_is_dead = false
 
 
 func _play_sfx(sfx_id: String) -> void:

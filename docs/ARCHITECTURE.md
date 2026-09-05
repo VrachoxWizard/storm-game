@@ -8,9 +8,17 @@ graph TB
         GM["GameManager"]
         SM["ScoreManager"]
         SV["SaveManager"]
+        SND["SoundManager"]
     end
 
-    subgraph UI["UI Layer (CanvasLayer)"]
+    subgraph Effects["World FX under Main"]
+        DM["DecalManager"]
+        CV["CombatVfx"]
+        PP["ProjectilePool"]
+        PO["PaperOverlay"]
+    end
+
+    subgraph UI["UI Layer"]
         HUD["HUD"]
         PM["PauseMenu"]
         BS["BriefingScreen"]
@@ -18,34 +26,23 @@ graph TB
         MM["MainMenu"]
     end
 
-    subgraph World["World (Node2D)"]
-        TM["TileMap"]
-        subgraph PlayerNode["Player (CharacterBody2D)"]
-            PS["Sprite2D"]
-            WM["WeaponManager"]
-            PC["Camera2D"]
-        end
-        subgraph EnemyContainer["Enemies"]
-            EB["EnemyBase"]
-            SP["Spawners"]
-        end
-        VC["Vehicles"]
-        EM["Emplacements"]
-        PK["Pickups"]
-        PR["Projectiles (Pool)"]
-        OB["Objectives"]
+    subgraph World["World Container"]
+        PlayerNode["Player + WeaponManager"]
+        Enemies["EnemyBase roster"]
+        Vehicles["VehicleBase"]
+        Objectives["ObjectiveTracker"]
     end
 
     GM --> World
     GM --> UI
     SM --> RS
     SV --> GM
-    OB -->|"signals"| GM
-    PlayerNode -->|"signals"| HUD
-    WM -->|"signals"| HUD
-    PK -->|"body_entered"| PlayerNode
-    SP -->|"spawns"| EB
-    WM -->|"instances"| PR
+    SND --> PlayerNode
+    SND --> Enemies
+    PlayerNode --> PP
+    Enemies --> PP
+    PlayerNode --> HUD
+    CV --> DM
 ```
 
 ## Game State Flow
@@ -53,20 +50,14 @@ graph TB
 ```mermaid
 stateDiagram-v2
     [*] --> MainMenu
-    MainMenu --> MissionSelect
-    MissionSelect --> Briefing
+    MainMenu --> Briefing
     Briefing --> Gameplay
     Gameplay --> Paused: ESC
     Paused --> Gameplay: ESC
     Paused --> MainMenu: Quit
-    Gameplay --> Checkpoint: Enter checkpoint area
-    Checkpoint --> Gameplay
-    Gameplay --> Death: Health <= 0
-    Death --> Gameplay: Respawn at checkpoint
     Gameplay --> Results: Objective complete
     Results --> Briefing: Next mission
-    Results --> MissionSelect: Return
-    Results --> MainMenu: Quit
+    Results --> MainMenu: Continue
 ```
 
 ## Enemy State Machine
@@ -75,10 +66,8 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> PATROL
     PATROL --> ALERT: Player detected
-    ALERT --> CHASE: Player confirmed
-    ALERT --> PATROL: Lost player (timeout)
+    ALERT --> CHASE: Alert timer 0.4-0.8s
     CHASE --> ATTACK: In attack range
-    CHASE --> ALERT: Lost line of sight
     ATTACK --> CHASE: Player out of range
     ATTACK --> DEAD: Health <= 0
     CHASE --> DEAD: Health <= 0
@@ -91,77 +80,59 @@ stateDiagram-v2
 
 ### Player System
 
-The player is a `CharacterBody2D` that handles:
+`CharacterBody2D` with modular rig (`ShadowSprite` / `LegsSprite` / `TorsoContainer`):
 
-- **Movement**: Reads WASD input to build a velocity vector, normalizes for diagonal movement, applies to `move_and_slide()`
-- **Rotation**: `look_at(get_global_mouse_position())` every physics frame
-- **Dodge-roll**: On Space press, applies a burst velocity in the movement direction with 0.3s invincibility. 1.5s cooldown
-- **Health**: Integer health pool, no regen. `take_damage()` emits `health_changed` signal for HUD
+- WASD movement, mouse-aim torso, dodge-roll i-frames
+- Health + armor, grenades/mines, checkpoint save/restore
+- Death lock until respawn; screen shake respects settings
 
 ### Weapon System
 
-`WeaponManager` is a child node of Player that manages:
+`WeaponManager` manages 3 slots with **magazine + reserve** ammo:
 
-- **3 slots**: Slot 1-2 (pickup weapons), Slot 3 (permanent pistol)
-- **Firing**: Each weapon has fire_rate, damage, spread, projectile_scene, ammo_count
-- **Switching**: 1/2/3 keys swap active weapon, updates sprite
-- **Pickup**: When player enters a weapon pickup's Area2D, weapon is added to inventory (or swaps if full)
+- Reload draws from reserve; pistol unlimited
+- Ammo crates refill reserve; weapon pickups grant total rounds
+- Per-weapon SFX via `SoundManager.play_weapon_shoot`
 
-### Projectile Pool
+### Projectile Pools
 
-- Pre-instantiate ~100 bullet nodes at mission start
-- On fire: grab inactive bullet, set position/rotation/speed, activate
-- On hit or off-screen: deactivate and return to pool
-- Different projectile types for different weapons (speed, damage, sprite)
+- Player: 100-bullet pool on Player
+- Enemy/vehicle: `ProjectilePool` on `Main/Projectiles` (80+)
+- Rockets/grenades instantiate under Projectiles and are freed on mission exit
 
-### Objective System
+### Combat VFX & Decals
 
-Objectives are `Area2D` trigger zones or enemy-count watchers:
+- `CombatVfx`: muzzle flashes (capped lights), explosions, ricochets, blood/dust
+- `DecalManager`: FIFO 250 blood/scorch/casings/treads; cleared on mission exit
 
-- **Area objectives**: Player enters zone → objective complete
-- **Kill objectives**: Track enemy deaths in an area, complete when count reached
-- **Survive objectives**: Timer-based, survive until timer expires
-- **Destroy objectives**: Specific target node destroyed → objective complete
+### Audio
 
-Objectives emit signals to `GameManager`, which tracks mission progress and triggers transitions.
+- Buses: Master, Music (low-pass), SFX (low-pass)
+- Crossfade music (title / tension / combat), ambient wind bed
+- Pitch-varied per-weapon and impact SFX
 
-### Checkpoint System
+### Objectives
 
-- `Area2D` nodes placed at 2-3 points per mission
-- On enter: saves player state (health, weapons, ammo, grenades, position)
-- On death: restores saved state and respawns at checkpoint position
-- Visual/audio feedback when checkpoint is reached
+`ObjectiveTracker` supports DESTROY / AREA / KILL_COUNT / SURVIVE with optional **sequential** gating.
 
-### Score System
+### Collision Layers
 
-Tracked per mission:
+| Layer | Name | Used By |
+|-------|------|---------|
+| 1 | Player | Player CharacterBody2D |
+| 2 | Enemies | Enemy soldiers |
+| 3 | PlayerBullets | Player projectiles |
+| 4 | EnemyBullets | Enemy projectiles |
+| 5 | Pickups | Health, ammo, weapons |
+| 6 | Environment | Walls, sandbags, buildings |
+| 7 | Vehicles | APC, Tank |
 
-| Metric | Points |
-|--------|--------|
-| Enemy kill | +100 per kill |
-| Vehicle destroyed | +500 per vehicle |
-| Emplacement destroyed | +300 per emplacement |
-| Accuracy bonus | Multiplier based on hit% |
-| Time bonus | Points for fast completion |
-| No-death bonus | +1000 if no deaths |
+## Mission Titles (canonical)
 
-Letter ranks: A (90%+), B (70-89%), C (50-69%), D (<50%) of max possible score.
+Aligned with `GameManager.MISSION_NAMES` and the design spec:
 
-### Save System
-
-Uses Godot's `ConfigFile` or `JSON` file saved to `user://save_data.json`:
-
-```json
-{
-    "missions_unlocked": 3,
-    "high_scores": {
-        "mission_1": { "score": 15400, "rank": "A", "time": 185.5 },
-        "mission_2": { "score": 12200, "rank": "B", "time": 240.0 }
-    },
-    "settings": {
-        "music_volume": 0.8,
-        "sfx_volume": 1.0,
-        "screen_shake": true
-    }
-}
-```
+1. First Thunder
+2. Breaking the Line
+3. Open Road
+4. The Heart
+5. Victory

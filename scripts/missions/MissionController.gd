@@ -21,18 +21,10 @@ const WAVES: Array[Dictionary] = [
 
 
 func _ready() -> void:
+	MissionHelpers.connect_checkpoints(get_parent(), player)
+	player.died.connect(func() -> void: MissionHelpers.handle_player_died(player))
 	_start_wave(0)
-	player.died.connect(_on_player_died)
-	# Save initial checkpoint at spawn
-	player.save_checkpoint(player.global_position)
-
-	var checkpoints_node := get_node_or_null("../Checkpoints")
-	if checkpoints_node:
-		for cp in checkpoints_node.get_children():
-			if cp.has_signal("checkpoint_reached"):
-				cp.checkpoint_reached.connect(func(checkpoint: Area2D) -> void:
-					player.save_checkpoint(checkpoint.global_position)
-				)
+	MissionHelpers.set_hud_objective(get_tree(), "Wave 1/%d — Hold the staging ground" % WAVES.size())
 
 
 func _start_wave(wave_index: int) -> void:
@@ -43,6 +35,7 @@ func _start_wave(wave_index: int) -> void:
 	_wave = wave_index
 	var wave_data: Dictionary = WAVES[wave_index]
 	_enemies_alive = wave_data["riflemen"] + wave_data["shotgunners"]
+	MissionHelpers.set_hud_objective(get_tree(), "Wave %d/%d — Hold the staging ground" % [_wave + 1, WAVES.size()])
 
 	var spawn_points := spawn_markers.get_children()
 	var spawn_index: int = 0
@@ -65,7 +58,9 @@ func _start_wave(wave_index: int) -> void:
 func _on_enemy_died(_enemy: CharacterBody2D) -> void:
 	_enemies_alive -= 1
 	if _enemies_alive <= 0:
-		# Brief pause then next wave
+		# Checkpoint between waves
+		player.save_checkpoint(player.global_position)
+		MissionHelpers._notify_checkpoint(player)
 		get_tree().create_timer(2.0).timeout.connect(
 			func() -> void: _start_wave(_wave + 1)
 		)
@@ -75,18 +70,4 @@ func _complete_mission() -> void:
 	if _mission_complete:
 		return
 	_mission_complete = true
-	var gm = get_node_or_null("/root/GameManager")
-	if gm:
-		gm.complete_mission()
-
-
-func _on_player_died() -> void:
-	var sm = get_node_or_null("/root/ScoreManager")
-	if sm:
-		sm.record_death()
-	# Brief delay then respawn
-	get_tree().create_timer(1.0).timeout.connect(_respawn_player)
-
-
-func _respawn_player() -> void:
-	player.restore_checkpoint()
+	MissionHelpers.complete_mission(get_tree())

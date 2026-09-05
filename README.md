@@ -8,12 +8,14 @@ Play as a Croatian soldier through a 5-mission campaign covering the decisive mi
 
 ### Key Features
 
-- **Top-down arcade action** — WASD movement, mouse aim/rotate/shoot
-- **5-mission campaign** — Following the real chronology of Operation Storm
+- **Top-down arcade action** — WASD movement, mouse aim/rotate/shoot, dodge-roll
+- **5-mission campaign** — First Thunder → Breaking the Line → Open Road → The Heart → Victory
+- **Real ammo economy** — Magazine + reserve pools; scarce RPG/M48; ammo crates refill reserve
 - **Pickup-based weapons** — Find rifles, SMGs, shotguns, sniper rifles, RPGs on the battlefield
-- **Diverse enemies & vehicles** — 6 infantry classes, B-80 APCs, T-55 boss tank, fortified bunkers and mortars
+- **Diverse enemies & vehicles** — 6 infantry classes with distinct AI, B-80 APCs, T-55 boss tank, bunkers and mortars
 - **War-journal art style** — Hand-drawn ink-sketch visuals, watercolor wash palettes, and paper-grain overlay
-- **Score system** — Per-mission scoring with kills, accuracy, time, and letter ranks
+- **Audio immersion** — Per-weapon SFX, tension/combat music crossfade, low-pass on critical HP
+- **Score system** — Per-mission scoring with kills, accuracy, vehicles, emplacements, and letter ranks
 
 ## War-Journal Visual Aesthetic & Art Pipeline
 
@@ -73,17 +75,29 @@ res://
 │   ├── player/          # Player controller, weapon manager
 │   ├── ui/              # UI controllers, PaperOverlay, Minimap
 │   ├── vehicles/        # VehicleBase, Apc, Tank controllers
-│   └── weapons/         # Weapon base class, per-weapon logic
+│   ├── weapons/         # WeaponResource, Projectile, ProjectilePool, rockets/grenades
 ├── assets/              # All game assets
 │   ├── fonts/           # Handwritten-style fonts
 │   ├── shaders/         # Paper overlay and screen shaders
 │   ├── sprites/         # Character, vehicle, terrain, prop, VFX, and UI sprites
-│   └── audio/           # Sound effects, voice lines, ambient audio
+│   └── audio/           # Per-weapon SFX, impact, UI, music (title/tension/combat), ambient
 ├── tests/               # Automated test suites (visual, systems, asset validation)
 ├── tools/               # Procedural asset generator (generate_war_journal_assets.py)
 ├── docs/                # Documentation and design specs
+├── Run_Game.bat         # Windows play launcher (auto-finds Godot 4, first-run import)
+├── Open_In_Godot.bat    # Windows editor launcher
 └── project.godot        # Godot project file
 ```
+
+## Campaign Missions
+
+| # | Title | Focus |
+|---|-------|-------|
+| 1 | First Thunder | Wave holdout at staging grounds |
+| 2 | Breaking the Line | Destroy bunkers (ordered), breach east; reinforcements |
+| 3 | Open Road | Stop APC convoy before escape, then T-55, liberate village |
+| 4 | The Heart | Street segments under mortar fire, reach fortress approach |
+| 5 | Victory | Approach climb → T-55 → courtyard → raise the flag |
 
 ## Getting Started
 

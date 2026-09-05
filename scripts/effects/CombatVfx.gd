@@ -11,6 +11,9 @@ const VfxComp = preload("res://scripts/effects/VfxComponents.gd")
 
 static var instance: CombatVfx = null
 static var _radial_light_texture: Texture2D = null
+const MAX_MUZZLE_LIGHTS: int = 8
+
+var _active_muzzle_lights: int = 0
 
 
 func _init() -> void:
@@ -154,8 +157,13 @@ func spawn_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle")
 	else:
 		sprite.queue_free()
 
-	# 2. Dynamic PointLight2D (0.05s)
-	VfxComp.create_transient_light(self, pos + Vector2.RIGHT.rotated(rot) * (8.0 * flash_scale.x), get_radial_light_texture(), Color(1.0, 0.82, 0.4), light_energy, light_scale, light_duration)
+	# 2. Dynamic PointLight2D (capped under SMG spam)
+	if _active_muzzle_lights < MAX_MUZZLE_LIGHTS:
+		_active_muzzle_lights += 1
+		VfxComp.create_transient_light(self, pos + Vector2.RIGHT.rotated(rot) * (8.0 * flash_scale.x), get_radial_light_texture(), Color(1.0, 0.82, 0.4), light_energy, light_scale, light_duration)
+		get_tree().create_timer(light_duration + 0.05).timeout.connect(func() -> void:
+			_active_muzzle_lights = maxi(_active_muzzle_lights - 1, 0)
+		)
 
 	# 3. Particle Sparks
 	var flash_p := VfxComp.create_burst(spark_count, light_duration * 2.5, Color(1.0, 0.85, 0.35, 1.0), speed_min, speed_max, 35.0 if is_shotgun else 22.0, Vector3.ZERO, Vector3(1, 0, 0))

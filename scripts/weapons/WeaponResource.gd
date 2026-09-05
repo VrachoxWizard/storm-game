@@ -6,7 +6,8 @@ extends Resource
 @export var weapon_name: String = ""
 @export var damage: int = 10
 @export var fire_rate: float = 0.2  ## seconds between shots
-@export var max_ammo: int = 30
+@export var max_ammo: int = 30  ## magazine capacity
+@export var starting_reserve: int = 60  ## spare rounds at pickup / mission start
 @export var reload_time: float = 1.5
 @export var spread_angle: float = 0.0  ## radians of random spread
 @export var bullet_speed: float = 600.0

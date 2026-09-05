@@ -8,6 +8,7 @@ weapon_name = "Skorpion vz.61"
 damage = 7
 fire_rate = 0.08
 max_ammo = 20
+starting_reserve = 40
 reload_time = 1.2
 spread_angle = 0.12
 bullet_speed = 550.0

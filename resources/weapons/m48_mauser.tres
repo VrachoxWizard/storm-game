@@ -8,6 +8,7 @@ weapon_name = "M48 Mauser"
 damage = 55
 fire_rate = 1.2
 max_ammo = 5
+starting_reserve = 10
 reload_time = 2.5
 spread_angle = 0.01
 bullet_speed = 1100.0

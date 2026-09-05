@@ -69,6 +69,19 @@ func _ready() -> void:
 	attack_timer.one_shot = true
 	state_timer.one_shot = true
 	_patrol_direction = Vector2.RIGHT.rotated(randf() * TAU)
+	# Deferred so subclass _ready() can set detection_range first.
+	call_deferred("_apply_detection_range")
+
+
+func _apply_detection_range() -> void:
+	if detection_area == null:
+		return
+	var col := detection_area.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if col == null:
+		return
+	var circle := CircleShape2D.new()
+	circle.radius = detection_range
+	col.shape = circle
 
 
 func _physics_process(delta: float) -> void:
@@ -181,7 +194,9 @@ func _process_patrol(delta: float) -> void:
 func _process_alert(_delta: float) -> void:
 	if target and is_instance_valid(target):
 		_update_rig_aim(target.global_position)
-		_enter_chase()
+		velocity = Vector2.ZERO
+	else:
+		current_state = State.PATROL
 
 
 func _process_chase(delta: float) -> void:
@@ -211,6 +226,16 @@ func _process_attack(delta: float) -> void:
 
 func _enter_alert() -> void:
 	current_state = State.ALERT
+	velocity = Vector2.ZERO
+	if not state_timer.timeout.is_connected(_on_alert_timeout):
+		state_timer.timeout.connect(_on_alert_timeout)
+	state_timer.wait_time = randf_range(0.4, 0.8)
+	state_timer.start()
+
+
+func _on_alert_timeout() -> void:
+	if current_state == State.ALERT and target and is_instance_valid(target):
+		_enter_chase()
 
 
 func _enter_chase() -> void:
@@ -251,8 +276,13 @@ func _on_detection_body_exited(body: Node2D) -> void:
 func _flash_hit() -> void:
 	var target_sprite: Sprite2D = body_sprite if body_sprite else sprite
 	if target_sprite:
-		target_sprite.modulate = Color.RED
-		get_tree().create_timer(0.1).timeout.connect(func() -> void:
-			if is_instance_valid(target_sprite):
+		target_sprite.modulate = Color(1.0, 0.35, 0.35)
+		get_tree().create_timer(0.12).timeout.connect(func() -> void:
+			if is_instance_valid(target_sprite) and current_state != State.DEAD:
 				target_sprite.modulate = Color.WHITE
 		)
+	if torso_container and is_inside_tree():
+		var tween := create_tween()
+		if tween:
+			tween.tween_property(torso_container, "scale", Vector2(1.15, 1.15), 0.05)
+			tween.tween_property(torso_container, "scale", Vector2.ONE, 0.08)

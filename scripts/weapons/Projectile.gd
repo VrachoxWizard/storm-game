@@ -50,6 +50,10 @@ func deactivate() -> void:
 	global_position = Vector2(-9999, -9999)
 
 
+func is_pool_active() -> bool:
+	return _active
+
+
 func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
@@ -64,13 +68,19 @@ func _on_body_entered(body: Node2D) -> void:
 			vfx.spawn_blood(global_position)
 		elif vfx and vfx.has_method("spawn_dust"):
 			vfx.spawn_dust(global_position)
+		var snd = get_node_or_null("/root/SoundManager")
+		if snd and snd.has_method("play_sfx"):
+			if body.is_in_group("enemies") or body.is_in_group("player"):
+				snd.play_sfx("impact_flesh")
+			else:
+				snd.play_sfx("impact_metal")
 	deactivate()
 
 
 func _on_area_entered(_area: Area2D) -> void:
-	var vfx: Node = null
-	if get_tree() and get_tree().root:
-		vfx = get_tree().root.get_node_or_null("Main/CombatVfx")
-	if vfx and vfx.has_method("spawn_dust"):
-		vfx.spawn_dust(global_position)
+	CombatVfx.vfx_ricochet(global_position, Vector2.RIGHT.rotated(global_rotation))
+	var snd = get_node_or_null("/root/SoundManager")
+	if snd and snd.has_method("play_sfx"):
+		snd.play_sfx("impact_metal")
 	deactivate()
+

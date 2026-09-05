@@ -56,6 +56,10 @@ func _init() -> void:
 		quit(1)
 		return
 	paper_overlay.trigger_combat_shock(0.04)
+	if paper_overlay._mat == null or absf(paper_overlay._mat.get_shader_parameter("shock_aberration") - 0.04) > 0.001:
+		print("FAIL: PaperOverlay shock_aberration shader parameter was not updated")
+		quit(1)
+		return
 
 	# 4. Test Minimap & Compass Texture
 	var minimap_script = load("res://scripts/ui/Minimap.gd")

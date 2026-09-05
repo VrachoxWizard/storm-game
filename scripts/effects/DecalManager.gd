@@ -172,8 +172,8 @@ func _do_spawn_casing(pos: Vector2, eject_dir: Vector2, is_shotgun: bool = false
 		var tween := create_tween()
 		if tween:
 			tween.set_parallel(false)
-			tween.tween_property(sprite, "position", bounce_pos, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-			tween.tween_property(sprite, "position", final_pos, 0.12).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			tween.tween_property(sprite, "global_position", bounce_pos, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tween.tween_property(sprite, "global_position", final_pos, 0.12).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 			var rot_tween := create_tween()
 			rot_tween.tween_property(sprite, "rotation", final_rot, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 

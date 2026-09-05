@@ -67,8 +67,8 @@ func _draw() -> void:
 	_draw_group("objective", Color(0.95, 0.8, 0.2), center, 4.0)
 	_draw_group("flag", Color(0.95, 0.8, 0.2), center, 4.0)
 
-	# 5. Player Arrow Blip (pointing in player's rotation)
-	var heading: float = _player.rotation
+	# 5. Player Arrow Blip (pointing in player's aiming rotation)
+	var heading: float = _player.torso_container.global_rotation if ("torso_container" in _player and _player.torso_container) else _player.rotation
 	var p_tip: Vector2 = center + Vector2(6.0, 0.0).rotated(heading)
 	var p_left: Vector2 = center + Vector2(-4.0, -4.0).rotated(heading)
 	var p_right: Vector2 = center + Vector2(-4.0, 4.0).rotated(heading)

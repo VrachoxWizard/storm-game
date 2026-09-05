@@ -116,7 +116,10 @@ If audio or scripts fail on a fresh clone, run `./Open_In_Godot.sh` once so Godo
 Run the master visual test suite and individual verification suites using the Godot headless console:
 
 ```powershell
-# Master visual test runner
+# Run all 6 visual test suites sequentially via Python runner
+python tools/run_visual_tests.py
+
+# Master visual test runner (headless Godot compilation check)
 & "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/run_all_visual_tests.gd --quit
 
 # Individual visual test suites

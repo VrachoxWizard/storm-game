@@ -8,6 +8,12 @@ var _shock_tween: Tween = null
 
 
 func _ready() -> void:
+	_setup_overlay()
+
+
+func _setup_overlay() -> void:
+	if _mat != null:
+		return
 	add_to_group("paper_overlay")
 	layer = 80
 	# Ensure we can read the back buffer
@@ -32,10 +38,15 @@ func _ready() -> void:
 ## Triggers a quick chromatic aberration shockwave pulse that fades to 0 over 0.1s.
 func trigger_combat_shock(intensity: float = 0.03) -> void:
 	if _mat == null:
+		_setup_overlay()
+	if _mat == null:
 		return
 	if _shock_tween and _shock_tween.is_valid():
 		_shock_tween.kill()
 	_mat.set_shader_parameter("shock_aberration", intensity)
+	if not is_inside_tree():
+		return
+	_shock_tween = create_tween()
 	var update_shock := func(val: float) -> void:
 		if _mat:
 			_mat.set_shader_parameter("shock_aberration", val)

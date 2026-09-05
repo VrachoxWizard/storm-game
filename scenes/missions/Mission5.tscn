@@ -1,0 +1,145 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Rifleman.tscn" id="2_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/MachineGunner.tscn" id="3_mg"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Sniper.tscn" id="4_sniper"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Officer.tscn" id="5_officer"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Grenadier.tscn" id="6_gren"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Shotgunner.tscn" id="7_sg"]
+[ext_resource type="PackedScene" path="res://scenes/vehicles/Tank.tscn" id="8_tank"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/WeaponPickup.tscn" id="9_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/LargeHealthKit.tscn" id="10_lhealth"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ArmorVest.tscn" id="11_armor"]
+[ext_resource type="Script" path="res://scripts/missions/Mission5Controller.gd" id="12_ctrl"]
+[ext_resource type="Script" path="res://scripts/missions/ObjectiveTracker.gd" id="13_obj"]
+[ext_resource type="Script" path="res://scripts/missions/Checkpoint.gd" id="14_cp"]
+[ext_resource type="Script" path="res://scripts/missions/FlagObjective.gd" id="15_flag"]
+[ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="16_rpg"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ground_tile.png" id="17_ground"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flag.png" id="18_flagtex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
+size = Vector2(1400, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vert"]
+size = Vector2(20, 1000)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_cp"]
+radius = 40.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_flag"]
+radius = 48.0
+
+[node name="Mission5" type="Node2D"]
+
+[node name="Ground" type="TextureRect" parent="."]
+offset_right = 1400.0
+offset_bottom = 980.0
+texture = ExtResource("17_ground")
+stretch_mode = 1
+modulate = Color(0.8, 0.72, 0.55, 1)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(120, 700)
+
+[node name="ApproachEnemies" type="Node2D" parent="."]
+
+[node name="Sniper1" parent="ApproachEnemies" instance=ExtResource("4_sniper")]
+position = Vector2(500, 200)
+
+[node name="MG1" parent="ApproachEnemies" instance=ExtResource("3_mg")]
+position = Vector2(400, 450)
+
+[node name="Rifle1" parent="ApproachEnemies" instance=ExtResource("2_rifle")]
+position = Vector2(350, 600)
+
+[node name="Vehicles" type="Node2D" parent="."]
+
+[node name="Tank" parent="Vehicles" instance=ExtResource("8_tank")]
+position = Vector2(750, 480)
+
+[node name="CourtyardEnemies" type="Node2D" parent="."]
+
+[node name="Officer1" parent="CourtyardEnemies" instance=ExtResource("5_officer")]
+position = Vector2(1000, 400)
+
+[node name="Grenadier1" parent="CourtyardEnemies" instance=ExtResource("6_gren")]
+position = Vector2(1050, 550)
+
+[node name="Shotgunner1" parent="CourtyardEnemies" instance=ExtResource("7_sg")]
+position = Vector2(980, 650)
+
+[node name="Rifle2" parent="CourtyardEnemies" instance=ExtResource("2_rifle")]
+position = Vector2(1100, 350)
+
+[node name="Pickups" type="Node2D" parent="."]
+
+[node name="Rpg" parent="Pickups" instance=ExtResource("9_weapon")]
+position = Vector2(250, 650)
+weapon_resource = ExtResource("16_rpg")
+ammo_count = 4
+
+[node name="LargeHealth" parent="Pickups" instance=ExtResource("10_lhealth")]
+position = Vector2(280, 720)
+
+[node name="Armor" parent="Pickups" instance=ExtResource("11_armor")]
+position = Vector2(220, 580)
+
+[node name="FlagObjective" type="Area2D" parent="."]
+position = Vector2(1200, 480)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("15_flag")
+
+[node name="Sprite2D" type="Sprite2D" parent="FlagObjective"]
+texture = ExtResource("18_flagtex")
+scale = Vector2(2, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FlagObjective"]
+shape = SubResource("CircleShape2D_flag")
+
+[node name="Checkpoints" type="Node2D" parent="."]
+
+[node name="CP1" type="Area2D" parent="Checkpoints"]
+position = Vector2(450, 650)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("14_cp")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints/CP1"]
+shape = SubResource("CircleShape2D_cp")
+
+[node name="CP2" type="Area2D" parent="Checkpoints"]
+position = Vector2(850, 500)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("14_cp")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints/CP2"]
+shape = SubResource("CircleShape2D_cp")
+
+[node name="MissionController" type="Node" parent="."]
+script = ExtResource("12_ctrl")
+
+[node name="ObjectiveTracker" type="Node" parent="MissionController"]
+script = ExtResource("13_obj")
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+collision_layer = 32
+
+[node name="WallTop" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(700, -10)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallBottom" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(700, 990)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallLeft" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-10, 490)
+shape = SubResource("RectangleShape2D_vert")
+
+[node name="WallRight" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(1410, 490)
+shape = SubResource("RectangleShape2D_vert")

@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/RocketProjectile.gd" id="1_rocket"]
+[ext_resource type="Texture2D" path="res://assets/sprites/rocket.png" id="2_tex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(16, 6)
+
+[node name="RocketProjectile" type="Area2D"]
+collision_layer = 4
+collision_mask = 98
+script = ExtResource("1_rocket")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="LifetimeTimer" type="Timer" parent="."]
+wait_time = 4.0
+one_shot = true

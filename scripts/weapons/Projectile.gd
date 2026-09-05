@@ -49,8 +49,16 @@ func _on_body_entered(body: Node2D) -> void:
 		body.take_damage(damage)
 		if (collision_layer & 4) != 0:
 			ScoreManager.record_shot_hit()
+		var vfx := get_tree().root.get_node_or_null("Main/CombatVfx")
+		if vfx and body.is_in_group("enemies") and vfx.has_method("spawn_blood"):
+			vfx.spawn_blood(global_position)
+		elif vfx and vfx.has_method("spawn_dust"):
+			vfx.spawn_dust(global_position)
 	deactivate()
 
 
 func _on_area_entered(_area: Area2D) -> void:
+	var vfx := get_tree().root.get_node_or_null("Main/CombatVfx")
+	if vfx and vfx.has_method("spawn_dust"):
+		vfx.spawn_dust(global_position)
 	deactivate()

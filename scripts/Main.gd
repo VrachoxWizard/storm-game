@@ -31,6 +31,7 @@ func _show_main_menu() -> void:
 		_current_world = null
 
 	_cleanup_projectiles()
+	SoundManager.play_music("title")
 
 
 func _cleanup_projectiles() -> void:
@@ -63,6 +64,7 @@ func _on_mission_started(_mission_index: int) -> void:
 	var player: CharacterBody2D = _current_world.get_node("Player")
 	hud.setup(player)
 	ScoreManager.start_tracking()
+	SoundManager.play_music("combat")
 
 
 func _on_mission_completed(_mission_index: int) -> void:

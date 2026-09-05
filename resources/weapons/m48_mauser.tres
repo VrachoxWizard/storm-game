@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+weapon_name = "M48 Mauser"
+damage = 55
+fire_rate = 1.2
+max_ammo = 5
+reload_time = 2.5
+spread_angle = 0.01
+bullet_speed = 1100.0
+is_automatic = false
+projectile_count = 1
+is_pistol = false
+is_explosive = false
+explosion_radius = 0.0
+explosion_damage = 0

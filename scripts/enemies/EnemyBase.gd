@@ -1,6 +1,11 @@
+class_name EnemyBase
 extends CharacterBody2D
 
 ## Base class for all enemies. Simple state machine AI.
+
+## Multiplier applied by Officer aura (1.0 = normal).
+var speed_buff: float = 1.0
+var fire_rate_buff: float = 1.0
 
 signal enemy_died(enemy: CharacterBody2D)
 
@@ -27,6 +32,7 @@ var _patrol_timer: float = 0.0
 
 func _ready() -> void:
 	health = max_health
+	add_to_group("enemies")
 	detection_area.body_entered.connect(_on_detection_body_entered)
 	detection_area.body_exited.connect(_on_detection_body_exited)
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
@@ -66,6 +72,9 @@ func _die() -> void:
 	current_state = State.DEAD
 	enemy_died.emit(self)
 	ScoreManager.record_kill()
+	var vfx := get_tree().root.get_node_or_null("Main/CombatVfx")
+	if vfx and vfx.has_method("spawn_blood"):
+		vfx.spawn_blood(global_position)
 	queue_free()
 
 
@@ -75,7 +84,7 @@ func _process_patrol(delta: float) -> void:
 		_patrol_timer = 0.0
 		_patrol_direction = Vector2.RIGHT.rotated(randf() * TAU)
 
-	velocity = _patrol_direction * speed * 0.3
+	velocity = _patrol_direction * speed * speed_buff * 0.3
 	look_at(global_position + _patrol_direction)
 	move_and_slide()
 
@@ -92,7 +101,7 @@ func _process_chase(_delta: float) -> void:
 		return
 
 	var dir := (target.global_position - global_position).normalized()
-	velocity = dir * speed
+	velocity = dir * speed * speed_buff
 	look_at(target.global_position)
 	move_and_slide()
 
@@ -123,7 +132,7 @@ func _enter_chase() -> void:
 func _enter_attack() -> void:
 	current_state = State.ATTACK
 	_perform_attack()
-	attack_timer.wait_time = attack_cooldown
+	attack_timer.wait_time = attack_cooldown / maxf(fire_rate_buff, 0.1)
 	attack_timer.start()
 
 

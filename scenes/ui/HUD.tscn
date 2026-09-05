@@ -1,9 +1,20 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/Minimap.gd" id="2_minimap"]
+[ext_resource type="Script" path="res://scripts/ui/LowHealthVignette.gd" id="3_vig"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
+
+[node name="LowHealthVignette" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_vig")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
@@ -27,10 +38,31 @@ custom_minimum_size = Vector2(200, 24)
 step = 1.0
 value = 100.0
 
+[node name="ArmorLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar"]
+text = "Armor: 0"
+
 [node name="AmmoLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar"]
 text = "30 / 30"
 
 [node name="BottomBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+theme_override_constants/separation = 24
 
 [node name="WeaponLabel" type="Label" parent="MarginContainer/VBoxContainer/BottomBar"]
 text = "Zastava M70"
+
+[node name="GearLabel" type="Label" parent="MarginContainer/VBoxContainer/BottomBar"]
+text = "G:0  M:0"
+
+[node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+text = ""
+
+[node name="Minimap" type="Control" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -140.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 140.0
+grow_horizontal = 0
+script = ExtResource("2_minimap")

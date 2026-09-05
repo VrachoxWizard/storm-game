@@ -18,11 +18,19 @@ func _apply_effect(player: Node2D) -> void:
 	if actual_ammo < 0:
 		actual_ammo = weapon_resource.max_ammo
 
-	var displaced: WeaponResource = weapon_manager.add_weapon(weapon_resource, actual_ammo)
-	if displaced:
-		_spawn_dropped_weapon(displaced)
+	var result: Dictionary = weapon_manager.add_weapon(weapon_resource, actual_ammo)
+	if not result.is_empty() and result.get("weapon") != null:
+		_spawn_dropped_weapon(result["weapon"], int(result.get("ammo", 0)))
 
 
-func _spawn_dropped_weapon(_weapon: WeaponResource) -> void:
-	## For Phase 1, displaced weapons are simply lost.
-	pass
+func _spawn_dropped_weapon(weapon: WeaponResource, dropped_ammo: int) -> void:
+	var drop_scene: PackedScene = load("res://scenes/pickups/WeaponPickup.tscn")
+	var drop: Node2D = drop_scene.instantiate()
+	drop.set("weapon_resource", weapon)
+	drop.set("ammo_count", dropped_ammo)
+	drop.global_position = global_position + Vector2(24, 0)
+	var pickups := get_parent()
+	if pickups:
+		pickups.call_deferred("add_child", drop)
+	else:
+		get_tree().current_scene.call_deferred("add_child", drop)

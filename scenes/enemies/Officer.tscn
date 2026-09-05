@@ -1,0 +1,19 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/EnemyBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/enemies/Officer.gd" id="2_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/EnemyProjectile.tscn" id="3_bullet"]
+[ext_resource type="Texture2D" path="res://assets/sprites/officer.png" id="4_tex"]
+
+[node name="Officer" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+max_health = 60
+speed = 90.0
+attack_range = 180.0
+detection_range = 250.0
+damage = 12
+attack_cooldown = 0.5
+bullet_scene = ExtResource("3_bullet")
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("4_tex")

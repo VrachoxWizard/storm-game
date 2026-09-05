@@ -1,0 +1,150 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Rifleman.tscn" id="2_rifleman"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Shotgunner.tscn" id="3_shotgunner"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/MachineGunner.tscn" id="4_mg"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Bunker.tscn" id="5_bunker"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="6_health"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="7_ammo"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/WeaponPickup.tscn" id="8_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/GrenadePickup.tscn" id="9_grenade"]
+[ext_resource type="Script" path="res://scripts/missions/Mission2Controller.gd" id="10_ctrl"]
+[ext_resource type="Script" path="res://scripts/missions/ObjectiveTracker.gd" id="11_obj"]
+[ext_resource type="Script" path="res://scripts/missions/Checkpoint.gd" id="12_cp"]
+[ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="13_rpg"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ground_tile.png" id="14_ground"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sandbag.png" id="15_sandbag"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
+size = Vector2(1400, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vert"]
+size = Vector2(20, 900)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(80, 200)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_cp"]
+radius = 40.0
+
+[node name="Mission2" type="Node2D"]
+
+[node name="Ground" type="TextureRect" parent="."]
+offset_right = 1400.0
+offset_bottom = 880.0
+texture = ExtResource("14_ground")
+stretch_mode = 1
+modulate = Color(0.85, 0.8, 0.7, 1)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(120, 440)
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Bunkers" type="Node2D" parent="."]
+
+[node name="Bunker1" parent="Bunkers" instance=ExtResource("5_bunker")]
+position = Vector2(700, 250)
+rotation = 3.14159
+
+[node name="Bunker2" parent="Bunkers" instance=ExtResource("5_bunker")]
+position = Vector2(900, 550)
+rotation = 3.14159
+
+[node name="SpawnMarkers" type="Node2D" parent="."]
+
+[node name="Spawn1" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(500, 200)
+
+[node name="Spawn2" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(550, 400)
+
+[node name="Spawn3" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(480, 650)
+
+[node name="Spawn4" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(800, 350)
+
+[node name="Spawn5" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(850, 700)
+
+[node name="Pickups" type="Node2D" parent="."]
+
+[node name="HealthKit1" parent="Pickups" instance=ExtResource("6_health")]
+position = Vector2(300, 300)
+
+[node name="AmmoCrate1" parent="Pickups" instance=ExtResource("7_ammo")]
+position = Vector2(280, 520)
+
+[node name="RpgPickup" parent="Pickups" instance=ExtResource("8_weapon")]
+position = Vector2(600, 440)
+weapon_resource = ExtResource("13_rpg")
+ammo_count = 3
+
+[node name="GrenadePickup1" parent="Pickups" instance=ExtResource("9_grenade")]
+position = Vector2(350, 400)
+
+[node name="Cover" type="Node2D" parent="."]
+
+[node name="Sandbag1" type="StaticBody2D" parent="Cover"]
+position = Vector2(400, 350)
+collision_layer = 32
+
+[node name="Sprite2D" type="Sprite2D" parent="Cover/Sandbag1"]
+texture = ExtResource("15_sandbag")
+
+[node name="Sandbag2" type="StaticBody2D" parent="Cover"]
+position = Vector2(400, 500)
+collision_layer = 32
+
+[node name="Sprite2D" type="Sprite2D" parent="Cover/Sandbag2"]
+texture = ExtResource("15_sandbag")
+
+[node name="ExitZone" type="Area2D" parent="."]
+position = Vector2(1280, 440)
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitZone"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="Checkpoints" type="Node2D" parent="."]
+
+[node name="Checkpoint1" type="Area2D" parent="Checkpoints"]
+position = Vector2(450, 440)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("12_cp")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints/Checkpoint1"]
+shape = SubResource("CircleShape2D_cp")
+
+[node name="MissionController" type="Node" parent="."]
+script = ExtResource("10_ctrl")
+rifleman_scene = ExtResource("2_rifleman")
+shotgunner_scene = ExtResource("3_shotgunner")
+machine_gunner_scene = ExtResource("4_mg")
+
+[node name="ObjectiveTracker" type="Node" parent="MissionController"]
+script = ExtResource("11_obj")
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+collision_layer = 32
+
+[node name="WallTop" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(700, -10)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallBottom" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(700, 890)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallLeft" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-10, 440)
+shape = SubResource("RectangleShape2D_vert")
+
+[node name="WallRight" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(1410, 440)
+shape = SubResource("RectangleShape2D_vert")

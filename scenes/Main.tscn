@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MainMenu.tscn" id="2_menu"]
@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ResultsScreen.tscn" id="4_results"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="6_pause"]
+[ext_resource type="Script" path="res://scripts/ui/PaperOverlay.gd" id="7_paper"]
+[ext_resource type="Script" path="res://scripts/effects/CombatVfx.gd" id="8_vfx"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -13,6 +15,9 @@ script = ExtResource("1_main")
 [node name="WorldContainer" type="Node2D" parent="."]
 
 [node name="Projectiles" type="Node2D" parent="."]
+
+[node name="CombatVfx" type="Node2D" parent="."]
+script = ExtResource("8_vfx")
 
 [node name="MainMenu" parent="." instance=ExtResource("2_menu")]
 
@@ -23,3 +28,6 @@ script = ExtResource("1_main")
 [node name="HUD" parent="." instance=ExtResource("5_hud")]
 
 [node name="PauseMenu" parent="." instance=ExtResource("6_pause")]
+
+[node name="PaperOverlay" type="CanvasLayer" parent="."]
+script = ExtResource("7_paper")

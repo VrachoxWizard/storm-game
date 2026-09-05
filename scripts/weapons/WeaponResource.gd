@@ -13,3 +13,6 @@ extends Resource
 @export var is_automatic: bool = false  ## hold to fire vs tap
 @export var projectile_count: int = 1  ## >1 for shotgun
 @export var is_pistol: bool = false  ## permanent slot, unlimited ammo
+@export var is_explosive: bool = false  ## RPG / splash projectiles
+@export var explosion_radius: float = 0.0
+@export var explosion_damage: int = 0

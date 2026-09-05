@@ -1,0 +1,182 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Rifleman.tscn" id="2_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Shotgunner.tscn" id="3_sg"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Sniper.tscn" id="4_sniper"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Officer.tscn" id="5_officer"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Grenadier.tscn" id="6_gren"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Mortar.tscn" id="7_mortar"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="8_health"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/LargeHealthKit.tscn" id="9_lhealth"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/WeaponPickup.tscn" id="10_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/GrenadePickup.tscn" id="11_gpick"]
+[ext_resource type="Script" path="res://scripts/missions/Mission4Controller.gd" id="12_ctrl"]
+[ext_resource type="Script" path="res://scripts/missions/ObjectiveTracker.gd" id="13_obj"]
+[ext_resource type="Script" path="res://scripts/missions/Checkpoint.gd" id="14_cp"]
+[ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="15_rpg"]
+[ext_resource type="Resource" path="res://resources/weapons/skorpion_smg.tres" id="16_smg"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ground_tile.png" id="17_ground"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
+size = Vector2(1400, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vert"]
+size = Vector2(20, 1000)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_approach"]
+size = Vector2(100, 180)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_cp"]
+radius = 40.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_building"]
+size = Vector2(80, 120)
+
+[node name="Mission4" type="Node2D"]
+
+[node name="Ground" type="TextureRect" parent="."]
+offset_right = 1400.0
+offset_bottom = 980.0
+texture = ExtResource("17_ground")
+stretch_mode = 1
+modulate = Color(0.7, 0.7, 0.75, 1)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(100, 500)
+
+[node name="Buildings" type="Node2D" parent="."]
+
+[node name="B1" type="StaticBody2D" parent="Buildings"]
+position = Vector2(350, 250)
+collision_layer = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Buildings/B1"]
+shape = SubResource("RectangleShape2D_building")
+
+[node name="ColorRect" type="ColorRect" parent="Buildings/B1"]
+offset_left = -40.0
+offset_top = -60.0
+offset_right = 40.0
+offset_bottom = 60.0
+color = Color(0.35, 0.32, 0.3, 1)
+
+[node name="B2" type="StaticBody2D" parent="Buildings"]
+position = Vector2(550, 650)
+collision_layer = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Buildings/B2"]
+shape = SubResource("RectangleShape2D_building")
+
+[node name="ColorRect" type="ColorRect" parent="Buildings/B2"]
+offset_left = -40.0
+offset_top = -60.0
+offset_right = 40.0
+offset_bottom = 60.0
+color = Color(0.35, 0.32, 0.3, 1)
+
+[node name="B3" type="StaticBody2D" parent="Buildings"]
+position = Vector2(800, 300)
+collision_layer = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Buildings/B3"]
+shape = SubResource("RectangleShape2D_building")
+
+[node name="ColorRect" type="ColorRect" parent="Buildings/B3"]
+offset_left = -40.0
+offset_top = -60.0
+offset_right = 40.0
+offset_bottom = 60.0
+color = Color(0.35, 0.32, 0.3, 1)
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Rifleman1" parent="Enemies" instance=ExtResource("2_rifle")]
+position = Vector2(400, 400)
+
+[node name="Shotgunner1" parent="Enemies" instance=ExtResource("3_sg")]
+position = Vector2(450, 550)
+
+[node name="Sniper1" parent="Enemies" instance=ExtResource("4_sniper")]
+position = Vector2(900, 180)
+
+[node name="Officer1" parent="Enemies" instance=ExtResource("5_officer")]
+position = Vector2(700, 480)
+
+[node name="Grenadier1" parent="Enemies" instance=ExtResource("6_gren")]
+position = Vector2(650, 350)
+
+[node name="Grenadier2" parent="Enemies" instance=ExtResource("6_gren")]
+position = Vector2(750, 600)
+
+[node name="Mortars" type="Node2D" parent="."]
+
+[node name="Mortar1" parent="Mortars" instance=ExtResource("7_mortar")]
+position = Vector2(1000, 250)
+
+[node name="Mortar2" parent="Mortars" instance=ExtResource("7_mortar")]
+position = Vector2(1050, 700)
+
+[node name="Pickups" type="Node2D" parent="."]
+
+[node name="Health1" parent="Pickups" instance=ExtResource("8_health")]
+position = Vector2(250, 350)
+
+[node name="LargeHealth1" parent="Pickups" instance=ExtResource("9_lhealth")]
+position = Vector2(280, 650)
+
+[node name="Rpg" parent="Pickups" instance=ExtResource("10_weapon")]
+position = Vector2(500, 480)
+weapon_resource = ExtResource("15_rpg")
+ammo_count = 3
+
+[node name="Smg" parent="Pickups" instance=ExtResource("10_weapon")]
+position = Vector2(320, 480)
+weapon_resource = ExtResource("16_smg")
+
+[node name="Grenades" parent="Pickups" instance=ExtResource("11_gpick")]
+position = Vector2(360, 520)
+
+[node name="ApproachZone" type="Area2D" parent="."]
+position = Vector2(1280, 500)
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ApproachZone"]
+shape = SubResource("RectangleShape2D_approach")
+
+[node name="Checkpoints" type="Node2D" parent="."]
+
+[node name="CP1" type="Area2D" parent="Checkpoints"]
+position = Vector2(480, 500)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("14_cp")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Checkpoints/CP1"]
+shape = SubResource("CircleShape2D_cp")
+
+[node name="MissionController" type="Node" parent="."]
+script = ExtResource("12_ctrl")
+
+[node name="ObjectiveTracker" type="Node" parent="MissionController"]
+script = ExtResource("13_obj")
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+collision_layer = 32
+
+[node name="WallTop" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(700, -10)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallBottom" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(700, 990)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallLeft" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-10, 490)
+shape = SubResource("RectangleShape2D_vert")
+
+[node name="WallRight" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(1410, 490)
+shape = SubResource("RectangleShape2D_vert")

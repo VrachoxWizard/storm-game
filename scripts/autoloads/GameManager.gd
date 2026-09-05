@@ -15,6 +15,18 @@ var _previous_state: GameState = GameState.MENU
 
 const MISSION_SCENES: Array[String] = [
 	"res://scenes/missions/Mission1.tscn",
+	"res://scenes/missions/Mission2.tscn",
+	"res://scenes/missions/Mission3.tscn",
+	"res://scenes/missions/Mission4.tscn",
+	"res://scenes/missions/Mission5.tscn",
+]
+
+const MISSION_NAMES: Array[String] = [
+	"First Thunder",
+	"Breaking the Line",
+	"Open Road",
+	"The Heart",
+	"Victory",
 ]
 
 

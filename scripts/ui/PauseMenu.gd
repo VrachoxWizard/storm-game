@@ -1,16 +1,23 @@
 extends CanvasLayer
 
-## Pause menu overlay.
+## Pause menu overlay with volume sliders.
 
 @onready var resume_button: Button = $CenterContainer/VBoxContainer/ResumeButton
+@onready var music_slider: HSlider = $CenterContainer/VBoxContainer/MusicSlider
+@onready var sfx_slider: HSlider = $CenterContainer/VBoxContainer/SfxSlider
 @onready var quit_button: Button = $CenterContainer/VBoxContainer/QuitButton
 
 
 func _ready() -> void:
 	resume_button.pressed.connect(_on_resume)
 	quit_button.pressed.connect(_on_quit)
+	music_slider.value_changed.connect(_on_music_changed)
+	sfx_slider.value_changed.connect(_on_sfx_changed)
 	visible = false
 	GameManager.game_paused.connect(_on_game_paused)
+	var settings: Dictionary = SaveManager.data.get("settings", {})
+	music_slider.value = float(settings.get("music_volume", 0.8))
+	sfx_slider.value = float(settings.get("sfx_volume", 1.0))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -28,4 +35,13 @@ func _on_resume() -> void:
 
 
 func _on_quit() -> void:
+	SaveManager.save_data()
 	GameManager.return_to_menu()
+
+
+func _on_music_changed(value: float) -> void:
+	SoundManager.set_music_volume(value)
+
+
+func _on_sfx_changed(value: float) -> void:
+	SoundManager.set_sfx_volume(value)

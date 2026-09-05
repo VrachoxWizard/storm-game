@@ -15,7 +15,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="CenterContainer/VBoxContainer"]
 text = "PAUSED"
@@ -23,6 +23,24 @@ horizontal_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="CenterContainer/VBoxContainer"]
 text = "Resume"
+
+[node name="MusicLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+text = "Music Volume"
+
+[node name="MusicSlider" type="HSlider" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(220, 0)
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="SfxLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+text = "SFX Volume"
+
+[node name="SfxSlider" type="HSlider" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(220, 0)
+max_value = 1.0
+step = 0.05
+value = 1.0
 
 [node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer"]
 text = "Quit"

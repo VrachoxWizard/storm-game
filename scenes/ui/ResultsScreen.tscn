@@ -57,4 +57,9 @@ horizontal_alignment = 1
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-text = "Continue"
+text = "Return to Menu"
+
+[node name="NextButton" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Next Mission"
+visible = false

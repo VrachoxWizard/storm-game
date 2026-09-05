@@ -110,23 +110,24 @@ func switch_to_slot(slot: int) -> void:
 	_emit_current_state()
 
 
-func add_weapon(weapon_res: WeaponResource, weapon_ammo: int) -> WeaponResource:
+func add_weapon(weapon_res: WeaponResource, weapon_ammo: int) -> Dictionary:
 	## Adds a weapon to the first empty slot, or swaps with current.
-	## Returns the displaced weapon (or null if slot was empty).
+	## Returns {} if no displacement, else { "weapon": WeaponResource, "ammo": int }.
 	for i in range(PISTOL_SLOT):  # only check slots 0 and 1
 		if slots[i] == null:
 			slots[i] = weapon_res
 			ammo[i] = weapon_ammo
 			switch_to_slot(i)
-			return null
+			return {}
 
 	# All slots full — swap with current (unless pistol)
 	var swap_slot := current_slot if current_slot != PISTOL_SLOT else 0
 	var old_weapon := slots[swap_slot]
+	var old_ammo: int = ammo[swap_slot]
 	slots[swap_slot] = weapon_res
 	ammo[swap_slot] = weapon_ammo
 	switch_to_slot(swap_slot)
-	return old_weapon
+	return {"weapon": old_weapon, "ammo": old_ammo}
 
 
 func add_ammo(amount: int) -> void:
@@ -144,10 +145,13 @@ func _start_reload() -> void:
 		return
 	if ammo[current_slot] == weapon.max_ammo:
 		return
+	if ammo[current_slot] == 0:
+		SoundManager.play_sfx("dry_fire")
 
 	is_reloading = true
 	reload_timer.wait_time = weapon.reload_time
 	reload_timer.start()
+	SoundManager.play_sfx("reload")
 
 
 func _on_reload_finished() -> void:

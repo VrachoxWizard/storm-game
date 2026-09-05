@@ -48,7 +48,9 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
 		if (collision_layer & 4) != 0:
-			ScoreManager.record_shot_hit()
+			var sm = get_node_or_null("/root/ScoreManager")
+			if sm and sm.has_method("record_shot_hit"):
+				sm.record_shot_hit()
 		var vfx := get_tree().root.get_node_or_null("Main/CombatVfx")
 		if vfx and body.is_in_group("enemies") and vfx.has_method("spawn_blood"):
 			vfx.spawn_blood(global_position)

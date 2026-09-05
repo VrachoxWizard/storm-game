@@ -33,20 +33,19 @@ func _setup_aura() -> void:
 	shape.shape = circle
 	_aura.add_child(shape)
 	add_child(_aura)
-	_aura.area_entered.connect(func(_a: Area2D) -> void: pass)
 	_aura.body_entered.connect(_on_aura_enter)
 	_aura.body_exited.connect(_on_aura_exit)
 
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-	# Prefer staying behind — lightly flee if too close
 	if target and is_instance_valid(target) and current_state == State.CHASE:
 		var dist := global_position.distance_to(target.global_position)
 		if dist < 120.0:
 			var away := (global_position - target.global_position).normalized()
 			velocity = away * speed * speed_buff
 			move_and_slide()
+			_update_legs(delta)
 
 
 func _on_aura_enter(body: Node2D) -> void:
@@ -78,6 +77,14 @@ func _perform_attack() -> void:
 	if bullet_scene == null or target == null:
 		return
 	var bullet: Area2D = bullet_scene.instantiate()
-	get_tree().root.get_node("Main/Projectiles").add_child(bullet)
-	var dir := (target.global_position - global_position).normalized()
-	bullet.activate(global_position, dir.angle(), 480.0, damage)
+	var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
+	if container:
+		container.add_child(bullet)
+	else:
+		get_tree().root.add_child(bullet)
+	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
+	var dir := (target.global_position - spawn_pos).normalized()
+	bullet.activate(spawn_pos, dir.angle(), 480.0, damage)
+	apply_recoil(3.0)
+	var flash_rot: float = torso_container.rotation if torso_container else dir.angle()
+	CombatVfxScript.vfx_muzzle_flash(spawn_pos, flash_rot, "pistol")

@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/EnemyBase.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/enemies/MachineGunner.gd" id="2_script"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/EnemyProjectile.tscn" id="3_bullet"]
-[ext_resource type="Texture2D" path="res://assets/sprites/machine_gunner.png" id="4_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/enemy_mg_torso.png" id="4_torso"]
 
 [node name="MachineGunner" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -13,7 +13,8 @@ attack_range = 220.0
 detection_range = 280.0
 damage = 8
 attack_cooldown = 2.0
+torso_texture = ExtResource("4_torso")
 bullet_scene = ExtResource("3_bullet")
 
-[node name="Sprite2D" parent="." index="0"]
-texture = ExtResource("4_tex")
+[node name="BodySprite" parent="TorsoContainer" index="0"]
+texture = ExtResource("4_torso")

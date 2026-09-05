@@ -146,12 +146,18 @@ func _start_reload() -> void:
 	if ammo[current_slot] == weapon.max_ammo:
 		return
 	if ammo[current_slot] == 0:
-		SoundManager.play_sfx("dry_fire")
+		_play_sfx("dry_fire")
 
 	is_reloading = true
 	reload_timer.wait_time = weapon.reload_time
 	reload_timer.start()
-	SoundManager.play_sfx("reload")
+	_play_sfx("reload")
+
+
+func _play_sfx(sfx_id: String) -> void:
+	var snd = get_node_or_null("/root/SoundManager")
+	if snd and snd.has_method("play_sfx"):
+		snd.play_sfx(sfx_id)
 
 
 func _on_reload_finished() -> void:

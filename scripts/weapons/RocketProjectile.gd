@@ -63,7 +63,9 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
 		if _from_player:
-			ScoreManager.record_shot_hit()
+			var sm = get_node_or_null("/root/ScoreManager")
+			if sm and sm.has_method("record_shot_hit"):
+				sm.record_shot_hit()
 	_detonate()
 
 

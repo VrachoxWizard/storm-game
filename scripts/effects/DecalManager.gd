@@ -11,6 +11,7 @@ const BLOOD_TEX: Texture2D = preload("res://assets/sprites/vfx/blood_splatter_de
 const SCORCH_TEX: Texture2D = preload("res://assets/sprites/vfx/scorch_mark.png")
 const CASING_RIFLE_TEX: Texture2D = preload("res://assets/sprites/vfx/shell_casing_rifle.png")
 const CASING_SHOTGUN_TEX: Texture2D = preload("res://assets/sprites/vfx/shell_casing_shotgun.png")
+const CASUALTY_TEX: Texture2D = preload("res://assets/sprites/characters/casualty_decals.png")
 
 static var instance: DecalManager = null
 
@@ -55,6 +56,11 @@ static func spawn_casing(pos: Vector2, eject_dir: Vector2, is_shotgun: bool = fa
 static func stamp_tread(pos: Vector2, rot: float, is_tank: bool = false) -> void:
 	if instance:
 		instance._do_stamp_tread(pos, rot, is_tank)
+
+
+static func stamp_casualty(pos: Vector2, rot: float = 0.0) -> void:
+	if instance:
+		instance._do_stamp_casualty(pos, rot)
 
 
 static func clear_decals() -> void:
@@ -178,6 +184,16 @@ func _do_stamp_tread(pos: Vector2, rot: float, is_tank: bool = false) -> void:
 	sprite.global_position = pos
 	sprite.rotation = rot
 	sprite.modulate = Color(0.2, 0.17, 0.14, 0.45 if is_tank else 0.35)
+
+	_register_decal(sprite)
+
+
+func _do_stamp_casualty(pos: Vector2, rot: float = 0.0) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = CASUALTY_TEX
+	sprite.global_position = pos
+	sprite.rotation = rot if rot != 0.0 else randf_range(0.0, TAU)
+	sprite.modulate = Color(0.9, 0.9, 0.9, randf_range(0.85, 0.95))
 
 	_register_decal(sprite)
 

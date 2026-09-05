@@ -1,6 +1,6 @@
-extends "res://scripts/enemies/EnemyBase.gd"
+extends EnemyBase
 
-## Rifleman enemy — fires burst shots at the player.
+## Rifleman enemy — fires burst shots at the player with weapon recoil and muzzle flash.
 
 var _burst_count: int = 0
 const BURST_SIZE: int = 3
@@ -28,18 +28,20 @@ func _fire_burst() -> void:
 
 
 func _spawn_enemy_bullet() -> void:
-	## Spawns an enemy projectile toward the target.
 	if bullet_scene == null:
 		return
 
 	var bullet: Area2D = bullet_scene.instantiate()
-	get_tree().root.get_node("Main/Projectiles").add_child(bullet)
+	var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
+	if container:
+		container.add_child(bullet)
+	else:
+		get_tree().root.add_child(bullet)
 
-	var dir := (target.global_position - global_position).normalized()
-	var spread := randf_range(-0.1, 0.1)
-	bullet.activate(
-		global_position,
-		dir.angle() + spread,
-		400.0,
-		damage
-	)
+	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
+	var dir := (target.global_position - spawn_pos).normalized()
+	var fire_rot: float = dir.angle() + randf_range(-0.1, 0.1)
+	bullet.activate(spawn_pos, fire_rot, 400.0, damage)
+	apply_recoil(4.0)
+	var flash_rot := torso_container.rotation if torso_container else fire_rot
+	CombatVfxScript.vfx_muzzle_flash(spawn_pos, flash_rot, "rifle")

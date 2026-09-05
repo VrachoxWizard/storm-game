@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/EnemyBase.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/enemies/Grenadier.gd" id="2_script"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/Grenade.tscn" id="3_grenade"]
-[ext_resource type="Texture2D" path="res://assets/sprites/grenadier.png" id="4_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/enemy_grenadier_torso.png" id="4_torso"]
 
 [node name="Grenadier" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -13,7 +13,8 @@ attack_range = 260.0
 detection_range = 300.0
 damage = 45
 attack_cooldown = 2.5
+torso_texture = ExtResource("4_torso")
 grenade_scene = ExtResource("3_grenade")
 
-[node name="Sprite2D" parent="." index="0"]
-texture = ExtResource("4_tex")
+[node name="BodySprite" parent="TorsoContainer" index="0"]
+texture = ExtResource("4_torso")

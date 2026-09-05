@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/Player.gd" id="1_player"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 16.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 58
+script = ExtResource("1_player")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="DodgeTimer" type="Timer" parent="."]
+wait_time = 1.5
+one_shot = true
+
+[node name="DodgeDurationTimer" type="Timer" parent="."]
+wait_time = 0.3
+one_shot = true
+
+[node name="HitFlashTimer" type="Timer" parent="."]
+wait_time = 0.1
+one_shot = true

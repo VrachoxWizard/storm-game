@@ -178,6 +178,8 @@ func _do_spawn_multi_stage_explosion(pos: Vector2, radius: float = 80.0) -> void
 	# Stage 1: Blinding Core Dynamic PointLight2D (0.25s expanding light pulse)
 	var light_scale := clampf(radius / 32.0, 1.2, 5.0)
 	VfxComp.create_transient_light(self, pos, get_radial_light_texture(), Color(1.0, 0.75, 0.3), 2.5, light_scale, 0.25)
+	if is_inside_tree():
+		get_tree().call_group("paper_overlay", "trigger_combat_shock", clampf(radius / 100.0 * 0.03, 0.015, 0.045))
 
 	# Stage 2: Expanding Core Fire Flash Circle
 	var flash := VfxComp.FlashCircle.new()

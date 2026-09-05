@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scripts/ui/Minimap.gd" id="2_minimap"]
 [ext_resource type="Script" path="res://scripts/ui/LowHealthVignette.gd" id="3_vig"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_health_frame.png" id="4_health_frame"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_ammo_frame.png" id="5_ammo_frame"]
+[ext_resource type="Script" path="res://scripts/ui/WeaponBadge.gd" id="6_badge"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -16,44 +19,80 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("3_vig")
 
+[node name="HealthFrame" type="TextureRect" parent="."]
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 240.0
+offset_bottom = 48.0
+mouse_filter = 2
+texture = ExtResource("4_health_frame")
+
+[node name="AmmoFrame" type="TextureRect" parent="."]
+offset_left = 330.0
+offset_top = 10.0
+offset_right = 510.0
+offset_bottom = 54.0
+mouse_filter = 2
+texture = ExtResource("5_ammo_frame")
+
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
-theme_override_constants/separation = 8
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
 
 [node name="TopBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
-theme_override_constants/separation = 16
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
 
 [node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar"]
 custom_minimum_size = Vector2(200, 24)
+layout_mode = 2
+mouse_filter = 2
 step = 1.0
 value = 100.0
 
 [node name="ArmorLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
 text = "Armor: 0"
 
 [node name="AmmoLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
 text = "30 / 30"
 
 [node name="BottomBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
-theme_override_constants/separation = 24
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="WeaponBadge" type="Control" parent="MarginContainer/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(64, 28)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("6_badge")
 
 [node name="WeaponLabel" type="Label" parent="MarginContainer/VBoxContainer/BottomBar"]
+layout_mode = 2
 text = "Zastava M70"
 
 [node name="GearLabel" type="Label" parent="MarginContainer/VBoxContainer/BottomBar"]
+layout_mode = 2
 text = "G:0  M:0"
 
 [node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
 text = ""
 
 [node name="Minimap" type="Control" parent="."]
@@ -65,4 +104,5 @@ offset_top = 20.0
 offset_right = -20.0
 offset_bottom = 140.0
 grow_horizontal = 0
+mouse_filter = 2
 script = ExtResource("2_minimap")

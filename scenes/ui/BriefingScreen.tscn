@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/BriefingScreen.gd" id="1_briefing"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/paper_parchment_bg.png" id="2_parchment"]
 
 [node name="BriefingScreen" type="Control"]
 layout_mode = 3
@@ -12,6 +13,17 @@ grow_vertical = 2
 visible = false
 script = ExtResource("1_briefing")
 
+[node name="BackgroundParchment" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_parchment")
+expand_mode = 1
+stretch_mode = 1
+
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -19,23 +31,34 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 40
+theme_override_constants/margin_left = 60
 theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 40
+theme_override_constants/margin_right = 60
 theme_override_constants/margin_bottom = 40
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 16
+
+[node name="DossierHeader" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.2, 0.16, 1)
+theme_override_font_sizes/font_size = 14
+text = "★ REPUBLIKA HRVATSKA — GLAVNI STOŽER HV ★  [STROGO POVJERLJIVO // TOP SECRET]"
 
 [node name="MissionTitle" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.12, 0.1, 0.08, 1)
+theme_override_font_sizes/font_size = 28
 text = "Mission 1: First Thunder"
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
 
 [node name="MissionDesc" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.18, 0.15, 0.12, 1)
 bbcode_enabled = true
 text = "August 4, 1995 — Dawn.
 
@@ -46,7 +69,8 @@ Your task: Hold the forward positions against enemy counterattacks while our for
 Za dom!"
 
 [node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
-custom_minimum_size = Vector2(200, 40)
 size_flags_horizontal = 4
-text = "Begin Mission"
+theme_override_font_sizes/font_size = 16
+text = "Započni Misiju // Begin Mission"

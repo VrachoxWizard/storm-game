@@ -22,4 +22,6 @@ func show_briefing(mission_index: int) -> void:
 
 func _on_start() -> void:
 	visible = false
-	GameManager.begin_gameplay()
+	var gm = get_node_or_null("/root/GameManager")
+	if gm and gm.has_method("begin_gameplay"):
+		gm.begin_gameplay()

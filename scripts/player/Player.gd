@@ -14,6 +14,7 @@ var health: int = max_health
 var is_dodging: bool = false
 var can_dodge: bool = true
 var _dodge_direction: Vector2 = Vector2.ZERO
+var _checkpoint_data: Dictionary = {}
 
 var _projectile_pool: Array[Area2D] = []
 var _projectile_scene: PackedScene = preload("res://scenes/weapons/Projectile.tscn")
@@ -145,3 +146,28 @@ func _on_weapon_fired() -> void:
 			weapon.bullet_speed,
 			weapon.damage
 		)
+
+
+func save_checkpoint(checkpoint_pos: Vector2) -> void:
+	_checkpoint_data = {
+		"position": checkpoint_pos,
+		"health": health,
+		"weapon_slots": weapon_manager.slots.duplicate(),
+		"weapon_ammo": weapon_manager.ammo.duplicate(),
+		"current_slot": weapon_manager.current_slot,
+	}
+
+
+func restore_checkpoint() -> void:
+	if _checkpoint_data.is_empty():
+		return
+
+	global_position = _checkpoint_data["position"]
+	health = _checkpoint_data["health"]
+	health_changed.emit(health)
+	# Restore weapons
+	weapon_manager.slots = _checkpoint_data["weapon_slots"].duplicate()
+	weapon_manager.ammo = _checkpoint_data["weapon_ammo"].duplicate()
+	weapon_manager.switch_to_slot(_checkpoint_data["current_slot"])
+	is_dodging = false
+	can_dodge = true

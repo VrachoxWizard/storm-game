@@ -17,10 +17,14 @@ const WAVES: Array[Dictionary] = [
 
 @onready var enemies_container: Node2D = $"../Enemies"
 @onready var spawn_markers: Node2D = $"../SpawnMarkers"
+@onready var player: CharacterBody2D = $"../Player"
 
 
 func _ready() -> void:
 	_start_wave(0)
+	player.died.connect(_on_player_died)
+	# Save initial checkpoint at spawn
+	player.save_checkpoint(player.global_position)
 
 
 func _start_wave(wave_index: int) -> void:
@@ -64,3 +68,13 @@ func _complete_mission() -> void:
 		return
 	_mission_complete = true
 	GameManager.complete_mission()
+
+
+func _on_player_died() -> void:
+	ScoreManager.record_death()
+	# Brief delay then respawn
+	get_tree().create_timer(1.0).timeout.connect(_respawn_player)
+
+
+func _respawn_player() -> void:
+	player.restore_checkpoint()

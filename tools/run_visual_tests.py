@@ -17,6 +17,7 @@ TESTS = [
     ("Vehicles & Destruction", "tests/test_vehicles_visual.gd"),
     ("Environment & Maps", "tests/test_missions_visual.gd"),
     ("UI & Paper Shader", "tests/test_ui_visual.gd"),
+    ("Player Bullet Firing & Damage", "tests/test_bullet_firing.gd"),
 ]
 
 def main() -> int:

@@ -7,6 +7,7 @@
 size = Vector2(16, 6)
 
 [node name="RocketProjectile" type="Area2D"]
+z_index = 2
 collision_layer = 4
 collision_mask = 98
 script = ExtResource("1_rocket")

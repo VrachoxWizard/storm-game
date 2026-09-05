@@ -11,6 +11,7 @@ var _active: bool = false
 
 
 func _ready() -> void:
+	z_index = 2
 	if lifetime_timer and not lifetime_timer.timeout.is_connected(deactivate):
 		lifetime_timer.timeout.connect(deactivate)
 	if not body_entered.is_connected(_on_body_entered):
@@ -23,12 +24,12 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not _active:
 		return
-	position += Vector2.RIGHT.rotated(rotation) * speed * delta
+	global_position += Vector2.RIGHT.rotated(global_rotation) * speed * delta
 
 
 func activate(pos: Vector2, rot: float, spd: float, dmg: int) -> void:
 	global_position = pos
-	rotation = rot
+	global_rotation = rot
 	speed = spd
 	damage = dmg
 	_active = true
@@ -52,11 +53,13 @@ func deactivate() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
-		if (collision_layer & 4) != 0:
+		if (collision_layer & 4) != 0 and is_inside_tree():
 			var sm = get_node_or_null("/root/ScoreManager")
 			if sm and sm.has_method("record_shot_hit"):
 				sm.record_shot_hit()
-		var vfx := get_tree().root.get_node_or_null("Main/CombatVfx")
+		var vfx: Node = null
+		if get_tree() and get_tree().root:
+			vfx = get_tree().root.get_node_or_null("Main/CombatVfx")
 		if vfx and body.is_in_group("enemies") and vfx.has_method("spawn_blood"):
 			vfx.spawn_blood(global_position)
 		elif vfx and vfx.has_method("spawn_dust"):
@@ -65,7 +68,9 @@ func _on_body_entered(body: Node2D) -> void:
 
 
 func _on_area_entered(_area: Area2D) -> void:
-	var vfx := get_tree().root.get_node_or_null("Main/CombatVfx")
+	var vfx: Node = null
+	if get_tree() and get_tree().root:
+		vfx = get_tree().root.get_node_or_null("Main/CombatVfx")
 	if vfx and vfx.has_method("spawn_dust"):
 		vfx.spawn_dust(global_position)
 	deactivate()

@@ -11,6 +11,7 @@ func _init() -> void:
 		"res://tests/test_vehicles_visual.gd",
 		"res://tests/test_missions_visual.gd",
 		"res://tests/test_ui_visual.gd",
+		"res://tests/test_bullet_firing.gd",
 	]
 	
 	for t in tests:

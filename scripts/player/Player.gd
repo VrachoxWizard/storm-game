@@ -167,11 +167,17 @@ func _on_dodge_duration_finished() -> void:
 
 
 func _init_projectile_pool() -> void:
-	var pool_container: Node2D = get_tree().root.get_node_or_null("Main/Projectiles")
-	if pool_container == null: return
+	var pool_container: Node = null
+	if get_tree() and get_tree().root:
+		pool_container = get_tree().root.get_node_or_null("Main/Projectiles")
+	if pool_container == null:
+		pool_container = get_parent()
+	if pool_container == null:
+		pool_container = self
 	for i in range(POOL_SIZE):
 		var bullet: Area2D = _projectile_scene.instantiate()
 		pool_container.add_child(bullet)
+		bullet.deactivate()
 		_projectile_pool.append(bullet)
 
 
@@ -193,19 +199,24 @@ func _on_weapon_fired() -> void:
 	if weapon == null: return
 	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
 	var fire_rot: float = torso_container.global_rotation if torso_container else rotation
-	CombatVfxScript.vfx_muzzle_flash(spawn_pos, fire_rot, weapon.name)
+	var wtype: String = weapon.weapon_name if ("weapon_name" in weapon and weapon.weapon_name != "") else "rifle"
+	CombatVfxScript.vfx_muzzle_flash(spawn_pos, fire_rot, wtype)
 	if weapon.is_explosive:
 		_fire_rocket(weapon); _play_sfx("explosion"); return
 	for i in range(weapon.projectile_count):
 		var bullet: Area2D = null
 		for b in _projectile_pool:
-			if is_instance_valid(b) and not b.visible: bullet = b; break
+			if is_instance_valid(b) and not b._active: bullet = b; break
 		if bullet == null: break
 		bullet.activate(spawn_pos, fire_rot + randf_range(-weapon.spread_angle, weapon.spread_angle), weapon.bullet_speed, weapon.damage)
 
 
 func _fire_rocket(weapon: WeaponResource) -> void:
-	var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
+	var container: Node = null
+	if get_tree() and get_tree().root:
+		container = get_tree().root.get_node_or_null("Main/Projectiles")
+	if container == null:
+		container = get_parent()
 	if container:
 		var rocket: Area2D = _rocket_scene.instantiate()
 		container.add_child(rocket)
@@ -218,7 +229,11 @@ func _fire_rocket(weapon: WeaponResource) -> void:
 func _throw_grenade() -> void:
 	if grenade_count <= 0: return
 	grenade_count -= 1; grenades_changed.emit(grenade_count)
-	var container: Node = get_tree().root.get_node_or_null("Main/Projectiles")
+	var container: Node = null
+	if get_tree() and get_tree().root:
+		container = get_tree().root.get_node_or_null("Main/Projectiles")
+	if container == null:
+		container = get_parent()
 	if container:
 		var grenade: Area2D = _grenade_scene.instantiate()
 		container.add_child(grenade)

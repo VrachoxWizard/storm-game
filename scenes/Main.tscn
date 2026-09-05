@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MainMenu.tscn" id="2_menu"]
@@ -8,11 +8,14 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="6_pause"]
 [ext_resource type="Script" path="res://scripts/ui/PaperOverlay.gd" id="7_paper"]
 [ext_resource type="Script" path="res://scripts/effects/CombatVfx.gd" id="8_vfx"]
+[ext_resource type="PackedScene" path="res://scenes/effects/DecalManager.tscn" id="9_decal"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
 
 [node name="WorldContainer" type="Node2D" parent="."]
+
+[node name="DecalManager" parent="." instance=ExtResource("9_decal")]
 
 [node name="Projectiles" type="Node2D" parent="."]
 

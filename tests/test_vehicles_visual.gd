@@ -62,9 +62,37 @@ func _init() -> void:
 	tank.take_rear_damage(20) # 20 * 3 = 60 damage
 	var hp_loss: int = initial_tank_hp - tank.health
 	if hp_loss != 60:
-		print("FAIL: Tank rear weak point expected 60 damage, got %d" % hp_loss)
+		print("FAIL: Tank take_rear_damage expected 60 damage, got %d" % hp_loss)
 		quit(1)
 		return
+
+	# Test rear weak point damage via take_damage() with attacker behind the tank (no infinite recursion)
+	var dummy_player := CharacterBody2D.new()
+	root.add_child(dummy_player)
+	tank.rotation = 0.0
+	dummy_player.global_position = tank.global_position + Vector2(-100.0, 0.0)
+	tank.target = dummy_player
+
+	var hp_before_rear_attack: int = tank.health
+	tank.take_damage(20) # Attacker is directly behind tank (rear dot product > 0.4) -> 20 * 3 = 60 damage
+	var rear_attack_loss: int = hp_before_rear_attack - tank.health
+	if rear_attack_loss != 60:
+		print("FAIL: Tank rear attack expected 60 damage (3x), got %d" % rear_attack_loss)
+		quit(1)
+		return
+
+	# Test standard frontal damage with attacker in front of the tank
+	dummy_player.global_position = tank.global_position + Vector2(100.0, 0.0)
+	var hp_before_front_attack: int = tank.health
+	tank.take_damage(20) # 20 >= armor_threshold (18), standard damage = 20
+	var front_attack_loss: int = hp_before_front_attack - tank.health
+	if front_attack_loss != 20:
+		print("FAIL: Tank front attack expected 20 damage, got %d" % front_attack_loss)
+		quit(1)
+		return
+
+	dummy_player.queue_free()
+	tank.target = null
 
 	# 6. Verify destroy_vehicle method presence
 	if not apc.has_method("destroy_vehicle") or not tank.has_method("destroy_vehicle"):

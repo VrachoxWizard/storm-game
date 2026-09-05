@@ -1,6 +1,6 @@
 extends VehicleBase
 
-## B-80 APC — 8-wheeled armored chassis with independent 360° twin MG turret.
+## B-80 APC -- 8-wheeled armored chassis with independent 360-degree twin MG turret.
 ## Deploys infantry squads when damaged or engaging close targets.
 
 @export var infantry_scene: PackedScene

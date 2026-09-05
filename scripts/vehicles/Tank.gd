@@ -1,6 +1,6 @@
 extends VehicleBase
 
-## T-55 Tank mini-boss — heavy tracked armored vehicle with 360° rotating turret,
+## T-55 Tank mini-boss -- heavy tracked armored vehicle with 360-degree rotating turret,
 ## powerful cannon recoil, muzzle flash, and vulnerable rear engine weak point (3x damage).
 
 @export var shell_scene: PackedScene
@@ -60,14 +60,21 @@ func _vehicle_ai(delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if is_destroyed:
 		return
-	# Rear weak point: attacker behind tank triggers 3x damage
+	# Rear weak point: attacker behind tank triggers 3x damage directly
 	if target and is_instance_valid(target):
 		var to_attacker := (target.global_position - global_position).normalized()
 		var rear := -Vector2.RIGHT.rotated(rotation)
 		if rear.dot(to_attacker) > 0.4:
-			take_rear_damage(amount)
+			super.take_damage(amount * 3)
 			return
 	super.take_damage(amount)
+
+
+func take_rear_damage(amount: int) -> void:
+	## Direct 3x weak-point damage avoiding mutual recursion
+	if is_destroyed:
+		return
+	super.take_damage(amount * 3)
 
 
 func _on_weak_point_area_entered(area: Area2D) -> void:

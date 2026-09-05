@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+weapon_name = "Hawk 12ga"
+damage = 12
+fire_rate = 0.8
+max_ammo = 8
+reload_time = 2.5
+spread_angle = 0.35
+bullet_speed = 500.0
+is_automatic = false
+projectile_count = 5
+is_pistol = false

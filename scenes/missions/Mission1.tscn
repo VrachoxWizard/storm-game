@@ -1,0 +1,91 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Rifleman.tscn" id="2_rifleman"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Shotgunner.tscn" id="3_shotgunner"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="4_healthkit"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="5_ammocrate"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/WeaponPickup.tscn" id="6_weaponpickup"]
+[ext_resource type="Script" path="res://scripts/missions/MissionController.gd" id="7_controller"]
+[ext_resource type="Resource" path="res://resources/weapons/hawk_shotgun.tres" id="8_hawk"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
+size = Vector2(1240, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vert"]
+size = Vector2(20, 840)
+
+[node name="Mission1" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(400, 400)
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="SpawnMarkers" type="Node2D" parent="."]
+
+[node name="Spawn1" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(800, 100)
+
+[node name="Spawn2" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(1000, 300)
+
+[node name="Spawn3" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(900, 600)
+
+[node name="Spawn4" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(700, 700)
+
+[node name="Spawn5" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(200, 700)
+
+[node name="Spawn6" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(100, 400)
+
+[node name="Spawn7" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(300, 100)
+
+[node name="Spawn8" type="Marker2D" parent="SpawnMarkers"]
+position = Vector2(600, 200)
+
+[node name="Pickups" type="Node2D" parent="."]
+
+[node name="HealthKit1" parent="Pickups" instance=ExtResource("4_healthkit")]
+position = Vector2(500, 300)
+
+[node name="HealthKit2" parent="Pickups" instance=ExtResource("4_healthkit")]
+position = Vector2(350, 550)
+
+[node name="AmmoCrate1" parent="Pickups" instance=ExtResource("5_ammocrate")]
+position = Vector2(650, 450)
+
+[node name="WeaponPickup1" parent="Pickups" instance=ExtResource("6_weaponpickup")]
+position = Vector2(550, 500)
+weapon_resource = ExtResource("8_hawk")
+
+[node name="MissionController" type="Node" parent="."]
+script = ExtResource("7_controller")
+rifleman_scene = ExtResource("2_rifleman")
+shotgunner_scene = ExtResource("3_shotgunner")
+
+[node name="Checkpoints" type="Node2D" parent="."]
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+collision_layer = 32
+collision_mask = 0
+
+[node name="WallTop" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(600, -10)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallBottom" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(600, 810)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="WallLeft" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-10, 400)
+shape = SubResource("RectangleShape2D_vert")
+
+[node name="WallRight" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(1210, 400)
+shape = SubResource("RectangleShape2D_vert")

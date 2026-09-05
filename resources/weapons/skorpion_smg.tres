@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+weapon_name = "Skorpion vz.61"
+damage = 7
+fire_rate = 0.08
+max_ammo = 20
+reload_time = 1.2
+spread_angle = 0.12
+bullet_speed = 550.0
+is_automatic = true
+projectile_count = 1
+is_pistol = false

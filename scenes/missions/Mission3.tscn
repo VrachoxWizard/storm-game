@@ -17,12 +17,16 @@
 [ext_resource type="Resource" path="res://resources/weapons/m48_mauser.tres" id="15_mauser"]
 [ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_highway.png" id="16_ground"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="17_sandbag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="18_tree"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1600, 20)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vert"]
 size = Vector2(20, 1000)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sandbag"]
+size = Vector2(64, 24)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_village"]
 size = Vector2(160, 160)
@@ -123,9 +127,23 @@ shape = SubResource("CircleShape2D_cp")
 [node name="Bag1" type="StaticBody2D" parent="Cover"]
 position = Vector2(650, 350)
 collision_layer = 32
+collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Cover/Bag1"]
 texture = ExtResource("17_sandbag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cover/Bag1"]
+shape = SubResource("RectangleShape2D_sandbag")
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Tree1" type="Sprite2D" parent="Props"]
+position = Vector2(300, 200)
+texture = ExtResource("18_tree")
+
+[node name="Tree2" type="Sprite2D" parent="Props"]
+position = Vector2(1100, 800)
+texture = ExtResource("18_tree")
 
 [node name="MissionController" type="Node" parent="."]
 script = ExtResource("11_ctrl")

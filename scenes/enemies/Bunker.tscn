@@ -1,11 +1,11 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/Bunker.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/sprites/bunker.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/bunker_concrete.png" id="2_tex"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/EnemyProjectile.tscn" id="3_bullet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(56, 40)
+size = Vector2(88, 64)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_2"]
 radius = 360.0
@@ -21,6 +21,11 @@ detection_range = 360.0
 damage = 10
 attack_cooldown = 0.12
 bullet_scene = ExtResource("3_bullet")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+modulate = Color(0, 0, 0, 0.35)
+position = Vector2(6, 8)
+texture = ExtResource("2_tex")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_tex")

@@ -54,6 +54,8 @@ func _die() -> void:
 	if is_instance_valid(_warning):
 		_warning.queue_free()
 	current_state = State.DEAD
+	destroyed.emit()
+	enemy_died.emit(self)
 	var sm = get_node_or_null("/root/ScoreManager")
 	if sm:
 		sm.record_emplacement_destroyed()

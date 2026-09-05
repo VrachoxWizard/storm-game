@@ -90,7 +90,7 @@ func _init() -> void:
 			print("FAIL: Prefab %s collision_layer is %d, expected 32" % [p, p_inst.collision_layer])
 			quit(1)
 			return
-		p_inst.queue_free()
+		p_inst.free()
 		
 	print("PASS: All 5 missions verified with visual upgrades")
 	quit(0)

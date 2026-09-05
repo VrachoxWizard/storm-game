@@ -10,6 +10,9 @@
 [ext_resource type="Resource" path="res://resources/weapons/hawk_shotgun.tres" id="8_hawk"]
 [ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_staging.png" id="9_ground"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="10_sandbag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_corner.png" id="11_corner"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/barbed_wire.png" id="12_wire"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="13_tree"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1240, 20)
@@ -19,6 +22,12 @@ size = Vector2(20, 840)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sandbag"]
 size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_corner"]
+size = Vector2(48, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wire"]
+size = Vector2(64, 20)
 
 [node name="Mission1" type="Node2D"]
 
@@ -127,6 +136,38 @@ texture = ExtResource("10_sandbag")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Cover/Sandbag4"]
 shape = SubResource("RectangleShape2D_sandbag")
+
+[node name="SandbagCorner1" type="StaticBody2D" parent="Cover"]
+position = Vector2(420, 320)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cover/SandbagCorner1"]
+texture = ExtResource("11_corner")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cover/SandbagCorner1"]
+shape = SubResource("RectangleShape2D_corner")
+
+[node name="BarbedWire1" type="StaticBody2D" parent="Cover"]
+position = Vector2(750, 200)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Cover/BarbedWire1"]
+texture = ExtResource("12_wire")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Cover/BarbedWire1"]
+shape = SubResource("RectangleShape2D_wire")
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Tree1" type="Sprite2D" parent="Props"]
+position = Vector2(150, 180)
+texture = ExtResource("13_tree")
+
+[node name="Tree2" type="Sprite2D" parent="Props"]
+position = Vector2(1050, 680)
+texture = ExtResource("13_tree")
 
 [node name="Checkpoints" type="Node2D" parent="."]
 

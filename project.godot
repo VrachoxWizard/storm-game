@@ -16,6 +16,10 @@ config/features=PackedStringArray("4.3")
 
 [autoload]
 
+GameManager="*res://scripts/autoloads/GameManager.gd"
+ScoreManager="*res://scripts/autoloads/ScoreManager.gd"
+SaveManager="*res://scripts/autoloads/SaveManager.gd"
+
 [input]
 
 move_up={

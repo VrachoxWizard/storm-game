@@ -65,6 +65,7 @@ func take_damage(amount: int) -> void:
 func _die() -> void:
 	current_state = State.DEAD
 	enemy_died.emit(self)
+	ScoreManager.record_kill()
 	queue_free()
 
 

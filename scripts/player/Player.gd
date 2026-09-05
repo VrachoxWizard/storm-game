@@ -127,6 +127,7 @@ func _get_pooled_bullet() -> Area2D:
 
 
 func _on_weapon_fired() -> void:
+	ScoreManager.record_shot_fired()
 	var weapon := weapon_manager.get_current_weapon()
 	if weapon == null:
 		return

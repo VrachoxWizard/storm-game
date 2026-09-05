@@ -1,7 +1,25 @@
-[gd_scene format=3]
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MainMenu.tscn" id="2_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/BriefingScreen.tscn" id="3_briefing"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ResultsScreen.tscn" id="4_results"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="6_pause"]
 
 [node name="Main" type="Node"]
+script = ExtResource("1_main")
 
 [node name="WorldContainer" type="Node2D" parent="."]
 
 [node name="Projectiles" type="Node2D" parent="."]
+
+[node name="MainMenu" parent="." instance=ExtResource("2_menu")]
+
+[node name="BriefingScreen" parent="." instance=ExtResource("3_briefing")]
+
+[node name="ResultsScreen" parent="." instance=ExtResource("4_results")]
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("6_pause")]

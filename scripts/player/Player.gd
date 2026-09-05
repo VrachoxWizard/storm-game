@@ -9,12 +9,15 @@ const DODGE_SPEED_MULTIPLIER: float = 3.0
 
 @export var speed: float = 200.0
 @export var max_health: int = 100
+@export var shake_strength: float = 5.0
+@export var shake_decay: float = 8.0
 
 var health: int = max_health
 var is_dodging: bool = false
 var can_dodge: bool = true
 var _dodge_direction: Vector2 = Vector2.ZERO
 var _checkpoint_data: Dictionary = {}
+var _shake_amount: float = 0.0
 
 var _projectile_pool: Array[Area2D] = []
 var _projectile_scene: PackedScene = preload("res://scenes/weapons/Projectile.tscn")
@@ -39,6 +42,18 @@ func _ready() -> void:
 	_init_projectile_pool()
 
 
+func _process(delta: float) -> void:
+	if _shake_amount > 0.0:
+		camera.offset = Vector2(
+			randf_range(-_shake_amount, _shake_amount),
+			randf_range(-_shake_amount, _shake_amount)
+		)
+		_shake_amount = lerpf(_shake_amount, 0.0, shake_decay * delta)
+		if _shake_amount < 0.1:
+			_shake_amount = 0.0
+			camera.offset = Vector2.ZERO
+
+
 func _physics_process(_delta: float) -> void:
 	_handle_rotation()
 	_handle_movement()
@@ -56,6 +71,7 @@ func take_damage(amount: int) -> void:
 	health = clampi(health - amount, 0, max_health)
 	health_changed.emit(health)
 	_flash_hit()
+	shake_camera()
 
 	if health <= 0:
 		died.emit()
@@ -64,6 +80,12 @@ func take_damage(amount: int) -> void:
 func heal(amount: int) -> void:
 	health = clampi(health + amount, 0, max_health)
 	health_changed.emit(health)
+
+
+func shake_camera(intensity: float = -1.0) -> void:
+	if intensity < 0.0:
+		intensity = shake_strength
+	_shake_amount = intensity
 
 
 func _handle_rotation() -> void:

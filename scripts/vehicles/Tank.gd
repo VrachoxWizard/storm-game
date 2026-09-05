@@ -60,13 +60,6 @@ func _vehicle_ai(delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if is_destroyed:
 		return
-	# Rear weak point: attacker behind tank triggers 3x damage directly
-	if target and is_instance_valid(target):
-		var to_attacker := (target.global_position - global_position).normalized()
-		var rear := -Vector2.RIGHT.rotated(rotation)
-		if rear.dot(to_attacker) > 0.4:
-			super.take_damage(amount * 3)
-			return
 	super.take_damage(amount)
 
 
@@ -85,6 +78,9 @@ func _on_weak_point_area_entered(area: Area2D) -> void:
 		if "damage" in area:
 			dmg = area.damage
 		take_rear_damage(dmg)
+		CombatVfxScript.vfx_ricochet(area.global_position, -Vector2.RIGHT.rotated(rotation))
+		if area.has_method("deactivate"):
+			area.deactivate()
 
 
 func _fire_shell() -> void:

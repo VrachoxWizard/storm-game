@@ -11,9 +11,12 @@ var _active: bool = false
 
 
 func _ready() -> void:
-	lifetime_timer.timeout.connect(deactivate)
-	body_entered.connect(_on_body_entered)
-	area_entered.connect(_on_area_entered)
+	if lifetime_timer and not lifetime_timer.timeout.is_connected(deactivate):
+		lifetime_timer.timeout.connect(deactivate)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
 	deactivate()
 
 
@@ -32,7 +35,8 @@ func activate(pos: Vector2, rot: float, spd: float, dmg: int) -> void:
 	visible = true
 	monitoring = true
 	monitorable = true
-	lifetime_timer.start()
+	if lifetime_timer and lifetime_timer.is_inside_tree():
+		lifetime_timer.start()
 
 
 func deactivate() -> void:
@@ -40,7 +44,8 @@ func deactivate() -> void:
 	visible = false
 	monitoring = false
 	monitorable = false
-	lifetime_timer.stop()
+	if lifetime_timer and is_instance_valid(lifetime_timer) and lifetime_timer.is_inside_tree():
+		lifetime_timer.stop()
 	global_position = Vector2(-9999, -9999)
 
 

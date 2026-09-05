@@ -57,7 +57,7 @@ func _init() -> void:
 		quit(1)
 		return
 
-	# Test rear weak point 3x damage multiplier
+	# Test direct rear weak point 3x damage multiplier
 	var initial_tank_hp: int = tank.health
 	tank.take_rear_damage(20) # 20 * 3 = 60 damage
 	var hp_loss: int = initial_tank_hp - tank.health
@@ -66,33 +66,36 @@ func _init() -> void:
 		quit(1)
 		return
 
-	# Test rear weak point damage via take_damage() with attacker behind the tank (no infinite recursion)
-	var dummy_player := CharacterBody2D.new()
-	root.add_child(dummy_player)
-	tank.rotation = 0.0
-	dummy_player.global_position = tank.global_position + Vector2(-100.0, 0.0)
-	tank.target = dummy_player
-
-	var hp_before_rear_attack: int = tank.health
-	tank.take_damage(20) # Attacker is directly behind tank (rear dot product > 0.4) -> 20 * 3 = 60 damage
-	var rear_attack_loss: int = hp_before_rear_attack - tank.health
-	if rear_attack_loss != 60:
-		print("FAIL: Tank rear attack expected 60 damage (3x), got %d" % rear_attack_loss)
-		quit(1)
-		return
-
-	# Test standard frontal damage with attacker in front of the tank
-	dummy_player.global_position = tank.global_position + Vector2(100.0, 0.0)
-	var hp_before_front_attack: int = tank.health
+	# Test standard body hit (1x damage)
+	var hp_before_body: int = tank.health
 	tank.take_damage(20) # 20 >= armor_threshold (18), standard damage = 20
-	var front_attack_loss: int = hp_before_front_attack - tank.health
-	if front_attack_loss != 20:
-		print("FAIL: Tank front attack expected 20 damage, got %d" % front_attack_loss)
+	var body_loss: int = hp_before_body - tank.health
+	if body_loss != 20:
+		print("FAIL: Tank body hit expected 1x (20 damage), got %d" % body_loss)
 		quit(1)
 		return
 
-	dummy_player.queue_free()
-	tank.target = null
+	# Test weak point Area2D trigger: 3x damage (60) and deactivates bullet (prevents duplicate body hit 6x damage)
+	var bullet_scene := load("res://scenes/weapons/Projectile.tscn")
+	var dummy_bullet: Area2D = bullet_scene.instantiate()
+	root.add_child(dummy_bullet)
+	dummy_bullet._ready()
+	dummy_bullet.activate(tank.global_position + Vector2(-54, 0), 0.0, 400.0, 20)
+
+	var hp_before_weak_point: int = tank.health
+	tank._on_weak_point_area_entered(dummy_bullet)
+	var weak_point_loss: int = hp_before_weak_point - tank.health
+	if weak_point_loss != 60:
+		print("FAIL: Weak point Area2D expected 3x (60 damage), got %d" % weak_point_loss)
+		quit(1)
+		return
+
+	if dummy_bullet.get("_active") == true:
+		print("FAIL: Bullet not deactivated when hitting weak point Area2D")
+		quit(1)
+		return
+
+	dummy_bullet.queue_free()
 
 	# 6. Verify destroy_vehicle method presence
 	if not apc.has_method("destroy_vehicle") or not tank.has_method("destroy_vehicle"):

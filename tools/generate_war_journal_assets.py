@@ -1,0 +1,1572 @@
+#!/usr/bin/env python3
+"""
+War-Journal Asset Generator for Operation Storm.
+Generates hand-inked, cross-hatched, watercolor-washed sprite library using Pillow.
+Output includes characters, vehicles, terrain maps, props, combat VFX, and UI frames.
+"""
+
+import os
+import math
+import random
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+# Set deterministic random seed for reproducible hand-drawn strokes
+random.seed(19950805)
+
+# ---------------------------------------------------------------------------
+# Core Palette & Styling Constants
+# ---------------------------------------------------------------------------
+INK_DARK = (28, 24, 20, 255)
+INK_MID = (45, 38, 32, 230)
+INK_LIGHT = (45, 38, 32, 120)
+INK_FAINT = (45, 38, 32, 50)
+
+COLOR_SKIN = (212, 176, 142, 255)
+COLOR_SKIN_SHADOW = (175, 138, 106, 255)
+
+COLOR_OLIVE_DRAB = (76, 92, 58, 255)
+COLOR_OLIVE_DARK = (52, 65, 41, 255)
+COLOR_OLIVE_LIGHT = (102, 120, 80, 255)
+
+COLOR_KHAKI = (145, 133, 98, 255)
+COLOR_CAMO_BROWN = (90, 68, 48, 255)
+COLOR_LEATHER = (82, 56, 36, 255)
+COLOR_LEATHER_DARK = (55, 37, 24, 255)
+
+COLOR_STEEL = (60, 64, 68, 255)
+COLOR_STEEL_DARK = (36, 38, 42, 255)
+COLOR_STEEL_LIGHT = (100, 108, 114, 255)
+
+COLOR_WOOD = (118, 76, 42, 255)
+COLOR_WOOD_DARK = (78, 48, 26, 255)
+
+COLOR_BLOOD = (128, 16, 16, 220)
+COLOR_BLOOD_DARK = (80, 8, 8, 240)
+COLOR_BLOOD_FRESH = (160, 22, 22, 200)
+
+COLOR_FIRE_WHITE = (255, 255, 230, 255)
+COLOR_FIRE_YELLOW = (255, 210, 50, 240)
+COLOR_FIRE_ORANGE = (240, 110, 25, 220)
+
+COLOR_CRO_RED = (196, 34, 28, 255)
+COLOR_CRO_WHITE = (240, 240, 235, 255)
+COLOR_CRO_BLUE = (28, 64, 142, 255)
+
+
+def save_image(img: Image.Image, output_path: str, target_size: tuple = None) -> None:
+    """Resamples down with Lanczos if target_size provided, and saves as RGBA PNG."""
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if target_size and img.size != target_size:
+        img = img.resize(target_size, Image.Resampling.LANCZOS)
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    img.save(output_path, format="PNG")
+    print(f"Generated: {output_path} ({img.size[0]}x{img.size[1]})")
+
+
+def draw_crosshatch(draw: ImageDraw.ImageDraw, x0: int, y0: int, x1: int, y1: int,
+                    spacing: int = 6, angle: float = 45.0, color: tuple = INK_LIGHT, width: int = 1) -> None:
+    """Draws fine hand-drawn crosshatch lines within a bounding box."""
+    rad = math.radians(angle)
+    dx = math.cos(rad)
+    dy = math.sin(rad)
+    length = math.hypot(x1 - x0, y1 - y0) * 1.5
+    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+    
+    steps = int(length / spacing)
+    for i in range(-steps, steps):
+        offset = i * spacing
+        sx = cx + offset * (-dy) - length * dx * 0.5
+        sy = cy + offset * dx - length * dy * 0.5
+        ex = cx + offset * (-dy) + length * dx * 0.5
+        ey = cy + offset * dx + length * dy * 0.5
+        draw.line([(sx, sy), (ex, ey)], fill=color, width=width)
+
+
+# ---------------------------------------------------------------------------
+# 1. Characters Generator
+# ---------------------------------------------------------------------------
+
+def generate_torso(soldier_type: str, output_path: str) -> None:
+    """Generates a 48x48 character torso facing right (+X). Drawn at 4x (192x192)."""
+    S = 4  # Scale factor
+    W, H = 48 * S, 48 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = 20 * S, 24 * S
+
+    # Torso Base Colors
+    torso_color = COLOR_OLIVE_DRAB
+    helmet_color = COLOR_OLIVE_DARK
+    vest_color = COLOR_OLIVE_DARK
+
+    if soldier_type == "player":
+        torso_color = (68, 86, 52, 255)
+        helmet_color = (82, 102, 64, 255)
+        vest_color = (55, 45, 35, 255)
+    elif soldier_type == "rifleman":
+        torso_color = (70, 78, 62, 255)
+        helmet_color = (56, 64, 48, 255)
+        vest_color = (48, 52, 42, 255)
+    elif soldier_type == "shotgunner":
+        torso_color = (64, 68, 58, 255)
+        helmet_color = (50, 54, 46, 255)
+        vest_color = (38, 42, 36, 255)
+    elif soldier_type == "mg":
+        torso_color = (72, 80, 60, 255)
+        helmet_color = (46, 54, 40, 255)
+        vest_color = (44, 48, 38, 255)
+    elif soldier_type == "sniper":
+        torso_color = (85, 96, 68, 255)
+        helmet_color = (95, 108, 76, 255)
+        vest_color = (68, 76, 54, 255)
+    elif soldier_type == "officer":
+        torso_color = (60, 68, 55, 255)
+        helmet_color = (42, 48, 40, 255)  # Service cap
+        vest_color = (50, 35, 25, 255)
+    elif soldier_type == "grenadier":
+        torso_color = (68, 74, 58, 255)
+        helmet_color = (52, 58, 46, 255)
+        vest_color = (44, 48, 38, 255)
+
+    # 1. Torso body oval (shoulders and chest)
+    # Shoulders span Y from (cy - 14*S) to (cy + 14*S)
+    body_bbox = [cx - 10 * S, cy - 13 * S, cx + 10 * S, cy + 13 * S]
+    draw.ellipse(body_bbox, fill=torso_color, outline=INK_DARK, width=2 * S)
+
+    # Crosshatch rear shadow
+    draw_crosshatch(draw, cx - 10 * S, cy - 12 * S, cx - 2 * S, cy + 12 * S,
+                    spacing=3 * S, angle=60, color=INK_LIGHT, width=int(1.5 * S))
+
+    # 2. Tactical Vest / Harness straps
+    draw.rectangle([cx - 4 * S, cy - 10 * S, cx + 6 * S, cy + 10 * S],
+                   fill=vest_color, outline=INK_DARK, width=int(1.5 * S))
+    # Chest straps
+    draw.line([(cx - 4 * S, cy - 6 * S), (cx + 6 * S, cy - 6 * S)], fill=INK_MID, width=int(1.5 * S))
+    draw.line([(cx - 4 * S, cy + 6 * S), (cx + 6 * S, cy + 6 * S)], fill=INK_MID, width=int(1.5 * S))
+
+    # 3. Soldier Type Specific Gear
+    if soldier_type == "player":
+        # Croatian Checkerboard Shoulder Patch on Left Shoulder (top shoulder in top-down view)
+        pw, ph = 2 * S, 2 * S
+        px0, py0 = cx - 4 * S, cy - 12 * S
+        colors = [COLOR_CRO_RED, COLOR_CRO_WHITE]
+        for row in range(3):
+            for col in range(3):
+                c = colors[(row + col) % 2]
+                draw.rectangle([px0 + col * pw, py0 + row * ph, px0 + (col + 1) * pw, py0 + (row + 1) * ph], fill=c)
+        draw.rectangle([px0, py0, px0 + 3 * pw, py0 + 3 * ph], outline=INK_DARK, width=S)
+
+    elif soldier_type == "shotgunner":
+        # Red shotgun shell bandolier across chest
+        for bi in range(4):
+            by = cy - 7 * S + bi * 4 * S
+            draw.rectangle([cx - 2 * S, by, cx + 4 * S, by + 2 * S], fill=(180, 30, 25, 255), outline=INK_DARK, width=S)
+            draw.ellipse([cx + 3 * S, by, cx + 5 * S, by + 2 * S], fill=(220, 180, 50, 255))
+
+    elif soldier_type == "mg":
+        # Brass ammunition belt draped across chest
+        for bi in range(5):
+            by = cy - 8 * S + bi * 4 * S
+            draw.rectangle([cx - 3 * S, by, cx + 5 * S, by + 2 * S], fill=(210, 175, 45, 255), outline=INK_DARK, width=S)
+
+    elif soldier_type == "officer":
+        # Officer diagonal leather cross-belt & gold rank epaulets
+        draw.line([(cx - 6 * S, cy - 10 * S), (cx + 4 * S, cy + 10 * S)], fill=COLOR_LEATHER_DARK, width=2 * S)
+        draw.rectangle([cx - 2 * S, cy - 13 * S, cx + 2 * S, cy - 10 * S], fill=(220, 190, 50, 255), outline=INK_DARK, width=S)
+        draw.rectangle([cx - 2 * S, cy + 10 * S, cx + 2 * S, cy + 13 * S], fill=(220, 190, 50, 255), outline=INK_DARK, width=S)
+
+    elif soldier_type == "grenadier":
+        # Heavy grenade pouches on chest
+        for gi in range(3):
+            gy = cy - 6 * S + gi * 5 * S
+            draw.rounded_rectangle([cx - 2 * S, gy, cx + 4 * S, gy + 3 * S], radius=S, fill=(50, 55, 42, 255), outline=INK_DARK, width=S)
+
+    # 4. Head & Helmet (Centered top-down circle)
+    head_r = 7.5 * S
+    head_bbox = [cx - head_r, cy - head_r, cx + head_r, cy + head_r]
+    draw.ellipse(head_bbox, fill=helmet_color, outline=INK_DARK, width=2 * S)
+
+    if soldier_type == "officer":
+        # Officer service cap visor (black curved bill facing +X)
+        draw.chord([cx + 3 * S, cy - 6 * S, cx + 9 * S, cy + 6 * S], -90, 90, fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        # Gold cap emblem
+        draw.ellipse([cx + 2 * S, cy - 2 * S, cx + 5 * S, cy + 2 * S], fill=(230, 200, 50, 255))
+    elif soldier_type == "sniper":
+        # Ghillie camo foliage frills around helmet
+        for fi in range(8):
+            fa = fi * (math.pi / 4.0)
+            fx = cx + (head_r - 1 * S) * math.cos(fa)
+            fy = cy + (head_r - 1 * S) * math.sin(fa)
+            draw.ellipse([fx - 2 * S, fy - 2 * S, fx + 2 * S, fy + 2 * S], fill=COLOR_OLIVE_LIGHT, outline=INK_DARK, width=S)
+    else:
+        # Standard combat helmet brim line and dome cross-hatch
+        draw.arc([cx - 6 * S, cy - 6 * S, cx + 6 * S, cy + 6 * S], -90, 90, fill=INK_DARK, width=int(1.5 * S))
+        draw_crosshatch(draw, cx - 6 * S, cy - 5 * S, cx - 1 * S, cy + 5 * S, spacing=2 * S, angle=45, color=INK_LIGHT, width=S)
+
+    # 5. Arms & Hands holding weapon forward (+X)
+    # Left arm (upper in top-down)
+    draw.line([(cx + 4 * S, cy - 10 * S), (cx + 14 * S, cy - 4 * S)], fill=torso_color, width=3 * S)
+    draw.line([(cx + 4 * S, cy - 10 * S), (cx + 14 * S, cy - 4 * S)], fill=INK_DARK, width=int(1.5 * S))
+    # Right arm (lower in top-down)
+    draw.line([(cx + 2 * S, cy + 10 * S), (cx + 11 * S, cy + 4 * S)], fill=torso_color, width=3 * S)
+    draw.line([(cx + 2 * S, cy + 10 * S), (cx + 11 * S, cy + 4 * S)], fill=INK_DARK, width=int(1.5 * S))
+
+    # Hands (Skin tone)
+    draw.ellipse([cx + 13 * S, cy - 5 * S, cx + 17 * S, cy - 1 * S], fill=COLOR_SKIN, outline=INK_DARK, width=S)
+    draw.ellipse([cx + 10 * S, cy + 2 * S, cx + 14 * S, cy + 6 * S], fill=COLOR_SKIN, outline=INK_DARK, width=S)
+
+    # 6. Weapon Barrel & Receiver extending to the right (+X)
+    if soldier_type == "officer":
+        # Handgun / Sidearm (CZ99 / TT33)
+        draw.rectangle([cx + 12 * S, cy + 2 * S, cx + 22 * S, cy + 4 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+    elif soldier_type == "shotgunner":
+        # Pump Shotgun: wide barrel and wood pump
+        draw.rectangle([cx + 10 * S, cy - 2 * S, cx + 24 * S, cy + 3 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.rectangle([cx + 14 * S, cy - 1 * S, cx + 19 * S, cy + 3 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+    elif soldier_type == "mg":
+        # Machine Gun: long heavy receiver and perforated barrel
+        draw.rectangle([cx + 10 * S, cy - 3 * S, cx + 26 * S, cy + 3 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.line([(cx + 18 * S, cy - 4 * S), (cx + 25 * S, cy - 4 * S)], fill=COLOR_STEEL_LIGHT, width=S)
+    elif soldier_type == "sniper":
+        # Sniper Rifle: long slender barrel + scope
+        draw.rectangle([cx + 8 * S, cy - 1 * S, cx + 27 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        # Scope
+        draw.rectangle([cx + 12 * S, cy - 4 * S, cx + 18 * S, cy - 2 * S], fill=COLOR_STEEL_LIGHT, outline=INK_DARK, width=S)
+    elif soldier_type == "grenadier":
+        # Rifle with underbarrel launcher / RPG outline
+        draw.rectangle([cx + 10 * S, cy - 2 * S, cx + 23 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.rectangle([cx + 15 * S, cy + 1 * S, cx + 21 * S, cy + 4 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=S)
+    else:
+        # Standard M70 / AK Rifle: curved magazine, wooden handguard, steel barrel
+        draw.rectangle([cx + 8 * S, cy - 2 * S, cx + 24 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.rectangle([cx + 12 * S, cy - 1 * S, cx + 17 * S, cy + 2 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+        # Curved magazine arc
+        draw.arc([cx + 10 * S, cy + 1 * S, cx + 16 * S, cy + 7 * S], 0, 90, fill=INK_DARK, width=int(1.5 * S))
+
+    save_image(img, output_path, target_size=(48, 48))
+
+
+def generate_soldier_legs(output_path: str) -> None:
+    """Generates 128x32 soldier legs walk spritesheet (4 frames of 32x32) facing right."""
+    S = 4
+    FW, FH = 32 * S, 32 * S
+    sheet = Image.new("RGBA", (128 * S, 32 * S), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(sheet)
+
+    # 4 Walk frames: 0: Neutral pass, 1: Left forward, 2: Opposite pass, 3: Right forward
+    # Boots offsets relative to center (16, 16)
+    foot_offsets = [
+        ((3, -5), (-3, 5)),    # Frame 0: Left slightly fwd, Right slightly back
+        ((7, -5), (-7, 5)),    # Frame 1: Full stride (Left far fwd, Right far back)
+        ((-3, -5), (3, 5)),    # Frame 2: Left slightly back, Right slightly fwd
+        ((-7, -5), (7, 5)),    # Frame 3: Full stride (Right far fwd, Left far back)
+    ]
+
+    for frame_idx, (l_off, r_off) in enumerate(foot_offsets):
+        fx = frame_idx * FW
+        cx, cy = fx + 16 * S, 16 * S
+
+        for (ox, oy), is_left in [(l_off, True), (r_off, False)]:
+            bx = cx + ox * S
+            by = cy + oy * S
+
+            # Trouser cuff (Olive drab)
+            draw.ellipse([bx - 4 * S, by - 3 * S, bx + 1 * S, by + 3 * S],
+                         fill=COLOR_OLIVE_DRAB, outline=INK_DARK, width=int(1.5 * S))
+            draw_crosshatch(draw, bx - 4 * S, by - 3 * S, bx, by + 3 * S, spacing=2 * S, angle=45, color=INK_LIGHT, width=S)
+
+            # Combat Boot (Black/Dark Leather) pointing right (+X)
+            boot_pts = [
+                (bx - 3 * S, by - 2 * S),
+                (bx + 4 * S, by - 2 * S),
+                (bx + 6 * S, by),
+                (bx + 4 * S, by + 2 * S),
+                (bx - 3 * S, by + 2 * S)
+            ]
+            draw.polygon(boot_pts, fill=COLOR_LEATHER_DARK, outline=INK_DARK)
+            # Boot sole / tread line
+            draw.line([(bx - 3 * S, by + 2 * S), (bx + 5 * S, by + 2 * S)], fill=INK_DARK, width=int(1.5 * S))
+            # Boot laces ink marks
+            draw.line([(bx + 1 * S, by - 2 * S), (bx + 1 * S, by + 1 * S)], fill=INK_MID, width=S)
+            draw.line([(bx + 3 * S, by - 1 * S), (bx + 3 * S, by + 1 * S)], fill=INK_MID, width=S)
+
+    save_image(sheet, output_path, target_size=(128, 32))
+
+
+def generate_soldier_shadow(output_path: str) -> None:
+    """Generates 32x16 soft oval ink drop shadow for characters."""
+    S = 4
+    W, H = 32 * S, 16 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Soft charcoal shadow ellipse
+    cx, cy = W // 2, H // 2
+    rx, ry = 12 * S, 5 * S
+    draw.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], fill=(24, 20, 18, 120))
+    # Gaussian blur for soft feathered pen-wash falloff
+    img = img.filter(ImageFilter.GaussianBlur(radius=2 * S))
+
+    save_image(img, output_path, target_size=(32, 16))
+
+
+def generate_casualty_decals(output_path: str) -> None:
+    """Generates 64x64 inked casualty ground chalk/ink stamp with blood pool."""
+    S = 4
+    W, H = 64 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = W // 2, H // 2
+
+    # 1. Sprawling dark crimson blood puddle
+    puddle_pts = []
+    num_pts = 16
+    for i in range(num_pts):
+        angle = i * (2 * math.pi / num_pts)
+        r = (14 + random.uniform(-4, 6)) * S
+        puddle_pts.append((cx + r * math.cos(angle), cy + r * math.sin(angle) * 0.7))
+    draw.polygon(puddle_pts, fill=(110, 14, 14, 200))
+    draw.polygon(puddle_pts, outline=(70, 8, 8, 240), width=int(1.5 * S))
+
+    # Blood splatter satellite droplets
+    for _ in range(8):
+        dx = random.uniform(-24, 24) * S
+        dy = random.uniform(-18, 18) * S
+        dr = random.uniform(1.5, 3.5) * S
+        draw.ellipse([cx + dx - dr, cy + dy - dr, cx + dx + dr, cy + dy + dr], fill=COLOR_BLOOD)
+
+    # 2. Inked soldier silhouette crumpled on the ground
+    # Torso
+    draw.ellipse([cx - 8 * S, cy - 6 * S, cx + 8 * S, cy + 6 * S], fill=(52, 60, 44, 220), outline=INK_DARK, width=2 * S)
+    # Head with knocked helmet
+    draw.ellipse([cx + 7 * S, cy - 9 * S, cx + 16 * S, cy - 1 * S], fill=(42, 50, 36, 220), outline=INK_DARK, width=2 * S)
+    # Crumpled legs
+    draw.line([(cx - 7 * S, cy + 2 * S), (cx - 18 * S, cy + 10 * S)], fill=INK_DARK, width=3 * S)
+    draw.line([(cx - 7 * S, cy - 2 * S), (cx - 15 * S, cy - 8 * S)], fill=INK_DARK, width=3 * S)
+    # Splayed arms
+    draw.line([(cx + 2 * S, cy - 6 * S), (cx + 4 * S, cy - 16 * S)], fill=INK_DARK, width=2 * S)
+    draw.line([(cx + 2 * S, cy + 6 * S), (cx + 8 * S, cy + 15 * S)], fill=INK_DARK, width=2 * S)
+
+    # Shading crosshatch
+    draw_crosshatch(draw, cx - 6 * S, cy - 4 * S, cx + 6 * S, cy + 4 * S, spacing=3 * S, angle=45, color=INK_MID, width=S)
+
+    save_image(img, output_path, target_size=(64, 64))
+
+
+# ---------------------------------------------------------------------------
+# 2. Armored Vehicles Generator
+# ---------------------------------------------------------------------------
+
+def generate_apc_hull(output_path: str) -> None:
+    """Generates 128x64 B-80 / OT-60 8-wheeled APC hull facing right (+X)."""
+    S = 4
+    W, H = 128 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. 8 Heavy Rubber Tires (4 along top flank, 4 along bottom flank)
+    tire_x_offsets = [28 * S, 52 * S, 76 * S, 100 * S]
+    tire_w, tire_h = 16 * S, 10 * S
+
+    for tx in tire_x_offsets:
+        # Top flank tire
+        draw.rounded_rectangle([tx - tire_w // 2, 3 * S, tx + tire_w // 2, 3 * S + tire_h],
+                               radius=3 * S, fill=COLOR_STEEL_DARK, outline=INK_DARK, width=2 * S)
+        draw_crosshatch(draw, tx - tire_w // 2, 3 * S, tx + tire_w // 2, 3 * S + tire_h,
+                        spacing=3 * S, angle=90, color=INK_LIGHT, width=S)
+        # Bottom flank tire
+        draw.rounded_rectangle([tx - tire_w // 2, H - 3 * S - tire_h, tx + tire_w // 2, H - 3 * S],
+                               radius=3 * S, fill=COLOR_STEEL_DARK, outline=INK_DARK, width=2 * S)
+        draw_crosshatch(draw, tx - tire_w // 2, H - 3 * S - tire_h, tx + tire_w // 2, H - 3 * S,
+                        spacing=3 * S, angle=90, color=INK_LIGHT, width=S)
+
+    # 2. Sloped Armored Hull Body
+    # Pointed nose at x=122, rear at x=12
+    hull_pts = [
+        (12 * S, 12 * S),
+        (96 * S, 12 * S),
+        (122 * S, 28 * S),
+        (124 * S, 32 * S),
+        (122 * S, 36 * S),
+        (96 * S, 52 * S),
+        (12 * S, 52 * S),
+        (10 * S, 48 * S),
+        (10 * S, 16 * S)
+    ]
+    draw.polygon(hull_pts, fill=COLOR_OLIVE_DRAB, outline=INK_DARK)
+    # Outline with heavy pen ink
+    draw.line(hull_pts + [hull_pts[0]], fill=INK_DARK, width=int(2.5 * S))
+
+    # 3. Sloped Glacis Armor & Panel lines
+    draw.line([(96 * S, 12 * S), (96 * S, 52 * S)], fill=INK_DARK, width=2 * S)
+    draw.line([(96 * S, 32 * S), (122 * S, 32 * S)], fill=INK_MID, width=int(1.5 * S))
+    # Wave breaker trim vane on bow
+    draw.rectangle([102 * S, 20 * S, 114 * S, 44 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+
+    # 4. Roof Hatches & Turret Mount Ring
+    # Turret mount ring circle at (64*S, 32*S)
+    tcx, tcy = 64 * S, 32 * S
+    tr = 14 * S
+    draw.ellipse([tcx - tr, tcy - tr, tcx + tr, tcy + tr], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=2 * S)
+
+    # Commander / Driver hatches forward of turret
+    draw.rectangle([80 * S, 16 * S, 90 * S, 26 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+    draw.rectangle([80 * S, 38 * S, 90 * S, 48 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+
+    # Rear Troop Exit Hatches
+    draw.rectangle([22 * S, 18 * S, 44 * S, 30 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+    draw.rectangle([22 * S, 34 * S, 44 * S, 46 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+
+    # Engine ventilation louvers on left/rear deck
+    for li in range(5):
+        lx = 30 * S + li * 4 * S
+        draw.line([(lx, 15 * S), (lx, 17 * S)], fill=INK_DARK, width=int(1.5 * S))
+        draw.line([(lx, 47 * S), (lx, 49 * S)], fill=INK_DARK, width=int(1.5 * S))
+
+    # Cross-hatching for armor shade
+    draw_crosshatch(draw, 14 * S, 14 * S, 60 * S, 50 * S, spacing=5 * S, angle=45, color=INK_LIGHT, width=S)
+
+    save_image(img, output_path, target_size=(128, 64))
+
+
+def generate_apc_turret(output_path: str) -> None:
+    """Generates 48x32 APC rotating machine gun turret facing right (+X)."""
+    S = 4
+    W, H = 48 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    tcx, tcy = 18 * S, 16 * S
+
+    # 1. Conical faceted armored turret cupola
+    cr = 12 * S
+    draw.ellipse([tcx - cr, tcy - cr, tcx + cr, tcy + cr], fill=COLOR_OLIVE_DRAB, outline=INK_DARK, width=2 * S)
+    # Hatch rim on turret roof
+    draw.ellipse([tcx - 6 * S, tcy - 6 * S, tcx + 6 * S, tcy + 6 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+    # Crosshatch shading
+    draw_crosshatch(draw, tcx - 10 * S, tcy - 10 * S, tcx + 2 * S, tcy + 10 * S, spacing=3 * S, angle=60, color=INK_LIGHT, width=S)
+
+    # 2. Dual Heavy Machine Gun Barrels (KPVT 14.5mm + PKT 7.62mm) pointing right
+    # Heavy main barrel (top)
+    draw.rectangle([tcx + 8 * S, tcy - 4 * S, tcx + 26 * S, tcy - 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=int(1.5 * S))
+    # Muzzle flash hider cone
+    draw.polygon([(tcx + 26 * S, tcy - 5 * S), (tcx + 29 * S, tcy - 6 * S),
+                  (tcx + 29 * S, tcy), (tcx + 26 * S, tcy)], fill=COLOR_STEEL_LIGHT, outline=INK_DARK)
+
+    # Coaxial secondary barrel (bottom)
+    draw.rectangle([tcx + 8 * S, tcy + 1 * S, tcx + 22 * S, tcy + 3 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+
+    # Mantlet protective shroud
+    draw.rounded_rectangle([tcx + 4 * S, tcy - 6 * S, tcx + 10 * S, tcy + 6 * S], radius=2 * S, fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+
+    save_image(img, output_path, target_size=(48, 32))
+
+
+def generate_apc_wreck(output_path: str) -> None:
+    """Generates 128x64 burned-out, blackened APC wreck with blown hatches and soot."""
+    S = 4
+    W, H = 128 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Deflated / shredded wheels
+    tire_x_offsets = [28 * S, 52 * S, 76 * S, 100 * S]
+    for tx in tire_x_offsets:
+        draw.rectangle([tx - 6 * S, 4 * S, tx + 6 * S, 12 * S], fill=(22, 20, 18, 255), outline=INK_DARK, width=int(1.5 * S))
+        draw.rectangle([tx - 6 * S, H - 12 * S, tx + 6 * S, H - 4 * S], fill=(22, 20, 18, 255), outline=INK_DARK, width=int(1.5 * S))
+
+    # 2. Buckled charred hull
+    hull_pts = [
+        (12 * S, 13 * S), (96 * S, 12 * S), (120 * S, 29 * S), (118 * S, 35 * S),
+        (96 * S, 51 * S), (12 * S, 52 * S), (10 * S, 16 * S)
+    ]
+    draw.polygon(hull_pts, fill=(35, 32, 28, 255), outline=INK_DARK)
+    draw.line(hull_pts + [hull_pts[0]], fill=INK_DARK, width=int(2.5 * S))
+
+    # 3. Blown-out jagged hole in the roof / turret ring
+    hole_pts = [
+        (54 * S, 24 * S), (74 * S, 20 * S), (82 * S, 32 * S),
+        (76 * S, 44 * S), (58 * S, 42 * S), (50 * S, 32 * S)
+    ]
+    draw.polygon(hole_pts, fill=(12, 10, 8, 255), outline=INK_DARK, width=2 * S)
+
+    # 4. Dense charcoal soot stains and blast cracks
+    draw_crosshatch(draw, 20 * S, 14 * S, 100 * S, 50 * S, spacing=3 * S, angle=45, color=(18, 16, 14, 200), width=int(1.5 * S))
+    draw_crosshatch(draw, 20 * S, 14 * S, 100 * S, 50 * S, spacing=4 * S, angle=-45, color=(18, 16, 14, 180), width=int(1.5 * S))
+
+    # Rust streaks on metal
+    draw.line([(30 * S, 20 * S), (24 * S, 35 * S)], fill=(120, 50, 20, 200), width=2 * S)
+    draw.line([(85 * S, 22 * S), (92 * S, 40 * S)], fill=(120, 50, 20, 200), width=2 * S)
+
+    save_image(img, output_path, target_size=(128, 64))
+
+
+def generate_tank_hull(output_path: str) -> None:
+    """Generates 160x96 T-55 Main Battle Tank hull facing right (+X)."""
+    S = 4
+    W, H = 160 * S, 96 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Caterpillar Continuous Tracks (Top flank y=6..22, Bottom flank y=74..90)
+    # Track link base
+    draw.rectangle([14 * S, 6 * S, 148 * S, 22 * S], fill=(42, 40, 36, 255), outline=INK_DARK, width=2 * S)
+    draw.rectangle([14 * S, 74 * S, 148 * S, 90 * S], fill=(42, 40, 36, 255), outline=INK_DARK, width=2 * S)
+
+    # 5 Road wheels per side visible under rubber track skirt
+    for wi in range(5):
+        wx = 34 * S + wi * 24 * S
+        # Top road wheels
+        draw.ellipse([wx - 8 * S, 7 * S, wx + 8 * S, 21 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+        draw.ellipse([wx - 3 * S, 11 * S, wx + 3 * S, 17 * S], fill=COLOR_STEEL_DARK)
+        # Bottom road wheels
+        draw.ellipse([wx - 8 * S, 75 * S, wx + 8 * S, 89 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+        draw.ellipse([wx - 3 * S, 79 * S, wx + 3 * S, 85 * S], fill=COLOR_STEEL_DARK)
+
+    # Track tread cross-hatches
+    draw_crosshatch(draw, 14 * S, 6 * S, 148 * S, 22 * S, spacing=3 * S, angle=90, color=INK_DARK, width=int(1.5 * S))
+    draw_crosshatch(draw, 14 * S, 74 * S, 148 * S, 90 * S, spacing=3 * S, angle=90, color=INK_DARK, width=int(1.5 * S))
+
+    # 2. Main Tank Armored Hull Body (Between tracks)
+    hull_pts = [
+        (16 * S, 20 * S),
+        (128 * S, 20 * S),
+        (152 * S, 36 * S),
+        (154 * S, 48 * S),
+        (152 * S, 60 * S),
+        (128 * S, 76 * S),
+        (16 * S, 76 * S)
+    ]
+    draw.polygon(hull_pts, fill=COLOR_OLIVE_DRAB, outline=INK_DARK)
+    draw.line(hull_pts + [hull_pts[0]], fill=INK_DARK, width=int(2.5 * S))
+
+    # 3. Sloped Front Glacis Plate
+    draw.line([(128 * S, 20 * S), (128 * S, 76 * S)], fill=INK_DARK, width=2 * S)
+    # Splash board V-ridge
+    draw.line([(130 * S, 26 * S), (146 * S, 48 * S)], fill=COLOR_OLIVE_DARK, width=2 * S)
+    draw.line([(130 * S, 70 * S), (146 * S, 48 * S)], fill=COLOR_OLIVE_DARK, width=2 * S)
+
+    # 4. Central Turret Mount Ring at (76*S, 48*S)
+    tcx, tcy = 76 * S, 48 * S
+    tr = 22 * S
+    draw.ellipse([tcx - tr, tcy - tr, tcx + tr, tcy + tr], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=2 * S)
+
+    # 5. Rear Engine Deck & Louvers (Weak point!) - x=16 to 52
+    draw.rectangle([18 * S, 24 * S, 52 * S, 72 * S], fill=(58, 68, 46, 255), outline=INK_DARK, width=2 * S)
+    # Ventilation grilles / fan covers (2 circular engine louvers)
+    draw.ellipse([24 * S, 28 * S, 42 * S, 46 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=int(1.5 * S))
+    draw_crosshatch(draw, 24 * S, 28 * S, 42 * S, 46 * S, spacing=2 * S, angle=45, color=INK_MID, width=S)
+    draw.ellipse([24 * S, 50 * S, 42 * S, 68 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=int(1.5 * S))
+    draw_crosshatch(draw, 24 * S, 50 * S, 42 * S, 68 * S, spacing=2 * S, angle=45, color=INK_MID, width=S)
+
+    # External cylindrical fuel drums mounted at rear tail plate
+    draw.rectangle([8 * S, 26 * S, 15 * S, 44 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+    draw.rectangle([8 * S, 52 * S, 15 * S, 70 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+
+    # Cross-hatching shading on hull armor
+    draw_crosshatch(draw, 54 * S, 22 * S, 126 * S, 74 * S, spacing=6 * S, angle=45, color=INK_LIGHT, width=S)
+
+    save_image(img, output_path, target_size=(160, 96))
+
+
+def generate_tank_turret(output_path: str) -> None:
+    """Generates 112x48 T-55 rotating dome turret with long 100mm rifled cannon facing right."""
+    S = 4
+    W, H = 112 * S, 48 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    tcx, tcy = 28 * S, 24 * S
+
+    # 1. 100mm Main Gun Barrel extending from mantlet out to x=108
+    # Main tube
+    draw.rectangle([tcx + 14 * S, tcy - 3 * S, tcx + 78 * S, tcy + 3 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=2 * S)
+    # Cylindrical Bore Evacuator / Fume Extractor cylinder
+    draw.rectangle([tcx + 50 * S, tcy - 4 * S, tcx + 62 * S, tcy + 4 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+    # Muzzle counterweight tip
+    draw.rectangle([tcx + 76 * S, tcy - 4 * S, tcx + 80 * S, tcy + 4 * S], fill=COLOR_STEEL_LIGHT, outline=INK_DARK, width=int(1.5 * S))
+
+    # 2. Heavy Gun Mantlet dust cover
+    mantlet_pts = [
+        (tcx + 12 * S, tcy - 8 * S),
+        (tcx + 18 * S, tcy - 5 * S),
+        (tcx + 18 * S, tcy + 5 * S),
+        (tcx + 12 * S, tcy + 8 * S)
+    ]
+    draw.polygon(mantlet_pts, fill=COLOR_KHAKI, outline=INK_DARK)
+
+    # 3. Cast Hemispherical Turtle-Shell Dome Turret (T-55 profile)
+    tr_x, tr_y = 22 * S, 18 * S
+    draw.ellipse([tcx - tr_x, tcy - tr_y, tcx + tr_x, tcy + tr_y], fill=COLOR_OLIVE_DRAB, outline=INK_DARK, width=int(2.5 * S))
+
+    # Commander Cupola (Upper half) & Loader's Hatch (Lower half)
+    draw.ellipse([tcx - 6 * S, tcy - 14 * S, tcx + 6 * S, tcy - 4 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+    draw.ellipse([tcx - 6 * S, tcy + 4 * S, tcx + 6 * S, tcy + 14 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=int(1.5 * S))
+
+    # Vision periscopes / rangefinder blister
+    draw.rectangle([tcx + 12 * S, tcy - 12 * S, tcx + 16 * S, tcy - 8 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+
+    # Shading cross-hatching
+    draw_crosshatch(draw, tcx - 18 * S, tcy - 14 * S, tcx + 2 * S, tcy + 14 * S, spacing=4 * S, angle=60, color=INK_LIGHT, width=S)
+
+    save_image(img, output_path, target_size=(112, 48))
+
+
+def generate_tank_wreck(output_path: str) -> None:
+    """Generates 160x96 smoldering T-55 tank wreck with broken track and charred armor."""
+    S = 4
+    W, H = 160 * S, 96 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Charred tracks
+    draw.rectangle([14 * S, 6 * S, 148 * S, 22 * S], fill=(24, 22, 20, 255), outline=INK_DARK, width=2 * S)
+    # Bottom track broken and derailed
+    draw.polygon([(14 * S, 74 * S), (110 * S, 74 * S), (124 * S, 88 * S), (80 * S, 94 * S), (14 * S, 90 * S)],
+                 fill=(24, 22, 20, 255), outline=INK_DARK, width=2 * S)
+
+    # Blackened hull
+    hull_pts = [
+        (16 * S, 20 * S), (128 * S, 20 * S), (150 * S, 36 * S),
+        (148 * S, 58 * S), (126 * S, 76 * S), (16 * S, 76 * S)
+    ]
+    draw.polygon(hull_pts, fill=(32, 28, 25, 255), outline=INK_DARK)
+    draw.line(hull_pts + [hull_pts[0]], fill=INK_DARK, width=int(2.5 * S))
+
+    # Shattered engine deck hole
+    hole_pts = [
+        (22 * S, 30 * S), (46 * S, 26 * S), (52 * S, 54 * S),
+        (40 * S, 68 * S), (20 * S, 62 * S)
+    ]
+    draw.polygon(hole_pts, fill=(10, 8, 8, 255), outline=INK_DARK, width=2 * S)
+
+    # Dense soot crosshatch and scorched fractures
+    draw_crosshatch(draw, 16 * S, 20 * S, 148 * S, 76 * S, spacing=4 * S, angle=45, color=(16, 14, 12, 220), width=int(1.5 * S))
+    draw_crosshatch(draw, 16 * S, 20 * S, 148 * S, 76 * S, spacing=4 * S, angle=-45, color=(16, 14, 12, 180), width=int(1.5 * S))
+
+    # Rust/heat discoloration marks
+    draw.ellipse([60 * S, 32 * S, 94 * S, 64 * S], outline=(140, 55, 20, 180), width=3 * S)
+
+    save_image(img, output_path, target_size=(160, 96))
+
+
+# ---------------------------------------------------------------------------
+# 3. Terrain Field Maps Generator (512x512 Seamless/Field Maps)
+# ---------------------------------------------------------------------------
+
+def generate_terrain_staging(output_path: str) -> None:
+    """Generates 512x512 Forest Staging & Farmland map (Mission 1)."""
+    img = Image.new("RGBA", (512, 512), (225, 218, 195, 255))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Warm olive grass wash patches
+    for _ in range(40):
+        px = random.randint(0, 512)
+        py = random.randint(0, 512)
+        pr = random.randint(30, 90)
+        draw.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(138, 156, 114, 45))
+
+    # 2. Hand-inked topographic contour lines
+    for contour_y in range(40, 500, 64):
+        pts = []
+        for x in range(0, 513, 32):
+            wave = 20 * math.sin(x * 0.02 + contour_y) + 10 * math.cos(x * 0.04)
+            pts.append((x, contour_y + wave))
+        draw.line(pts, fill=(100, 90, 75, 110), width=1)
+        # Elevation notation tick
+        draw.text((256, int(contour_y + 5)), f"{120 + (contour_y // 4)}m", fill=(100, 90, 75, 140))
+
+    # 3. Tactical grid coordinate ticks (+) every 128px
+    for gx in range(64, 512, 128):
+        for gy in range(64, 512, 128):
+            draw.line([(gx - 8, gy), (gx + 8, gy)], fill=INK_MID, width=1)
+            draw.line([(gx, gy - 8), (gx, gy + 8)], fill=INK_MID, width=1)
+
+    # 4. Dirt wheel ruts / cart tracks
+    road_pts_l = [(x, 220 + 30 * math.sin(x * 0.015)) for x in range(0, 513, 16)]
+    road_pts_r = [(x, 240 + 30 * math.sin(x * 0.015)) for x in range(0, 513, 16)]
+    draw.line(road_pts_l, fill=(140, 115, 80, 130), width=2)
+    draw.line(road_pts_r, fill=(140, 115, 80, 130), width=2)
+
+    save_image(img, output_path, target_size=(512, 512))
+
+
+def generate_terrain_trenches(output_path: str) -> None:
+    """Generates 512x512 Trench Warfare & Mud map (Mission 2 - Lika Front)."""
+    img = Image.new("RGBA", (512, 512), (110, 86, 60, 255))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Mud churn washes
+    for _ in range(50):
+        px = random.randint(0, 512)
+        py = random.randint(0, 512)
+        pr = random.randint(25, 80)
+        draw.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(85, 65, 42, 70))
+
+    # 2. Zigzagging military trench network
+    trench_segments = [
+        [(40, 80), (140, 120), (200, 80), (320, 140), (420, 90), (480, 130)],
+        [(30, 260), (120, 310), (220, 260), (340, 320), (440, 270), (490, 300)],
+        [(50, 420), (160, 460), (240, 410), (360, 470), (460, 430)]
+    ]
+    for seg in trench_segments:
+        # Deep trench ditch
+        draw.line(seg, fill=(45, 32, 20, 255), width=16)
+        draw.line(seg, fill=INK_DARK, width=20)
+        # Wooden duckboard boardwalk running along trench center
+        draw.line(seg, fill=(160, 125, 80, 255), width=4)
+
+    # 3. Artillery Shell Craters
+    craters = [(100, 200, 32), (380, 210, 40), (260, 370, 30), (420, 380, 26)]
+    for cx, cy, cr in craters:
+        # Crater rim earth mound
+        draw.ellipse([cx - cr, cy - cr, cx + cr, cy + cr], fill=(140, 110, 75, 200), outline=INK_DARK, width=2)
+        # Crater dark mud/water center
+        draw.ellipse([cx - cr * 0.6, cy - cr * 0.6, cx + cr * 0.6, cy + cr * 0.6], fill=(40, 30, 20, 255))
+
+    # 4. Barbed wire barrier markers (x---x---x)
+    for bx in range(60, 480, 24):
+        draw.line([(bx, 180), (bx + 16, 180)], fill=INK_MID, width=1)
+        draw.line([(bx + 8, 175), (bx + 8, 185)], fill=INK_DARK, width=2)
+
+    save_image(img, output_path, target_size=(512, 512))
+
+
+def generate_terrain_highway(output_path: str) -> None:
+    """Generates 512x512 Highway Ambush map with asphalt & gravel (Mission 3)."""
+    img = Image.new("RGBA", (512, 512), (155, 142, 115, 255))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Balkan scrubland texture
+    for _ in range(40):
+        px = random.randint(0, 512)
+        py = random.randint(0, 512)
+        draw.ellipse([px - 30, py - 30, px + 30, py + 30], fill=(135, 125, 95, 60))
+
+    # 2. Highway Asphalt Strip (Center y=180 to 332, width 152px)
+    draw.rectangle([0, 180, 512, 332], fill=(70, 72, 70, 255))
+    # Asphalt edges / curbs
+    draw.line([(0, 180), (512, 180)], fill=INK_DARK, width=3)
+    draw.line([(0, 332), (512, 332)], fill=INK_DARK, width=3)
+
+    # Gravel shoulders
+    draw.rectangle([0, 164, 512, 180], fill=(120, 115, 95, 200))
+    draw.rectangle([0, 332, 512, 348], fill=(120, 115, 95, 200))
+
+    # 3. Faded dashed yellow highway centerline
+    for dx in range(0, 512, 40):
+        draw.line([(dx, 256), (dx + 22, 256)], fill=(210, 180, 45, 220), width=4)
+
+    # 4. Asphalt cracks and tire skid marks
+    for _ in range(8):
+        sx = random.randint(30, 450)
+        draw.arc([sx, 220, sx + 60, 290], 0, 180, fill=(35, 35, 35, 160), width=3)
+
+    save_image(img, output_path, target_size=(512, 512))
+
+
+def generate_terrain_urban(output_path: str) -> None:
+    """Generates 512x512 Urban Cobblestone & Pavement Street grid (Mission 4 - Petrinja)."""
+    img = Image.new("RGBA", (512, 512), (130, 128, 122, 255))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Cobblestone paver pattern
+    for y in range(0, 512, 12):
+        x_shift = 6 if (y // 12) % 2 == 1 else 0
+        for x in range(0, 512, 16):
+            draw.rectangle([x + x_shift, y, x + x_shift + 14, y + 10],
+                           fill=(115 + (x * 7) % 20, 112 + (y * 5) % 20, 108, 255),
+                           outline=INK_LIGHT, width=1)
+
+    # 2. Paved Main Street intersection
+    # Horizontal street
+    draw.rectangle([0, 200, 512, 312], fill=(85, 84, 82, 255), outline=INK_DARK, width=2)
+    # Vertical street
+    draw.rectangle([200, 0, 312, 512], fill=(85, 84, 82, 255), outline=INK_DARK, width=2)
+
+    # 3. Sidewalk curbs with ink hatching
+    draw.line([(0, 198), (512, 198)], fill=(160, 158, 152, 255), width=4)
+    draw.line([(0, 314), (512, 314)], fill=(160, 158, 152, 255), width=4)
+    draw.line([(198, 0), (198, 512)], fill=(160, 158, 152, 255), width=4)
+    draw.line([(314, 0), (314, 512)], fill=(160, 158, 152, 255), width=4)
+
+    # Pedestrian zebra crossing stripes
+    for zi in range(208, 308, 14):
+        draw.rectangle([160, zi, 190, zi + 8], fill=(210, 210, 200, 220))
+        draw.rectangle([322, zi, 352, zi + 8], fill=(210, 210, 200, 220))
+
+    # Masonry rubble & debris piles
+    for rx, ry in [(90, 90), (410, 110), (110, 420), (420, 420)]:
+        for _ in range(12):
+            bx = rx + random.randint(-20, 20)
+            by = ry + random.randint(-20, 20)
+            draw.rectangle([bx, by, bx + 6, by + 4], fill=(165, 85, 50, 255), outline=INK_DARK, width=1)
+
+    save_image(img, output_path, target_size=(512, 512))
+
+
+def generate_terrain_fortress(output_path: str) -> None:
+    """Generates 512x512 Knin Fortress stone flagstone pavers & masonry (Mission 5)."""
+    img = Image.new("RGBA", (512, 512), (160, 156, 148, 255))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Ancient rectangular limestone flagstones
+    tile_w, tile_h = 48, 32
+    for row, y in enumerate(range(0, 512, tile_h)):
+        offset = 24 if row % 2 == 1 else 0
+        for x in range(-24, 512, tile_w):
+            tx0, ty0 = x + offset, y
+            shade = random.randint(-12, 12)
+            stone_c = (150 + shade, 146 + shade, 138 + shade, 255)
+            draw.rectangle([tx0, ty0, tx0 + tile_w - 2, ty0 + tile_h - 2], fill=stone_c, outline=INK_MID, width=1)
+            # Stone surface crack or chisel mark
+            if random.random() > 0.6:
+                draw.line([(tx0 + 6, ty0 + 10), (tx0 + 20, ty0 + 20)], fill=INK_LIGHT, width=1)
+
+    # 2. Rampart edge stone coping / battlements along top edge
+    draw.rectangle([0, 0, 512, 28], fill=(110, 106, 100, 255), outline=INK_DARK, width=3)
+    for bx in range(20, 500, 60):
+        draw.rectangle([bx, 4, bx + 32, 24], fill=(85, 82, 78, 255), outline=INK_DARK, width=2)
+
+    # 3. Weathering moss / lichen green washes in stone crevices
+    for _ in range(25):
+        mx = random.randint(0, 512)
+        my = random.randint(30, 512)
+        draw.ellipse([mx - 15, my - 8, mx + 15, my + 8], fill=(85, 105, 70, 50))
+
+    save_image(img, output_path, target_size=(512, 512))
+
+
+# ---------------------------------------------------------------------------
+# 4. Illustrated Props Generator
+# ---------------------------------------------------------------------------
+
+def generate_building_roof_tiles(output_path: str) -> None:
+    """Generates 160x120 Mediterranean terracotta clay tile roof with drop shadow."""
+    S = 4
+    W, H = 160 * S, 120 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Soft ink drop shadow along bottom-right edge
+    draw.rectangle([10 * S, 10 * S, 158 * S, 118 * S], fill=(25, 20, 18, 90))
+
+    # 2. Main terracotta roof slab (x=4 to 152, y=4 to 112)
+    rx0, ry0, rx1, ry1 = 4 * S, 4 * S, 152 * S, 112 * S
+    draw.rectangle([rx0, ry0, rx1, ry1], fill=(195, 96, 58, 255), outline=INK_DARK, width=int(2.5 * S))
+
+    # 3. Scalloped overlapping terracotta tile rows
+    row_h = 8 * S
+    tile_w = 12 * S
+    for y in range(ry0, ry1, row_h):
+        for x in range(rx0, rx1, tile_w):
+            # Curved barrel tile arch
+            draw.arc([x, y, x + tile_w, y + row_h * 2], 180, 360, fill=INK_DARK, width=int(1.5 * S))
+            draw.line([(x + tile_w // 2, y), (x + tile_w // 2, y + row_h)], fill=(225, 120, 80, 255), width=S)
+
+    # 4. Central Roof Ridge Cap line
+    mid_y = (ry0 + ry1) // 2
+    draw.rectangle([rx0, mid_y - 3 * S, rx1, mid_y + 3 * S], fill=(170, 75, 42, 255), outline=INK_DARK, width=int(1.5 * S))
+
+    # 5. Small brick chimney stack
+    draw.rectangle([120 * S, 16 * S, 136 * S, 32 * S], fill=(140, 60, 35, 255), outline=INK_DARK, width=int(1.5 * S))
+    draw.rectangle([122 * S, 18 * S, 134 * S, 30 * S], fill=(30, 25, 22, 255))
+
+    save_image(img, output_path, target_size=(160, 120))
+
+
+def generate_building_roof_tin(output_path: str) -> None:
+    """Generates 140x100 Corrugated industrial tin roof with rust runoff & shadow."""
+    S = 4
+    W, H = 140 * S, 100 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Soft ink drop shadow
+    draw.rectangle([8 * S, 8 * S, 138 * S, 98 * S], fill=(25, 20, 18, 90))
+
+    # 2. Tin roof slab (x=4 to 134, y=4 to 94)
+    rx0, ry0, rx1, ry1 = 4 * S, 4 * S, 134 * S, 94 * S
+    draw.rectangle([rx0, ry0, rx1, ry1], fill=(125, 135, 142, 255), outline=INK_DARK, width=int(2.5 * S))
+
+    # 3. Vertical Corrugation Seams (spaced ~6*S)
+    rib_spacing = 6 * S
+    for x in range(rx0 + rib_spacing, rx1, rib_spacing):
+        # Dark shadow rib
+        draw.line([(x, ry0), (x, ry1)], fill=INK_DARK, width=int(1.5 * S))
+        # Bright zinc reflection rib
+        draw.line([(x + S, ry0), (x + S, ry1)], fill=(165, 175, 182, 255), width=S)
+
+    # 4. Weathered rust runoff streaks
+    for rx, ry_len in [(32 * S, 40 * S), (75 * S, 60 * S), (110 * S, 35 * S)]:
+        draw.line([(rx, ry0), (rx, ry0 + ry_len)], fill=(145, 75, 40, 200), width=3 * S)
+
+    # Rivet lines along top and bottom structural beams
+    for x in range(rx0 + 4 * S, rx1 - 4 * S, 12 * S):
+        draw.ellipse([x - S, ry0 + 3 * S - S, x + S, ry0 + 3 * S + S], fill=COLOR_STEEL_DARK)
+        draw.ellipse([x - S, ry1 - 3 * S - S, x + S, ry1 - 3 * S + S], fill=COLOR_STEEL_DARK)
+
+    save_image(img, output_path, target_size=(140, 100))
+
+
+def generate_bunker_concrete(output_path: str) -> None:
+    """Generates 96x72 concrete pillbox bunker with firing embrasure slit."""
+    S = 4
+    W, H = 96 * S, 72 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Heavy concrete pillbox perimeter (thick angled blast slab)
+    pts = [
+        (10 * S, 10 * S),
+        (72 * S, 10 * S),
+        (88 * S, 24 * S),
+        (88 * S, 48 * S),
+        (72 * S, 62 * S),
+        (10 * S, 62 * S)
+    ]
+    draw.polygon(pts, fill=(120, 124, 120, 255), outline=INK_DARK)
+    draw.line(pts + [pts[0]], fill=INK_DARK, width=int(2.5 * S))
+
+    # 2. Black firing embrasure slit facing right (+X)
+    draw.rectangle([76 * S, 28 * S, 88 * S, 44 * S], fill=(16, 14, 12, 255), outline=INK_DARK, width=2 * S)
+
+    # 3. Protective Sandbags flanking front angle
+    draw.ellipse([64 * S, 6 * S, 82 * S, 18 * S], fill=COLOR_KHAKI, outline=INK_DARK, width=int(1.5 * S))
+    draw.ellipse([64 * S, 54 * S, 82 * S, 66 * S], fill=COLOR_KHAKI, outline=INK_DARK, width=int(1.5 * S))
+
+    # 4. Formwork concrete board lines and crosshatch shading
+    for y in range(16 * S, 60 * S, 8 * S):
+        draw.line([(12 * S, y), (70 * S, y)], fill=(95, 98, 95, 255), width=S)
+    draw_crosshatch(draw, 12 * S, 12 * S, 60 * S, 60 * S, spacing=5 * S, angle=45, color=INK_LIGHT, width=S)
+
+    save_image(img, output_path, target_size=(96, 72))
+
+
+def generate_sandbag_straight(output_path: str) -> None:
+    """Generates 64x24 straight stacked sandbag revetment wall."""
+    S = 4
+    W, H = 64 * S, 24 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Two rows of stacked overlapping sandbags
+    bag_w, bag_h = 14 * S, 9 * S
+    for row in range(2):
+        y = 2 * S + row * 9 * S
+        x_start = 2 * S if row == 0 else -4 * S
+        for x in range(x_start, W, bag_w - 2 * S):
+            # Rounded burlap sandbag
+            draw.rounded_rectangle([x, y, x + bag_w, y + bag_h], radius=3 * S,
+                                   fill=COLOR_KHAKI, outline=INK_DARK, width=int(1.5 * S))
+            # Seam stitching & cross-hatch fabric
+            draw.line([(x + 2 * S, y + bag_h // 2), (x + bag_w - 2 * S, y + bag_h // 2)], fill=INK_MID, width=S)
+            draw_crosshatch(draw, x + 2 * S, y + 2 * S, x + bag_w - 2 * S, y + bag_h - 2 * S,
+                            spacing=3 * S, angle=45, color=INK_LIGHT, width=S)
+
+    save_image(img, output_path, target_size=(64, 24))
+
+
+def generate_sandbag_corner(output_path: str) -> None:
+    """Generates 48x48 90-degree corner sandbag defensive revetment."""
+    S = 4
+    W, H = 48 * S, 48 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # L-shaped revetment (Top horizontal arm and Left vertical arm)
+    # Horizontal segment: x=2..46, y=2..18
+    # Vertical segment: x=2..18, y=2..46
+    for x in range(2 * S, 44 * S, 11 * S):
+        draw.rounded_rectangle([x, 3 * S, x + 12 * S, 16 * S], radius=3 * S,
+                               fill=COLOR_KHAKI, outline=INK_DARK, width=int(1.5 * S))
+        draw_crosshatch(draw, x, 3 * S, x + 12 * S, 16 * S, spacing=3 * S, angle=45, color=INK_LIGHT, width=S)
+
+    for y in range(16 * S, 44 * S, 11 * S):
+        draw.rounded_rectangle([3 * S, y, 16 * S, y + 12 * S], radius=3 * S,
+                               fill=COLOR_KHAKI, outline=INK_DARK, width=int(1.5 * S))
+        draw_crosshatch(draw, 3 * S, y, 16 * S, y + 12 * S, spacing=3 * S, angle=45, color=INK_LIGHT, width=S)
+
+    save_image(img, output_path, target_size=(48, 48))
+
+
+def generate_ammo_crate_wooden(output_path: str) -> None:
+    """Generates 32x32 military wooden ammo crate with corner brackets and stencil."""
+    S = 4
+    W, H = 32 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Olive painted wooden plank body
+    draw.rectangle([2 * S, 2 * S, 30 * S, 30 * S], fill=(88, 102, 68, 255), outline=INK_DARK, width=int(1.5 * S))
+    # Plank divider lines
+    draw.line([(2 * S, 11 * S), (30 * S, 11 * S)], fill=INK_DARK, width=int(1.5 * S))
+    draw.line([(2 * S, 21 * S), (30 * S, 21 * S)], fill=INK_DARK, width=int(1.5 * S))
+
+    # 2. Steel Corner Angle Brackets
+    bw = 5 * S
+    for cx, cy in [(2 * S, 2 * S), (30 * S - bw, 2 * S), (2 * S, 30 * S - bw), (30 * S - bw, 30 * S - bw)]:
+        draw.rectangle([cx, cy, cx + bw, cy + bw], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+
+    # 3. Yellow Stencil Marking (Ammunition cross / 7.62)
+    draw.line([(12 * S, 16 * S), (20 * S, 16 * S)], fill=(220, 190, 45, 255), width=2 * S)
+    draw.line([(16 * S, 12 * S), (16 * S, 20 * S)], fill=(220, 190, 45, 255), width=2 * S)
+
+    # 4. Rope Handles on sides
+    draw.arc([0, 12 * S, 4 * S, 20 * S], 90, 270, fill=INK_DARK, width=int(1.5 * S))
+    draw.arc([28 * S, 12 * S, 32 * S, 20 * S], -90, 90, fill=INK_DARK, width=int(1.5 * S))
+
+    save_image(img, output_path, target_size=(32, 32))
+
+
+def generate_fuel_drum(output_path: str) -> None:
+    """Generates 28x28 circular top-down steel fuel drum with rim chimes & bungs."""
+    S = 4
+    W, H = 28 * S, 28 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = W // 2, H // 2
+    r = 12 * S
+
+    # 1. Outer rolled steel chime rim
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(165, 42, 32, 255), outline=INK_DARK, width=2 * S)
+
+    # 2. Inner lid recessed ring
+    draw.ellipse([cx - r + 3 * S, cy - r + 3 * S, cx + r - 3 * S, cy + r - 3 * S],
+                 fill=(145, 36, 28, 255), outline=INK_DARK, width=int(1.5 * S))
+
+    # 3. Threaded Bung Plugs (Large 2" bung and 3/4" vent plug)
+    draw.ellipse([cx - 4 * S, cy - 6 * S, cx, cy - 2 * S], fill=COLOR_STEEL_LIGHT, outline=INK_DARK, width=S)
+    draw.ellipse([cx + 2 * S, cy + 3 * S, cx + 5 * S, cy + 6 * S], fill=COLOR_STEEL_LIGHT, outline=INK_DARK, width=S)
+
+    # Crosshatch rust/scratch mark
+    draw_crosshatch(draw, cx - 8 * S, cy - 4 * S, cx + 6 * S, cy + 8 * S, spacing=2 * S, angle=45, color=INK_MID, width=S)
+
+    save_image(img, output_path, target_size=(28, 28))
+
+
+def generate_barbed_wire(output_path: str) -> None:
+    """Generates 64x20 concertina barbed wire coil obstacle."""
+    S = 4
+    W, H = 64 * S, 20 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cy = H // 2
+
+    # Wooden picket stakes driven into ground at regular intervals
+    for px in [10 * S, 32 * S, 54 * S]:
+        draw.rectangle([px - 2 * S, 2 * S, px + 2 * S, H - 2 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=S)
+
+    # Coiled concertina wire loops (overlapping ovals)
+    for x in range(4 * S, W - 8 * S, 6 * S):
+        draw.arc([x, 4 * S, x + 10 * S, H - 4 * S], 0, 360, fill=COLOR_STEEL, width=int(1.5 * S))
+        # Sharp barbs
+        draw.line([(x + 2 * S, cy - 3 * S), (x + 4 * S, cy + 3 * S)], fill=INK_DARK, width=S)
+        draw.line([(x + 6 * S, cy + 3 * S), (x + 8 * S, cy - 3 * S)], fill=INK_DARK, width=S)
+
+    save_image(img, output_path, target_size=(64, 20))
+
+
+def generate_tree_ink_sketch(output_path: str) -> None:
+    """Generates 80x80 hand-sketched Balkan pine / oak canopy viewed from above."""
+    S = 4
+    W, H = 80 * S, 80 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = W // 2, H // 2
+
+    # 1. Soft ink drop shadow beneath canopy
+    draw.ellipse([cx - 28 * S, cy - 24 * S, cx + 34 * S, cy + 34 * S], fill=(24, 20, 18, 80))
+
+    # 2. Organic lobed foliage clusters
+    clusters = [
+        (cx, cy, 26 * S, (62, 88, 48, 255)),
+        (cx - 10 * S, cy - 8 * S, 18 * S, (74, 102, 56, 255)),
+        (cx + 12 * S, cy - 6 * S, 16 * S, (82, 110, 62, 255)),
+        (cx - 8 * S, cy + 12 * S, 16 * S, (54, 78, 42, 255)),
+        (cx + 10 * S, cy + 10 * S, 18 * S, (68, 94, 52, 255))
+    ]
+    for lx, ly, lr, c in clusters:
+        draw.ellipse([lx - lr, ly - lr, lx + lr, ly + lr], fill=c, outline=INK_DARK, width=int(1.5 * S))
+        # Inked foliage stippling and contour crosshatch
+        draw_crosshatch(draw, lx - lr * 0.7, ly - lr * 0.7, lx + lr * 0.7, ly + lr * 0.7,
+                        spacing=4 * S, angle=random.choice([30, 60, 120]), color=INK_LIGHT, width=S)
+
+    # 3. Central trunk peak / branch hints
+    draw.ellipse([cx - 3 * S, cy - 3 * S, cx + 3 * S, cy + 3 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=S)
+    for ba in [0.3, 1.8, 3.4, 4.9]:
+        bx = cx + 12 * S * math.cos(ba)
+        by = cy + 12 * S * math.sin(ba)
+        draw.line([(cx, cy), (bx, by)], fill=INK_DARK, width=int(1.5 * S))
+
+    save_image(img, output_path, target_size=(80, 80))
+
+
+# ---------------------------------------------------------------------------
+# 5. Combat VFX Generator
+# ---------------------------------------------------------------------------
+
+def generate_muzzle_flash_m70(output_path: str) -> None:
+    """Generates 32x32 M70 rifle starburst muzzle flash."""
+    S = 4
+    W, H = 32 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = 8 * S, 16 * S
+
+    # Starburst spikes extending right (+X)
+    spikes = [
+        [(cx, cy - 2 * S), (cx + 22 * S, cy), (cx, cy + 2 * S)],       # Main forward jet
+        [(cx, cy - 2 * S), (cx + 14 * S, cy - 10 * S), (cx + 4 * S, cy)],  # Upper diagonal
+        [(cx, cy + 2 * S), (cx + 14 * S, cy + 10 * S), (cx + 4 * S, cy)],  # Lower diagonal
+        [(cx - 2 * S, cy - 6 * S), (cx, cy), (cx - 2 * S, cy + 6 * S)]     # Rear flare
+    ]
+    for sp in spikes:
+        draw.polygon(sp, fill=COLOR_FIRE_ORANGE)
+
+    # Hot yellow inner core
+    core_pts = [(cx, cy - S), (cx + 15 * S, cy), (cx, cy + S)]
+    draw.polygon(core_pts, fill=COLOR_FIRE_YELLOW)
+
+    # Incandescent white ignition center
+    draw.ellipse([cx - 2 * S, cy - 3 * S, cx + 6 * S, cy + 3 * S], fill=COLOR_FIRE_WHITE)
+
+    # Ink smoke contour streaks
+    draw.line([(cx + 10 * S, cy - 6 * S), (cx + 20 * S, cy - 10 * S)], fill=INK_LIGHT, width=S)
+    draw.line([(cx + 10 * S, cy + 6 * S), (cx + 20 * S, cy + 10 * S)], fill=INK_LIGHT, width=S)
+
+    save_image(img, output_path, target_size=(32, 32))
+
+
+def generate_muzzle_flash_shotgun(output_path: str) -> None:
+    """Generates 48x32 wide conical shotgun muzzle flash."""
+    S = 4
+    W, H = 48 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = 6 * S, 16 * S
+
+    # Wide fanning cone
+    cone_pts = [(cx, cy - 2 * S), (cx + 38 * S, cy - 14 * S),
+                (cx + 34 * S, cy), (cx + 38 * S, cy + 14 * S), (cx, cy + 2 * S)]
+    draw.polygon(cone_pts, fill=COLOR_FIRE_ORANGE)
+
+    # Inner bright cone
+    inner_cone = [(cx, cy - S), (cx + 24 * S, cy - 8 * S),
+                  (cx + 22 * S, cy), (cx + 24 * S, cy + 8 * S), (cx, cy + S)]
+    draw.polygon(inner_cone, fill=COLOR_FIRE_YELLOW)
+
+    # White hot breach center
+    draw.ellipse([cx - 2 * S, cy - 4 * S, cx + 8 * S, cy + 4 * S], fill=COLOR_FIRE_WHITE)
+
+    # Sparks & powder grains
+    for _ in range(12):
+        sx = cx + random.uniform(16, 40) * S
+        sy = cy + random.uniform(-12, 12) * S
+        draw.ellipse([sx - S, sy - S, sx + S, sy + S], fill=COLOR_FIRE_YELLOW)
+
+    save_image(img, output_path, target_size=(48, 32))
+
+
+def generate_explosion_charcoal(output_path: str) -> None:
+    """Generates 64x64 billowing charcoal smoke explosion fireball."""
+    S = 4
+    W, H = 64 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = W // 2, H // 2
+
+    # 1. Outer billowing charcoal soot smoke lobes
+    num_lobes = 10
+    for i in range(num_lobes):
+        ang = i * (2 * math.pi / num_lobes)
+        dist = random.uniform(14, 24) * S
+        lx = cx + dist * math.cos(ang)
+        ly = cy + dist * math.sin(ang)
+        lr = random.uniform(10, 16) * S
+        draw.ellipse([lx - lr, ly - lr, lx + lr, ly + lr],
+                     fill=(38, 34, 30, 240), outline=INK_DARK, width=int(1.5 * S))
+        draw_crosshatch(draw, lx - lr * 0.6, ly - lr * 0.6, lx + lr * 0.6, ly + lr * 0.6,
+                        spacing=3 * S, angle=45, color=INK_MID, width=S)
+
+    # 2. Glowing burning fire core
+    draw.ellipse([cx - 16 * S, cy - 16 * S, cx + 16 * S, cy + 16 * S], fill=COLOR_FIRE_ORANGE)
+    draw.ellipse([cx - 10 * S, cy - 10 * S, cx + 10 * S, cy + 10 * S], fill=COLOR_FIRE_YELLOW)
+    draw.ellipse([cx - 5 * S, cy - 5 * S, cx + 5 * S, cy + 5 * S], fill=COLOR_FIRE_WHITE)
+
+    # 3. Flying sparks and shrapnel trails
+    for _ in range(10):
+        ang = random.uniform(0, 2 * math.pi)
+        dist = random.uniform(22, 30) * S
+        draw.line([(cx, cy), (cx + dist * math.cos(ang), cy + dist * math.sin(ang))], fill=COLOR_FIRE_YELLOW, width=S)
+
+    save_image(img, output_path, target_size=(64, 64))
+
+
+def generate_shell_casing_rifle(output_path: str) -> None:
+    """Generates 8x4 7.62mm brass rifle cartridge casing."""
+    S = 8
+    W, H = 8 * S, 4 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Brass cylinder with rim and extractor groove
+    draw.rectangle([S, S, 7 * S, 3 * S], fill=(215, 175, 45, 255), outline=INK_DARK, width=S)
+    # Extractor groove
+    draw.line([(2 * S, S), (2 * S, 3 * S)], fill=INK_DARK, width=S)
+    # Open neck
+    draw.rectangle([6 * S, S, 7 * S, 3 * S], fill=(40, 35, 25, 255))
+
+    save_image(img, output_path, target_size=(8, 4))
+
+
+def generate_shell_casing_shotgun(output_path: str) -> None:
+    """Generates 8x6 12-gauge red shotgun hull with brass head."""
+    S = 8
+    W, H = 8 * S, 6 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Red plastic ribbed hull
+    draw.rectangle([S, S, 7 * S, 5 * S], fill=(195, 38, 28, 255), outline=INK_DARK, width=S)
+    # Brass base cap
+    draw.rectangle([S, S, 3 * S, 5 * S], fill=(215, 175, 45, 255), outline=INK_DARK, width=S)
+
+    save_image(img, output_path, target_size=(8, 6))
+
+
+def generate_blood_splatter_decals(output_path: str) -> None:
+    """Generates 64x64 hand-inked arterial blood splatter decal with pooling and droplets."""
+    S = 4
+    W, H = 64 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = W // 2, H // 2
+
+    # Central irregular splatter pool
+    pool_pts = []
+    num_pts = 14
+    for i in range(num_pts):
+        ang = i * (2 * math.pi / num_pts)
+        r = (8 + random.uniform(-3, 6)) * S
+        pool_pts.append((cx + r * math.cos(ang), cy + r * math.sin(ang)))
+    draw.polygon(pool_pts, fill=COLOR_BLOOD)
+    draw.polygon(pool_pts, outline=COLOR_BLOOD_DARK, width=int(1.5 * S))
+
+    # Radiating splatter streaks and satellite droplets
+    for _ in range(16):
+        ang = random.uniform(0, 2 * math.pi)
+        dist = random.uniform(12, 28) * S
+        dr = random.uniform(1, 3) * S
+        sx = cx + dist * math.cos(ang)
+        sy = cy + dist * math.sin(ang)
+        draw.ellipse([sx - dr, sy - dr, sx + dr, sy + dr], fill=COLOR_BLOOD_FRESH)
+        # Streaks connecting to pool
+        if random.random() > 0.5:
+            draw.line([(cx, cy), (sx, sy)], fill=COLOR_BLOOD, width=S)
+
+    save_image(img, output_path, target_size=(64, 64))
+
+
+def generate_scorch_mark(output_path: str) -> None:
+    """Generates 64x64 explosion blast crater scorch mark with soot & fractures."""
+    S = 4
+    W, H = 64 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = W // 2, H // 2
+
+    # Fading radial soot cloud
+    for r in range(24 * S, 4 * S, -4 * S):
+        alpha = int(220 * (1.0 - (r / (24.0 * S))))
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(22, 20, 18, alpha))
+
+    # Jagged ground fracture cracks
+    for _ in range(8):
+        ang = random.uniform(0, 2 * math.pi)
+        pts = [(cx, cy)]
+        cur_x, cur_y = cx, cy
+        for step in range(4):
+            cur_x += random.uniform(4, 8) * S * math.cos(ang + random.uniform(-0.3, 0.3))
+            cur_y += random.uniform(4, 8) * S * math.sin(ang + random.uniform(-0.3, 0.3))
+            pts.append((cur_x, cur_y))
+        draw.line(pts, fill=INK_DARK, width=int(1.5 * S))
+
+    save_image(img, output_path, target_size=(64, 64))
+
+
+# ---------------------------------------------------------------------------
+# 6. Hand-Drawn UI Generator
+# ---------------------------------------------------------------------------
+
+def generate_paper_parchment_bg(output_path: str) -> None:
+    """Generates 512x512 authentic vintage military field map parchment texture."""
+    img = Image.new("RGBA", (512, 512), (234, 224, 202, 255))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Subtle fiber noise and watercolor tea-stains
+    for _ in range(30):
+        px = random.randint(0, 512)
+        py = random.randint(0, 512)
+        pr = random.randint(40, 120)
+        draw.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(215, 200, 172, 35))
+
+    # Coffee ring watermarks
+    for cx, cy in [(140, 160), (380, 360)]:
+        draw.ellipse([cx - 45, cy - 45, cx + 45, cy + 45], outline=(175, 150, 120, 60), width=3)
+
+    # Fold creases
+    draw.line([(0, 256), (512, 256)], fill=(185, 170, 145, 90), width=1)
+    draw.line([(256, 0), (256, 512)], fill=(185, 170, 145, 90), width=1)
+
+    # 2. Pencil border margin lines & tactical coordinate tick marks
+    draw.rectangle([16, 16, 496, 496], outline=(110, 100, 85, 160), width=1)
+    draw.rectangle([20, 20, 492, 492], outline=(110, 100, 85, 100), width=1)
+    for t in range(32, 480, 32):
+        # Top and bottom ticks
+        draw.line([(t, 16), (t, 22)], fill=(110, 100, 85, 180), width=1)
+        draw.line([(t, 490), (t, 496)], fill=(110, 100, 85, 180), width=1)
+        # Left and right ticks
+        draw.line([(16, t), (22, t)], fill=(110, 100, 85, 180), width=1)
+        draw.line([(490, t), (496, t)], fill=(110, 100, 85, 180), width=1)
+
+    save_image(img, output_path, target_size=(512, 512))
+
+
+def generate_hud_health_frame(output_path: str) -> None:
+    """Generates 220x32 tactical military HUD health bar container frame."""
+    S = 4
+    W, H = 220 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Parchment backing
+    draw.rounded_rectangle([2 * S, 2 * S, W - 2 * S, H - 2 * S], radius=4 * S,
+                           fill=(235, 226, 205, 240), outline=INK_DARK, width=2 * S)
+    # Inner border
+    draw.rounded_rectangle([4 * S, 4 * S, W - 4 * S, H - 4 * S], radius=3 * S,
+                           outline=INK_MID, width=S)
+
+    # 2. Medical Red Cross icon on left (x=8..24)
+    mcx, mcy = 16 * S, 16 * S
+    cw, cl = 3 * S, 9 * S
+    draw.rectangle([mcx - cl, mcy - cw, mcx + cl, mcy + cw], fill=COLOR_CRO_RED, outline=INK_DARK, width=S)
+    draw.rectangle([mcx - cw, mcy - cl, mcx + cw, mcy + cl], fill=COLOR_CRO_RED, outline=INK_DARK, width=S)
+
+    # 3. Cutout slot for dynamic health bar (x=30 to 212)
+    draw.rectangle([30 * S, 6 * S, 212 * S, 26 * S], fill=(45, 40, 35, 60), outline=INK_DARK, width=int(1.5 * S))
+
+    # Graduated tick marks along bar slot
+    for tx in range(30 * S, 212 * S, 18 * S):
+        draw.line([(tx, 6 * S), (tx, 10 * S)], fill=INK_MID, width=S)
+        draw.line([(tx, 22 * S), (tx, 26 * S)], fill=INK_MID, width=S)
+
+    # Corner screws
+    for cx, cy in [(4 * S, 4 * S), (W - 5 * S, 4 * S), (4 * S, H - 5 * S), (W - 5 * S, H - 5 * S)]:
+        draw.ellipse([cx, cy, cx + 2 * S, cy + 2 * S], fill=COLOR_STEEL_DARK)
+
+    save_image(img, output_path, target_size=(220, 32))
+
+
+def generate_hud_ammo_frame(output_path: str) -> None:
+    """Generates 180x44 military ammo counter gauge frame."""
+    S = 4
+    W, H = 180 * S, 44 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # 1. Stenciled metal and parchment frame
+    draw.rounded_rectangle([2 * S, 2 * S, W - 2 * S, H - 2 * S], radius=4 * S,
+                           fill=(230, 220, 198, 240), outline=INK_DARK, width=2 * S)
+    draw.rounded_rectangle([5 * S, 5 * S, W - 5 * S, H - 5 * S], radius=3 * S,
+                           outline=INK_LIGHT, width=S)
+
+    # 2. Inked silhouette of 7.62mm cartridge on left (x=10 to 30)
+    draw.rectangle([14 * S, 14 * S, 24 * S, 30 * S], fill=(210, 175, 45, 255), outline=INK_DARK, width=S)
+    draw.polygon([(14 * S, 14 * S), (19 * S, 8 * S), (24 * S, 14 * S)], fill=COLOR_STEEL_LIGHT, outline=INK_DARK)
+
+    # 3. Cutout window for ammo text display (x=38 to 170)
+    draw.rectangle([36 * S, 8 * S, 172 * S, 36 * S], fill=(42, 38, 32, 60), outline=INK_DARK, width=int(1.5 * S))
+
+    # Rivet details
+    for rx, ry in [(5 * S, 5 * S), (W - 6 * S, 5 * S), (5 * S, H - 6 * S), (W - 6 * S, H - 6 * S)]:
+        draw.ellipse([rx, ry, rx + 2 * S, ry + 2 * S], fill=COLOR_STEEL_DARK)
+
+    save_image(img, output_path, target_size=(180, 44))
+
+
+def generate_minimap_compass(output_path: str) -> None:
+    """Generates 48x48 vintage military compass rose."""
+    S = 4
+    W, H = 48 * S, 48 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = W // 2, H // 2
+    r_outer = 21 * S
+
+    # 1. Outer calibrated degree ring
+    draw.ellipse([cx - r_outer, cy - r_outer, cx + r_outer, cy + r_outer],
+                 outline=INK_DARK, width=int(1.5 * S))
+    # Degree ticks
+    for deg in range(0, 360, 30):
+        rad = math.radians(deg)
+        x0 = cx + (r_outer - 3 * S) * math.cos(rad)
+        y0 = cy + (r_outer - 3 * S) * math.sin(rad)
+        x1 = cx + r_outer * math.cos(rad)
+        y1 = cy + r_outer * math.sin(rad)
+        draw.line([(x0, y0), (x1, y1)], fill=INK_DARK, width=S)
+
+    # 2. 8-Point Compass Star
+    # North (top) point (Black/Red filled)
+    draw.polygon([(cx, cy - 18 * S), (cx - 4 * S, cy), (cx, cy)], fill=COLOR_CRO_RED, outline=INK_DARK)
+    draw.polygon([(cx, cy - 18 * S), (cx + 4 * S, cy), (cx, cy)], fill=INK_DARK, outline=INK_DARK)
+    # South point
+    draw.polygon([(cx, cy + 18 * S), (cx - 4 * S, cy), (cx, cy)], fill=INK_MID, outline=INK_DARK)
+    draw.polygon([(cx, cy + 18 * S), (cx + 4 * S, cy), (cx, cy)], fill=(220, 220, 210, 255), outline=INK_DARK)
+    # East point
+    draw.polygon([(cx + 18 * S, cy), (cx, cy - 4 * S), (cx, cy)], fill=INK_DARK, outline=INK_DARK)
+    draw.polygon([(cx + 18 * S, cy), (cx, cy + 4 * S), (cx, cy)], fill=(220, 220, 210, 255), outline=INK_DARK)
+    # West point
+    draw.polygon([(cx - 18 * S, cy), (cx, cy - 4 * S), (cx, cy)], fill=INK_MID, outline=INK_DARK)
+    draw.polygon([(cx - 18 * S, cy), (cx, cy + 4 * S), (cx, cy)], fill=(220, 220, 210, 255), outline=INK_DARK)
+
+    # Central pivot pin
+    draw.ellipse([cx - 3 * S, cy - 3 * S, cx + 3 * S, cy + 3 * S], fill=(220, 190, 50, 255), outline=INK_DARK, width=S)
+
+    # Inked Cardinal Letters (N at top)
+    draw.line([(cx - 2 * S, cy - 20 * S), (cx - 2 * S, cy - 15 * S)], fill=COLOR_CRO_RED, width=int(1.5 * S))
+    draw.line([(cx - 2 * S, cy - 20 * S), (cx + 2 * S, cy - 15 * S)], fill=COLOR_CRO_RED, width=int(1.5 * S))
+    draw.line([(cx + 2 * S, cy - 20 * S), (cx + 2 * S, cy - 15 * S)], fill=COLOR_CRO_RED, width=int(1.5 * S))
+
+    save_image(img, output_path, target_size=(48, 48))
+
+
+def generate_stamp_mission_complete(output_path: str) -> None:
+    """Generates 160x64 authentic red rubber ink stamp ('ZADATAK IZVRŠEN')."""
+    S = 4
+    W, H = 160 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    stamp_color = (185, 34, 28, 220)
+
+    # 1. Double rectangular border with rounded corners
+    draw.rounded_rectangle([4 * S, 4 * S, W - 4 * S, H - 4 * S], radius=6 * S,
+                           outline=stamp_color, width=3 * S)
+    draw.rounded_rectangle([8 * S, 8 * S, W - 8 * S, H - 8 * S], radius=4 * S,
+                           outline=stamp_color, width=int(1.5 * S))
+
+    # 2. Rubber stamp text: "★ ZADATAK IZVRŠEN ★" and "OPERATION STORM 1995"
+    try:
+        font_large = ImageFont.load_default(size=14 * S)
+        font_small = ImageFont.load_default(size=9 * S)
+    except Exception:
+        font_large = ImageFont.load_default()
+        font_small = ImageFont.load_default()
+
+    text1 = "★ ZADATAK IZVRŠEN ★"
+    text2 = "OPERATION STORM 1995"
+
+    bbox1 = draw.textbbox((0, 0), text1, font=font_large)
+    bbox2 = draw.textbbox((0, 0), text2, font=font_small)
+
+    w1, h1 = bbox1[2] - bbox1[0], bbox1[3] - bbox1[1]
+    w2, h2 = bbox2[2] - bbox2[0], bbox2[3] - bbox2[1]
+
+    draw.text(((W - w1) // 2, 14 * S), text1, fill=stamp_color, font=font_large)
+    draw.text(((W - w2) // 2, 36 * S), text2, fill=stamp_color, font=font_small)
+
+    # 3. Authentic weathered stamp noise voids (rubber stamp distress)
+    for _ in range(300):
+        vx = random.randint(4 * S, W - 4 * S)
+        vy = random.randint(4 * S, H - 4 * S)
+        draw.point((vx, vy), fill=(0, 0, 0, 0))
+
+    save_image(img, output_path, target_size=(160, 64))
+
+
+# ---------------------------------------------------------------------------
+# Main Generation Pipeline
+# ---------------------------------------------------------------------------
+
+def generate_all_assets() -> None:
+    """Generates all 42 required War-Journal assets."""
+    print("=== Generating War-Journal High-Definition Asset Library ===")
+
+    # 1. Characters (10 assets)
+    print("\n--- 1. Characters ---")
+    generate_torso("player", "assets/sprites/characters/player_torso.png")
+    generate_torso("rifleman", "assets/sprites/characters/enemy_rifleman_torso.png")
+    generate_torso("shotgunner", "assets/sprites/characters/enemy_shotgunner_torso.png")
+    generate_torso("mg", "assets/sprites/characters/enemy_mg_torso.png")
+    generate_torso("sniper", "assets/sprites/characters/enemy_sniper_torso.png")
+    generate_torso("officer", "assets/sprites/characters/enemy_officer_torso.png")
+    generate_torso("grenadier", "assets/sprites/characters/enemy_grenadier_torso.png")
+    generate_soldier_legs("assets/sprites/characters/soldier_legs_sheet.png")
+    generate_soldier_shadow("assets/sprites/characters/soldier_shadow.png")
+    generate_casualty_decals("assets/sprites/characters/casualty_decals.png")
+
+    # 2. Vehicles (6 assets)
+    print("\n--- 2. Armored Vehicles ---")
+    generate_apc_hull("assets/sprites/vehicles/apc_hull.png")
+    generate_apc_turret("assets/sprites/vehicles/apc_turret.png")
+    generate_apc_wreck("assets/sprites/vehicles/apc_wreck.png")
+    generate_tank_hull("assets/sprites/vehicles/tank_hull.png")
+    generate_tank_turret("assets/sprites/vehicles/tank_turret.png")
+    generate_tank_wreck("assets/sprites/vehicles/tank_wreck.png")
+
+    # 3. Terrain (5 assets)
+    print("\n--- 3. Terrain Maps ---")
+    generate_terrain_staging("assets/sprites/terrain/terrain_staging.png")
+    generate_terrain_trenches("assets/sprites/terrain/terrain_trenches.png")
+    generate_terrain_highway("assets/sprites/terrain/terrain_highway.png")
+    generate_terrain_urban("assets/sprites/terrain/terrain_urban.png")
+    generate_terrain_fortress("assets/sprites/terrain/terrain_fortress.png")
+
+    # 4. Props (9 assets)
+    print("\n--- 4. Illustrated Props ---")
+    generate_building_roof_tiles("assets/sprites/props/building_roof_tiles.png")
+    generate_building_roof_tin("assets/sprites/props/building_roof_tin.png")
+    generate_bunker_concrete("assets/sprites/props/bunker_concrete.png")
+    generate_sandbag_straight("assets/sprites/props/sandbag_straight.png")
+    generate_sandbag_corner("assets/sprites/props/sandbag_corner.png")
+    generate_ammo_crate_wooden("assets/sprites/props/ammo_crate_wooden.png")
+    generate_fuel_drum("assets/sprites/props/fuel_drum.png")
+    generate_barbed_wire("assets/sprites/props/barbed_wire.png")
+    generate_tree_ink_sketch("assets/sprites/props/tree_ink_sketch.png")
+
+    # 5. Combat VFX (7 assets)
+    print("\n--- 5. Combat VFX ---")
+    generate_muzzle_flash_m70("assets/sprites/vfx/muzzle_flash_m70.png")
+    generate_muzzle_flash_shotgun("assets/sprites/vfx/muzzle_flash_shotgun.png")
+    generate_explosion_charcoal("assets/sprites/vfx/explosion_charcoal.png")
+    generate_shell_casing_rifle("assets/sprites/vfx/shell_casing_rifle.png")
+    generate_shell_casing_shotgun("assets/sprites/vfx/shell_casing_shotgun.png")
+    generate_blood_splatter_decals("assets/sprites/vfx/blood_splatter_decals.png")
+    generate_scorch_mark("assets/sprites/vfx/scorch_mark.png")
+
+    # 6. UI (5 assets)
+    print("\n--- 6. UI Frames & Stamps ---")
+    generate_paper_parchment_bg("assets/sprites/ui/paper_parchment_bg.png")
+    generate_hud_health_frame("assets/sprites/ui/hud_health_frame.png")
+    generate_hud_ammo_frame("assets/sprites/ui/hud_ammo_frame.png")
+    generate_minimap_compass("assets/sprites/ui/minimap_compass.png")
+    generate_stamp_mission_complete("assets/sprites/ui/stamp_mission_complete.png")
+
+    print("\n=== All 42 Assets Generated Successfully! ===")
+
+
+if __name__ == "__main__":
+    generate_all_assets()

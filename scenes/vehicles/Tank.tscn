@@ -1,36 +1,77 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/vehicles/Tank.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/sprites/tank.png" id="2_tex"]
-[ext_resource type="PackedScene" path="res://scenes/weapons/RocketProjectile.tscn" id="3_shell"]
+[ext_resource type="Texture2D" path="res://assets/sprites/vehicles/tank_hull.png" id="2_hull"]
+[ext_resource type="Texture2D" path="res://assets/sprites/vehicles/tank_turret.png" id="3_turret"]
+[ext_resource type="Texture2D" path="res://assets/sprites/vehicles/tank_wreck.png" id="4_wreck"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/RocketProjectile.tscn" id="5_shell"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(88, 56)
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_dust"]
+emission_shape = 3
+emission_box_extents = Vector3(50, 26, 1)
+direction = Vector3(-1, 0, 0)
+spread = 40.0
+initial_velocity_min = 12.0
+initial_velocity_max = 35.0
+gravity = Vector3(0, 0, 0)
+color = Color(0.55, 0.5, 0.4, 0.45)
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_2"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hull"]
+size = Vector2(136, 76)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_weakpoint"]
+size = Vector2(28, 52)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
 radius = 480.0
 
 [node name="Tank" type="CharacterBody2D"]
 collision_layer = 64
 collision_mask = 33
 script = ExtResource("1_script")
-shell_scene = ExtResource("3_shell")
+shell_scene = ExtResource("5_shell")
+wreck_texture = ExtResource("4_wreck")
 max_health = 500
 armor_threshold = 18
 speed = 45.0
+shell_damage = 40
+shell_radius = 70.0
+fire_cooldown = 2.5
+
+[node name="DustParticles" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 16
+lifetime = 0.45
+process_material = SubResource("ParticleProcessMaterial_dust")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_tex")
+texture = ExtResource("2_hull")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_1")
+shape = SubResource("RectangleShape2D_hull")
+
+[node name="Turret" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Turret"]
+texture = ExtResource("3_turret")
+
+[node name="MuzzleMarker" type="Marker2D" parent="Turret"]
+position = Vector2(56, 0)
+
+[node name="EngineWeakPoint" type="Area2D" parent="."]
+position = Vector2(-54, 0)
+collision_layer = 64
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EngineWeakPoint"]
+shape = SubResource("RectangleShape2D_weakpoint")
 
 [node name="DetectionArea" type="Area2D" parent="."]
 collision_layer = 0
 collision_mask = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
-shape = SubResource("CircleShape2D_2")
+shape = SubResource("CircleShape2D_detect")
 
 [node name="AttackTimer" type="Timer" parent="."]
 one_shot = true

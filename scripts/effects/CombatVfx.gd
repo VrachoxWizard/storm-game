@@ -56,8 +56,25 @@ static func vfx_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "ri
 
 ## Static helper to spawn a multi-stage explosion via the active CombatVfx instance.
 static func vfx_explosion(pos: Vector2, radius: float = 80.0) -> void:
+	spawn_multi_stage_explosion(pos, radius)
+
+
+## Spawns a multi-stage explosion statically or via instance.
+static func spawn_multi_stage_explosion(pos: Vector2, radius: float = 80.0) -> void:
 	if instance:
-		instance.spawn_multi_stage_explosion(pos, radius)
+		instance._do_spawn_multi_stage_explosion(pos, radius)
+
+
+## Spawns a persistent burning wreck fire statically or via instance.
+static func spawn_burning_wreck_fire(pos: Vector2) -> Node2D:
+	if instance:
+		return instance._do_spawn_burning_wreck_fire(pos)
+	return null
+
+
+## Static helper to spawn a burning fire loop via the active CombatVfx instance.
+static func vfx_burning_wreck_fire(pos: Vector2) -> Node2D:
+	return spawn_burning_wreck_fire(pos)
 
 
 ## Static helper to spawn a ricochet effect via the active CombatVfx instance.
@@ -157,7 +174,7 @@ func spawn_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle")
 
 
 ## Spawns a multi-stage explosion with blinding light, core flash, shockwave ring, charcoal smoke plume, debris, and scorch decal.
-func spawn_multi_stage_explosion(pos: Vector2, radius: float = 80.0) -> void:
+func _do_spawn_multi_stage_explosion(pos: Vector2, radius: float = 80.0) -> void:
 	# Stage 1: Blinding Core Dynamic PointLight2D (0.25s expanding light pulse)
 	var light_scale := clampf(radius / 32.0, 1.2, 5.0)
 	VfxComp.create_transient_light(self, pos, get_radial_light_texture(), Color(1.0, 0.75, 0.3), 2.5, light_scale, 0.25)
@@ -218,7 +235,7 @@ func spawn_ricochet(pos: Vector2, normal: Vector2) -> void:
 
 
 ## Spawns a persistent burning wreck fire node with looping flame particles, charcoal smoke, and flickering light.
-func spawn_burning_wreck_fire(pos: Vector2) -> Node2D:
+func _do_spawn_burning_wreck_fire(pos: Vector2) -> Node2D:
 	return VfxComp.build_burning_fire(self, pos, EXPLOSION_CHARCOAL_TEX, get_radial_light_texture())
 
 

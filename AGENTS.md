@@ -22,18 +22,29 @@ This file provides context for AI coding agents (Cursor, Cline, Copilot, Antigra
 | GameManager | `scripts/autoloads/GameManager.gd` | Singleton — scene transitions, game state, mission flow |
 | ScoreManager | `scripts/autoloads/ScoreManager.gd` | Singleton — kill tracking, accuracy, scoring, ranks |
 | SaveManager | `scripts/autoloads/SaveManager.gd` | Singleton — mission unlock progress, high scores persistence |
-| Player | `scripts/player/Player.gd` | CharacterBody2D — movement, rotation, health, dodge-roll |
+| SoundManager | `scripts/autoloads/SoundManager.gd` | Singleton — audio bus management, SFX, music, voice lines |
+| DecalManager | `scripts/effects/DecalManager.gd` | Singleton/Manager — persistent ground decals (blood, scorch, casings, treads) capped at 250 FIFO |
+| CombatVfx | `scripts/effects/CombatVfx.gd` | Singleton/Helper — multi-stage charcoal explosions, dynamic point lights, muzzle flashes |
+| Player | `scripts/player/Player.gd` | CharacterBody2D — modular rig, movement, aim, health, dodge-roll |
 | WeaponManager | `scripts/player/WeaponManager.gd` | Weapon slots, switching, firing, ammo management |
-| EnemyBase | `scripts/enemies/EnemyBase.gd` | Base class for all enemies — state machine AI |
+| EnemyBase | `scripts/enemies/EnemyBase.gd` | Base class for all enemies — state machine AI, modular rig, casualty decals |
+| VehicleBase | `scripts/vehicles/VehicleBase.gd` | Base class for vehicles — independent turrets, tread decals, weak points, wrecks |
 
 ### Key Patterns
 
-- **Autoload singletons** for global managers (GameManager, ScoreManager, SaveManager)
-- **Inheritance** for enemy types — all extend `EnemyBase`
+- **Autoload singletons** for global managers (GameManager, ScoreManager, SaveManager, SoundManager, DecalManager, CombatVfx)
+- **Inheritance** for enemy types — all extend `EnemyBase`; vehicles extend `VehicleBase`
 - **Composition** for weapons — `WeaponManager` manages weapon instances on the player
 - **Signals** for loose coupling — objectives, pickups, and UI communicate via Godot signals
 - **State machines** for enemy AI — simple enum-based (PATROL, ALERT, CHASE, ATTACK, DEAD)
 - **Object pooling** for projectiles — reuse bullet nodes instead of instancing/freeing
+- **Persistent Decal FIFO**: `DecalManager` manages blood splatter, scorch marks, spent brass casings, and vehicle treads capped at 250 nodes using FIFO recycling
+- **Dynamic 2D Lighting & Charcoal VFX**: Multi-stage explosions, muzzle flashes, and ricochet sparks paired with instantaneous/decaying `PointLight2D` nodes and charcoal smoke bursts (`CombatVfx.gd`, `VfxComponents.gd`)
+- **Modular Character Rigging**: 3-tier hierarchy (`ShadowSprite` -> `LegsSprite` with 4-frame walk cycle aligned to movement -> `TorsoContainer` with 360-degree aim, weapon recoil kickback, squash/tumble dodge-roll, and casualty decal stamping on death)
+- **Vehicle Mechanics & Destruction States**: Independent rotating turrets, continuous tread tracks, rear engine weak points (3x multiplier on Tank), and destruction states (wreck sprite swap, fire/smoke emitters, disabled collisions)
+- **Atmospheric Lighting & Themed Terrain**: Seamless 512x512 ground textures, per-mission `CanvasModulate` atmospheric color grading, and illustrated architectural cover props (`BuildingTileRoof`, `BuildingTinRoof`, `BunkerEmplacement`)
+- **Paper Overlay Shader & Sketched UI**: Hand-drawn paper texture overlay shader (`paper_overlay.gdshader`), chromatic aberration shock waves, sketched HUD frames, compass minimap, and ink-stamped mission completion reports
+- **Procedural Asset Pipeline**: `tools/generate_war_journal_assets.py` generates 42 hand-drawn, cross-hatched, watercolor-washed sprites deterministically using Python/Pillow, validated by `tests/test_assets_generation.py`
 
 ### Collision Layers
 
@@ -52,7 +63,11 @@ This file provides context for AI coding agents (Cursor, Cline, Copilot, Antigra
 - Each scene type lives in its own `scenes/<category>/` directory
 - Corresponding scripts live in `scripts/<category>/`
 - Mission levels are individual scenes in `scenes/missions/`
-- Assets (sprites, audio, fonts, tilesets) are in `assets/`
+- Effects systems in `scenes/effects/` and `scripts/effects/`
+- Architectural prefabs in `scenes/environment/`
+- Assets (sprites, audio, fonts, shaders, tilesets) are in `assets/`
+- Procedural generation tools in `tools/`
+- Test suites in `tests/`
 
 ## Code Style Rules
 
@@ -116,7 +131,7 @@ func _unhandled_input(event: InputEvent) -> void:
 - **Do NOT use Godot 3 APIs** — this is Godot 4 (e.g., use `CharacterBody2D` not `KinematicBody2D`, `@export` not `export`, `@onready` not `onready`)
 - **Do NOT create .cs files** — this is a GDScript-only project
 - **Do NOT add multiplayer/networking** — this is a single-player game
-- **Do NOT use procedural generation** — missions are hand-crafted authored levels
+- **Do NOT use procedural generation** for mission layout — missions are hand-crafted authored levels
 - **Do NOT overcomplicate enemy AI** — simple state machines, arcade-style behavior
 - **Do NOT add microtransactions or F2P mechanics** — this is a premium single-player game
 
@@ -127,28 +142,66 @@ The full game design document is at:
 
 Always consult this spec before implementing gameplay features.
 
-## Implementation Status & Roadmap for Next Phases
+## Implementation Status & Roadmap
 
-### Current Status: Phase 1 Complete
-- Full playable vertical slice is implemented and verified in Godot 4.3+.
-- Features: Player (WASD, mouse-aim, dodge-roll, screen shake, checkpoints), Weapons (4 types, slots, reloading), Projectile pooling, Enemies (Rifleman, Shotgunner), Pickups (health, ammo, shotgun), Autoloads (GameManager, ScoreManager, SaveManager), UI (Menus, HUD, Pause, Results), Mission 1 (3-wave holdout, sandbag cover, terrain).
-- Launchers: `Run_Game.bat` and `Open_In_Godot.bat`.
+### Current Status: All Phases (1–5) Complete
 
-### Next Implementation Phases
-1. **Phase 2: Heavy Enemies & Emplacements**
-   - Sniper (`scenes/enemies/Sniper.tscn`, `scripts/enemies/Sniper.gd`): Red laser targeting telegraph, high damage.
-   - RPG Infantry (`scenes/enemies/RpgInfantry.tscn`): Rocket projectile with Area2D splash radius.
-   - Officer (`scenes/enemies/Officer.tscn`): Speed & fire-rate buff aura for nearby enemies.
-   - B-80 APC (`scenes/vehicles/Apc.tscn`): Vehicle layer 7, rotating machine gun turret, deploys infantry.
-   - T-55 Tank (`scenes/vehicles/Tank.tscn`): Boss vehicle, rotating cannon turret, rear engine weak point (3x dmg).
-   - Sandbag Bunker / MG Nest (`scenes/enemies/Bunker.tscn`) & Mortar Pit (`scenes/enemies/Mortar.tscn`).
-2. **Phase 3: Campaign Missions 2–5**
-   - Mission 2: "The Breakthrough" (Lika front, minefield hazards, bunker clearing).
-   - Mission 3: "Highway Ambush" (intercept retreating supply convoy).
-   - Mission 4: "Urban Assault — Petrinja" (street-by-street clearing, tight urban sightlines).
-   - Mission 5: "The Fortress — Knin" (summit assault, T-55 tank battle, flag raising).
-3. **Phase 4: Audio System**
+1. **Phase 1: Core Vertical Slice (Complete)**
+   - Player movement, 360-degree mouse aiming, dodge-roll with invulnerability frames, screen shake.
+   - Weapon inventory (slots 1–3), reload cycle, weapon types (pistol, rifle, shotgun, sniper, RPG).
+   - Projectile pooling and damage pipeline.
+   - Core enemies (Rifleman, Shotgunner), basic pickups (HealthKit, AmmoCrate, WeaponPickup).
+   - Core autoloads (`GameManager`, `ScoreManager`, `SaveManager`), UI menus, HUD, pause, mission flow.
+   - Mission 1 staging baseline with sandbag cover and holdout waves.
+
+2. **Phase 2: Heavy Enemies & Emplacements (Complete)**
+   - Sniper (`Sniper.gd`, `Sniper.tscn`): Aim telegraph red laser, high precision damage.
+   - Grenadier / RPG Infantry (`Grenadier.gd`, `Grenadier.tscn`): Rocket projectiles with Area2D splash radius.
+   - Machine Gunner (`MachineGunner.gd`, `MachineGunner.tscn`): Sustained suppressing fire with spread cone.
+   - Officer (`Officer.gd`, `Officer.tscn`): Speed & fire-rate buff aura for nearby infantry.
+   - B-80 APC (`Apc.gd`, `Apc.tscn`): Layer 7 vehicle, rotating machine gun turret, infantry deployment.
+   - T-55 Tank (`Tank.gd`, `Tank.tscn`): Boss vehicle, rotating cannon turret, rear engine weak point (3x dmg).
+   - Sandbag Bunker / MG Nest (`Bunker.gd`, `Bunker.tscn`) & Mortar Pit (`Mortar.gd`, `Mortar.tscn`).
+
+3. **Phase 3: Full 5-Mission Campaign (Complete)**
+   - Mission 1: "The Staging" — Staging grounds holdout, defensive waves, airfield perimeter.
+   - Mission 2: "The Breakthrough" — Lika front, minefield navigation, fortified bunker line assault.
+   - Mission 3: "Highway Ambush" — Intercept retreating supply convoy with moving APCs and trucks.
+   - Mission 4: "Urban Assault — Petrinja" — Street-by-street clearing, tight sightlines, building prefabs.
+   - Mission 5: "The Fortress — Knin" — Summit assault, bunker clearing, T-55 tank boss duel, flag raising.
+
+4. **Phase 4: Audio System (Complete)**
    - `SoundManager.gd` autoload: Gunfire SFX, shell casing clatters, impact sounds, low-pass filter on low HP.
-4. **Phase 5: Visual Polish & War-Journal Aesthetic**
-   - CanvasLayer paper sketch / ink outline shader, muzzle flashes, blood and dust particles, radar/minimap.
+
+5. **Phase 5: Visual Polish & War-Journal Aesthetic (Complete)**
+   - **Asset Generation Pipeline**: `tools/generate_war_journal_assets.py` procedurally produces 42 hand-inked, cross-hatched, watercolor-washed sprites (characters, vehicles, terrain, props, VFX, UI). Verified by `tests/test_assets_generation.py`.
+   - **Persistent Decal System**: `DecalManager.gd` stamps blood splatter, scorch marks, spent brass casings, and vehicle treads capped at 250 FIFO entries with zero memory leaks.
+   - **Combat VFX & Dynamic 2D Lighting**: `CombatVfx.gd` and `VfxComponents.gd` spawn multi-stage charcoal explosion bursts, weapon-specific muzzle flashes, ricochet sparks, and transient `PointLight2D` illumination.
+   - **Modular Character Rigs**: Player and all 6 enemy types feature independent `ShadowSprite`, 4-frame animated `LegsSprite` aligned with movement direction, and 360-degree `TorsoContainer` with weapon recoil kickback, dodge tumble, and casualty decal stamping.
+   - **Armored Vehicles & Destruction**: APC and Tank feature independent rotating turrets, continuous tread stamping, rear weak points, and destruction states with burning wreck sprites, fire/smoke emitters, and disabled collision.
+   - **Mission Maps & Environments**: All 5 campaign missions upgraded with unique seamless 512x512 illustrated terrain, per-mission `CanvasModulate` atmospheric lighting, and hand-inked architectural prefabs (`BuildingTileRoof`, `BuildingTinRoof`, `BunkerEmplacement`).
+   - **Paper Overlay Shader & UI Polish**: Fullscreen `paper_overlay.gdshader` with parchment grain, vignette, chromatic aberration combat shock, hand-drawn HUD frames, minimap compass, and ink-stamped mission completion reports.
+
+## Testing & Verification
+
+Run the master visual test suite and individual verification suites using the Godot headless console:
+
+```powershell
+# Master visual test runner
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/run_all_visual_tests.gd --quit
+
+# Individual visual test suites
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/test_decal_manager.gd --quit
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/test_combat_vfx.gd --quit
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/test_character_rigs.gd --quit
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/test_vehicles_visual.gd --quit
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/test_missions_visual.gd --quit
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/test_ui_visual.gd --quit
+
+# Asset generator unit tests
+pytest tests/test_assets_generation.py
+
+# Regenerate all 42 war-journal assets
+python tools/generate_war_journal_assets.py
+```
 

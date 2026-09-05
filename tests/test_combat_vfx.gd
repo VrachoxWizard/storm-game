@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 
 func _init() -> void:
 	var decal_script = load("res://scripts/effects/DecalManager.gd")
@@ -43,9 +43,18 @@ func _init() -> void:
 	vfx.spawn_muzzle_flash(Vector2(65, 50), 0.6, "heavy")
 	vfx.spawn_muzzle_flash(Vector2(70, 50), 0.8) # Default weapon_type = 'rifle'
 
-	# Each muzzle flash should eject a spent casing via DecalManager
+	# Each conventional muzzle flash should eject a spent casing via DecalManager
 	if dm.get_decal_count() <= initial_decals:
 		print("FAIL: Casing decals not spawned on muzzle flash")
+		quit(1)
+		return
+
+	# Verify rocket/cannon does not eject brass casings
+	var count_before_explosive_shots: int = dm.get_decal_count()
+	vfx.spawn_muzzle_flash(Vector2(80, 50), 0.0, "rocket")
+	vfx.spawn_muzzle_flash(Vector2(85, 50), 0.0, "cannon")
+	if dm.get_decal_count() != count_before_explosive_shots:
+		print("FAIL: Rocket/cannon should not spawn spent brass casing")
 		quit(1)
 		return
 

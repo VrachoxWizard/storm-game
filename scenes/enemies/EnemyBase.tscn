@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/EnemyBase.gd" id="1_base"]
+[ext_resource type="Texture2D" path="res://assets/sprites/rifleman.png" id="2_tex"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 14.0
@@ -14,6 +15,7 @@ collision_mask = 37
 script = ExtResource("1_base")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")

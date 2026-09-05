@@ -36,8 +36,7 @@ void fragment() {
 
 	// 2. Soft Ink-Bleed Edge Feathering
 	if (ink_bleed > 0.001) {
-		ivec2 tex_sz = textureSize(screen_texture, 0);
-		vec2 step_uv = (vec2(1.0) / max(vec2(tex_sz), vec2(1.0, 1.0))) * ink_bleed;
+		vec2 step_uv = SCREEN_PIXEL_SIZE * ink_bleed;
 		vec3 bleed_sample = (
 			textureLod(screen_texture, screen_uv + vec2(step_uv.x, 0.0), 0.0).rgb +
 			textureLod(screen_texture, screen_uv - vec2(step_uv.x, 0.0), 0.0).rgb +

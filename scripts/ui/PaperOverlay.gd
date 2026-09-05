@@ -36,12 +36,7 @@ func trigger_combat_shock(intensity: float = 0.03) -> void:
 	if _shock_tween and _shock_tween.is_valid():
 		_shock_tween.kill()
 	_mat.set_shader_parameter("shock_aberration", intensity)
-	_shock_tween = create_tween()
-	_shock_tween.tween_method(
-		func(val: float) -> void:
-			if _mat:
-				_mat.set_shader_parameter("shock_aberration", val),
-		intensity,
-		0.0,
-		0.1
-	)
+	var update_shock := func(val: float) -> void:
+		if _mat:
+			_mat.set_shader_parameter("shock_aberration", val)
+	_shock_tween.tween_method(update_shock, intensity, 0.0, 0.1)

@@ -61,12 +61,23 @@ res://
 ### Running the Game
 
 1. Clone this repository
-2. Open Godot 4 and import the project (`project.godot`)
-3. Press F5 or click "Play" to run
+2. Install [Godot 4.x](https://godotengine.org/download/) (standard version, not .NET) — on macOS you can also `brew install --cask godot`
+3. Launch with a quick script, or open `project.godot` in Godot and press F5
+
+**Windows**
+- `Run_Game.bat` — play the game
+- `Open_In_Godot.bat` — open the editor
+
+**macOS**
+```bash
+chmod +x Run_Game.sh Open_In_Godot.sh   # first time only
+./Run_Game.sh                           # play
+./Open_In_Godot.sh                      # editor
+```
 
 ### Development
 
-- Open the project in Godot 4 editor
+- Open the project in Godot 4 editor (`Open_In_Godot.bat` / `Open_In_Godot.sh`)
 - Main scene entry point: `res://scenes/Main.tscn`
 - Autoload singletons are registered in Project Settings → Autoload
 

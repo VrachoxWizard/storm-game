@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+weapon_name = "PHP Pistol"
+damage = 8
+fire_rate = 0.25
+max_ammo = -1
+reload_time = 0.0
+spread_angle = 0.03
+bullet_speed = 600.0
+is_automatic = false
+projectile_count = 1
+is_pistol = true

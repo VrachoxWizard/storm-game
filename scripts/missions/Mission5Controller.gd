@@ -72,7 +72,9 @@ func _on_flag_raised() -> void:
 	_mission_complete = true
 	_set_hud("Victory! The flag flies over Knin.")
 	get_tree().create_timer(1.5).timeout.connect(func() -> void:
-		GameManager.complete_mission()
+		var gm = get_node_or_null("/root/GameManager")
+		if gm:
+			gm.complete_mission()
 	)
 
 
@@ -83,7 +85,9 @@ func _set_hud(text: String) -> void:
 
 
 func _on_player_died() -> void:
-	ScoreManager.record_death()
+	var sm = get_node_or_null("/root/ScoreManager")
+	if sm:
+		sm.record_death()
 	get_tree().create_timer(1.0).timeout.connect(func() -> void:
 		player.restore_checkpoint()
 	)

@@ -15,8 +15,8 @@
 [ext_resource type="Script" path="res://scripts/missions/Checkpoint.gd" id="13_cp"]
 [ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="14_rpg"]
 [ext_resource type="Resource" path="res://resources/weapons/m48_mauser.tres" id="15_mauser"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ground_tile.png" id="16_ground"]
-[ext_resource type="Texture2D" path="res://assets/sprites/sandbag.png" id="17_sandbag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_highway.png" id="16_ground"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="17_sandbag"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1600, 20)
@@ -32,12 +32,14 @@ radius = 40.0
 
 [node name="Mission3" type="Node2D"]
 
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.94902, 0.921569, 0.878431, 1)
+
 [node name="Ground" type="TextureRect" parent="."]
 offset_right = 1600.0
 offset_bottom = 980.0
 texture = ExtResource("16_ground")
 stretch_mode = 1
-modulate = Color(0.75, 0.85, 0.7, 1)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(100, 480)

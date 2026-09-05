@@ -16,7 +16,9 @@
 [ext_resource type="Script" path="res://scripts/missions/Checkpoint.gd" id="14_cp"]
 [ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="15_rpg"]
 [ext_resource type="Resource" path="res://resources/weapons/skorpion_smg.tres" id="16_smg"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ground_tile.png" id="17_ground"]
+[ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_urban.png" id="17_ground"]
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTileRoof.tscn" id="18_b_tile"]
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTinRoof.tscn" id="19_b_tin"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1400, 20)
@@ -30,64 +32,30 @@ size = Vector2(100, 180)
 [sub_resource type="CircleShape2D" id="CircleShape2D_cp"]
 radius = 40.0
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_building"]
-size = Vector2(80, 120)
-
 [node name="Mission4" type="Node2D"]
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.815686, 0.741176, 0.666667, 1)
 
 [node name="Ground" type="TextureRect" parent="."]
 offset_right = 1400.0
 offset_bottom = 980.0
 texture = ExtResource("17_ground")
 stretch_mode = 1
-modulate = Color(0.7, 0.7, 0.75, 1)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(100, 500)
 
 [node name="Buildings" type="Node2D" parent="."]
 
-[node name="B1" type="StaticBody2D" parent="Buildings"]
+[node name="B1" parent="Buildings" instance=ExtResource("18_b_tile")]
 position = Vector2(350, 250)
-collision_layer = 32
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Buildings/B1"]
-shape = SubResource("RectangleShape2D_building")
-
-[node name="ColorRect" type="ColorRect" parent="Buildings/B1"]
-offset_left = -40.0
-offset_top = -60.0
-offset_right = 40.0
-offset_bottom = 60.0
-color = Color(0.35, 0.32, 0.3, 1)
-
-[node name="B2" type="StaticBody2D" parent="Buildings"]
+[node name="B2" parent="Buildings" instance=ExtResource("19_b_tin")]
 position = Vector2(550, 650)
-collision_layer = 32
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Buildings/B2"]
-shape = SubResource("RectangleShape2D_building")
-
-[node name="ColorRect" type="ColorRect" parent="Buildings/B2"]
-offset_left = -40.0
-offset_top = -60.0
-offset_right = 40.0
-offset_bottom = 60.0
-color = Color(0.35, 0.32, 0.3, 1)
-
-[node name="B3" type="StaticBody2D" parent="Buildings"]
+[node name="B3" parent="Buildings" instance=ExtResource("18_b_tile")]
 position = Vector2(800, 300)
-collision_layer = 32
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Buildings/B3"]
-shape = SubResource("RectangleShape2D_building")
-
-[node name="ColorRect" type="ColorRect" parent="Buildings/B3"]
-offset_left = -40.0
-offset_top = -60.0
-offset_right = 40.0
-offset_bottom = 60.0
-color = Color(0.35, 0.32, 0.3, 1)
 
 [node name="Enemies" type="Node2D" parent="."]
 

@@ -13,8 +13,8 @@
 [ext_resource type="Script" path="res://scripts/missions/ObjectiveTracker.gd" id="11_obj"]
 [ext_resource type="Script" path="res://scripts/missions/Checkpoint.gd" id="12_cp"]
 [ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="13_rpg"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ground_tile.png" id="14_ground"]
-[ext_resource type="Texture2D" path="res://assets/sprites/sandbag.png" id="15_sandbag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_trenches.png" id="14_ground"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="15_sandbag"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1400, 20)
@@ -30,12 +30,14 @@ radius = 40.0
 
 [node name="Mission2" type="Node2D"]
 
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.768627, 0.8, 0.768627, 1)
+
 [node name="Ground" type="TextureRect" parent="."]
 offset_right = 1400.0
 offset_bottom = 880.0
 texture = ExtResource("14_ground")
 stretch_mode = 1
-modulate = Color(0.85, 0.8, 0.7, 1)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(120, 440)

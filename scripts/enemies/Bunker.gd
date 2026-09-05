@@ -60,9 +60,9 @@ func take_damage(amount: int) -> void:
 
 func _die() -> void:
 	current_state = State.DEAD
-	destroyed.emit()
-	enemy_died.emit(self)
-	ScoreManager.record_emplacement_destroyed()
+	var sm = get_node_or_null("/root/ScoreManager")
+	if sm:
+		sm.record_emplacement_destroyed()
 	queue_free()
 
 

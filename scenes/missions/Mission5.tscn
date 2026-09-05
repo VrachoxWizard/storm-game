@@ -16,7 +16,7 @@
 [ext_resource type="Script" path="res://scripts/missions/Checkpoint.gd" id="14_cp"]
 [ext_resource type="Script" path="res://scripts/missions/FlagObjective.gd" id="15_flag"]
 [ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="16_rpg"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ground_tile.png" id="17_ground"]
+[ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_fortress.png" id="17_ground"]
 [ext_resource type="Texture2D" path="res://assets/sprites/flag.png" id="18_flagtex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
@@ -33,12 +33,14 @@ radius = 48.0
 
 [node name="Mission5" type="Node2D"]
 
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.870588, 0.752941, 0.690196, 1)
+
 [node name="Ground" type="TextureRect" parent="."]
 offset_right = 1400.0
 offset_bottom = 980.0
 texture = ExtResource("17_ground")
 stretch_mode = 1
-modulate = Color(0.8, 0.72, 0.55, 1)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(120, 700)

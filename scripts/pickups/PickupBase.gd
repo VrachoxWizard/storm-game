@@ -13,8 +13,10 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		_apply_effect(body)
 		picked_up.emit()
-		if Engine.get_main_loop().root.get_node_or_null("/root/SoundManager"):
-			SoundManager.play_sfx("pickup")
+		var root_node = Engine.get_main_loop().root if Engine.get_main_loop() else null
+		var sm = root_node.get_node_or_null("/root/SoundManager") if root_node else null
+		if sm:
+			sm.play_sfx("pickup")
 		queue_free()
 
 

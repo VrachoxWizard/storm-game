@@ -75,11 +75,15 @@ func _complete_mission() -> void:
 	if _mission_complete:
 		return
 	_mission_complete = true
-	GameManager.complete_mission()
+	var gm = get_node_or_null("/root/GameManager")
+	if gm:
+		gm.complete_mission()
 
 
 func _on_player_died() -> void:
-	ScoreManager.record_death()
+	var sm = get_node_or_null("/root/ScoreManager")
+	if sm:
+		sm.record_death()
 	# Brief delay then respawn
 	get_tree().create_timer(1.0).timeout.connect(_respawn_player)
 

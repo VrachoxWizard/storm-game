@@ -126,3 +126,29 @@ The full game design document is at:
 `docs/superpowers/specs/2026-09-05-operation-storm-shooter-design.md`
 
 Always consult this spec before implementing gameplay features.
+
+## Implementation Status & Roadmap for Next Phases
+
+### Current Status: Phase 1 Complete
+- Full playable vertical slice is implemented and verified in Godot 4.3+.
+- Features: Player (WASD, mouse-aim, dodge-roll, screen shake, checkpoints), Weapons (4 types, slots, reloading), Projectile pooling, Enemies (Rifleman, Shotgunner), Pickups (health, ammo, shotgun), Autoloads (GameManager, ScoreManager, SaveManager), UI (Menus, HUD, Pause, Results), Mission 1 (3-wave holdout, sandbag cover, terrain).
+- Launchers: `Run_Game.bat` and `Open_In_Godot.bat`.
+
+### Next Implementation Phases
+1. **Phase 2: Heavy Enemies & Emplacements**
+   - Sniper (`scenes/enemies/Sniper.tscn`, `scripts/enemies/Sniper.gd`): Red laser targeting telegraph, high damage.
+   - RPG Infantry (`scenes/enemies/RpgInfantry.tscn`): Rocket projectile with Area2D splash radius.
+   - Officer (`scenes/enemies/Officer.tscn`): Speed & fire-rate buff aura for nearby enemies.
+   - B-80 APC (`scenes/vehicles/Apc.tscn`): Vehicle layer 7, rotating machine gun turret, deploys infantry.
+   - T-55 Tank (`scenes/vehicles/Tank.tscn`): Boss vehicle, rotating cannon turret, rear engine weak point (3x dmg).
+   - Sandbag Bunker / MG Nest (`scenes/enemies/Bunker.tscn`) & Mortar Pit (`scenes/enemies/Mortar.tscn`).
+2. **Phase 3: Campaign Missions 2–5**
+   - Mission 2: "The Breakthrough" (Lika front, minefield hazards, bunker clearing).
+   - Mission 3: "Highway Ambush" (intercept retreating supply convoy).
+   - Mission 4: "Urban Assault — Petrinja" (street-by-street clearing, tight urban sightlines).
+   - Mission 5: "The Fortress — Knin" (summit assault, T-55 tank battle, flag raising).
+3. **Phase 4: Audio System**
+   - `SoundManager.gd` autoload: Gunfire SFX, shell casing clatters, impact sounds, low-pass filter on low HP.
+4. **Phase 5: Visual Polish & War-Journal Aesthetic**
+   - CanvasLayer paper sketch / ink outline shader, muzzle flashes, blood and dust particles, radar/minimap.
+

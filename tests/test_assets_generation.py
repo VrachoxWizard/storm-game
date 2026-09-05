@@ -53,6 +53,25 @@ REQUIRED_ASSETS = [
     ("assets/sprites/ui/stamp_mission_complete.png", (160, 64)),
 ]
 
+FULLY_OPAQUE_BACKGROUNDS = [
+    "assets/sprites/terrain/terrain_staging.png",
+    "assets/sprites/terrain/terrain_trenches.png",
+    "assets/sprites/terrain/terrain_highway.png",
+    "assets/sprites/terrain/terrain_urban.png",
+    "assets/sprites/terrain/terrain_fortress.png",
+    "assets/sprites/ui/paper_parchment_bg.png",
+]
+
+CHARACTER_TORSOS = [
+    "assets/sprites/characters/player_torso.png",
+    "assets/sprites/characters/enemy_rifleman_torso.png",
+    "assets/sprites/characters/enemy_shotgunner_torso.png",
+    "assets/sprites/characters/enemy_mg_torso.png",
+    "assets/sprites/characters/enemy_sniper_torso.png",
+    "assets/sprites/characters/enemy_officer_torso.png",
+    "assets/sprites/characters/enemy_grenadier_torso.png",
+]
+
 class TestWarJournalAssets(unittest.TestCase):
     def test_all_assets_exist_and_valid(self):
         for path, (exp_w, exp_h) in REQUIRED_ASSETS:
@@ -60,6 +79,41 @@ class TestWarJournalAssets(unittest.TestCase):
             with Image.open(path) as img:
                 self.assertEqual(img.mode, "RGBA", f"Asset not RGBA: {path}")
                 self.assertEqual(img.size, (exp_w, exp_h), f"Incorrect size for {path}: {img.size} vs {(exp_w, exp_h)}")
+
+    def test_background_textures_fully_opaque(self):
+        """Verifies terrain field maps and UI parchment have 100% opacity across all pixels."""
+        for path in FULLY_OPAQUE_BACKGROUNDS:
+            with Image.open(path) as img:
+                alpha_channel = img.getchannel("A")
+                min_alpha, max_alpha = alpha_channel.getextrema()
+                self.assertEqual(min_alpha, 255, f"Background {path} has semi-transparent pixels (min alpha {min_alpha})")
+                self.assertEqual(max_alpha, 255, f"Background {path} max alpha is not 255")
+
+    def test_character_and_vehicle_solid_bodies_opaque(self):
+        """Verifies character torsos and vehicle hulls do not contain low-alpha punch holes in solid bodies."""
+        for path in CHARACTER_TORSOS:
+            with Image.open(path) as img:
+                px = img.load()
+                for y in range(19, 29):
+                    for x in range(17, 24):
+                        alpha = px[x, y][3]
+                        self.assertEqual(alpha, 255, f"Character {path} has semi-transparent hole at ({x}, {y}) with alpha {alpha}")
+
+        # APC Hull core
+        with Image.open("assets/sprites/vehicles/apc_hull.png") as img:
+            px = img.load()
+            for y in range(24, 40):
+                for x in range(40, 80):
+                    alpha = px[x, y][3]
+                    self.assertEqual(alpha, 255, f"APC hull has semi-transparent hole at ({x}, {y}) with alpha {alpha}")
+
+        # Tank Hull core
+        with Image.open("assets/sprites/vehicles/tank_hull.png") as img:
+            px = img.load()
+            for y in range(35, 60):
+                for x in range(50, 100):
+                    alpha = px[x, y][3]
+                    self.assertEqual(alpha, 255, f"Tank hull has semi-transparent hole at ({x}, {y}) with alpha {alpha}")
 
 if __name__ == "__main__":
     unittest.main()

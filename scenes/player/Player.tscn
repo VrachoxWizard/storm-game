@@ -32,6 +32,9 @@ one_shot = true
 wait_time = 0.1
 one_shot = true
 
+[node name="MuzzleMarker" type="Marker2D" parent="."]
+position = Vector2(24, 0)
+
 [node name="WeaponManager" type="Node" parent="."]
 script = ExtResource("2_wm")
 default_weapon = ExtResource("3_m70")

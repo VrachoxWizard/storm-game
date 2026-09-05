@@ -1,3 +1,7 @@
 [gd_scene format=3]
 
 [node name="Main" type="Node"]
+
+[node name="WorldContainer" type="Node2D" parent="."]
+
+[node name="Projectiles" type="Node2D" parent="."]

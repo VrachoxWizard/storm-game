@@ -15,11 +15,17 @@ var is_dodging: bool = false
 var can_dodge: bool = true
 var _dodge_direction: Vector2 = Vector2.ZERO
 
+var _projectile_pool: Array[Area2D] = []
+var _projectile_scene: PackedScene = preload("res://scenes/weapons/Projectile.tscn")
+const POOL_SIZE: int = 100
+
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var dodge_timer: Timer = $DodgeTimer
 @onready var dodge_duration_timer: Timer = $DodgeDurationTimer
 @onready var hit_flash_timer: Timer = $HitFlashTimer
 @onready var camera: Camera2D = $Camera2D
+@onready var weapon_manager: Node = $WeaponManager
+@onready var muzzle: Marker2D = $MuzzleMarker
 
 
 func _ready() -> void:
@@ -27,6 +33,8 @@ func _ready() -> void:
 	dodge_timer.timeout.connect(_on_dodge_cooldown_finished)
 	dodge_duration_timer.timeout.connect(_on_dodge_duration_finished)
 	hit_flash_timer.timeout.connect(_on_hit_flash_finished)
+	weapon_manager.weapon_fired.connect(_on_weapon_fired)
+	_init_projectile_pool()
 
 
 func _physics_process(_delta: float) -> void:
@@ -100,3 +108,38 @@ func _flash_hit() -> void:
 
 func _on_hit_flash_finished() -> void:
 	sprite.modulate = Color.WHITE
+
+
+func _init_projectile_pool() -> void:
+	var pool_container := get_tree().root.get_node("Main/Projectiles")
+	for i in range(POOL_SIZE):
+		var bullet: Area2D = _projectile_scene.instantiate()
+		pool_container.add_child(bullet)
+		_projectile_pool.append(bullet)
+
+
+func _get_pooled_bullet() -> Area2D:
+	for bullet in _projectile_pool:
+		if not bullet.visible:
+			return bullet
+	return null
+
+
+func _on_weapon_fired() -> void:
+	var weapon := weapon_manager.get_current_weapon()
+	if weapon == null:
+		return
+
+	for i in range(weapon.projectile_count):
+		var bullet := _get_pooled_bullet()
+		if bullet == null:
+			break
+
+		var spread := randf_range(-weapon.spread_angle, weapon.spread_angle)
+		var fire_rotation := muzzle.global_rotation + spread
+		bullet.activate(
+			muzzle.global_position,
+			fire_rotation,
+			weapon.bullet_speed,
+			weapon.damage
+		)

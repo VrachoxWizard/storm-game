@@ -29,6 +29,7 @@ const POOL_SIZE: int = 100
 
 
 func _ready() -> void:
+	add_to_group("player")
 	health = max_health
 	dodge_timer.timeout.connect(_on_dodge_cooldown_finished)
 	dodge_duration_timer.timeout.connect(_on_dodge_duration_finished)

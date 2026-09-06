@@ -52,6 +52,13 @@ COLOR_CRO_RED = (196, 34, 28, 255)
 COLOR_CRO_WHITE = (240, 240, 235, 255)
 COLOR_CRO_BLUE = (28, 64, 142, 255)
 
+COLOR_SVK_RED = (198, 40, 40, 255)
+COLOR_SVK_BLUE = (28, 56, 140, 255)
+COLOR_SVK_WHITE = (236, 236, 232, 255)
+COLOR_SVK_OLIVE = (58, 62, 48, 255)
+COLOR_SVK_OLIVE_DARK = (42, 46, 36, 255)
+COLOR_BEARD = (52, 40, 28, 255)
+
 
 def save_image(img: Image.Image, output_path: str, target_size: tuple = None) -> None:
     """Resamples down with Lanczos if target_size provided, and saves as RGBA PNG."""
@@ -119,29 +126,29 @@ def generate_torso(soldier_type: str, output_path: str) -> None:
         helmet_color = (82, 102, 64, 255)
         vest_color = (55, 45, 35, 255)
     elif soldier_type == "rifleman":
-        torso_color = (70, 78, 62, 255)
-        helmet_color = (56, 64, 48, 255)
-        vest_color = (48, 52, 42, 255)
+        torso_color = COLOR_SVK_OLIVE
+        helmet_color = COLOR_SVK_OLIVE_DARK
+        vest_color = (48, 42, 34, 255)
     elif soldier_type == "shotgunner":
-        torso_color = (64, 68, 58, 255)
-        helmet_color = (50, 54, 46, 255)
-        vest_color = (38, 42, 36, 255)
+        torso_color = (62, 66, 52, 255)
+        helmet_color = (46, 50, 38, 255)
+        vest_color = (50, 35, 25, 255)
     elif soldier_type == "mg":
-        torso_color = (72, 80, 60, 255)
-        helmet_color = (46, 54, 40, 255)
-        vest_color = (44, 48, 38, 255)
+        torso_color = (54, 58, 46, 255)
+        helmet_color = (40, 44, 34, 255)
+        vest_color = (44, 38, 30, 255)
     elif soldier_type == "sniper":
-        torso_color = (85, 96, 68, 255)
-        helmet_color = (95, 108, 76, 255)
-        vest_color = (68, 76, 54, 255)
+        torso_color = (60, 68, 50, 255)
+        helmet_color = (48, 56, 40, 255)
+        vest_color = (50, 35, 25, 255)
     elif soldier_type == "officer":
-        torso_color = (60, 68, 55, 255)
-        helmet_color = (42, 48, 40, 255)  # Service cap
+        torso_color = COLOR_SVK_OLIVE_DARK
+        helmet_color = (38, 42, 34, 255)
         vest_color = (50, 35, 25, 255)
     elif soldier_type == "grenadier":
-        torso_color = (68, 74, 58, 255)
-        helmet_color = (52, 58, 46, 255)
-        vest_color = (44, 48, 38, 255)
+        torso_color = (58, 62, 50, 255)
+        helmet_color = (44, 48, 38, 255)
+        vest_color = (40, 44, 34, 255)
 
     # 1. Torso body oval (shoulders and chest)
     # Shoulders span Y from (cy - 14*S) to (cy + 14*S)
@@ -162,17 +169,29 @@ def generate_torso(soldier_type: str, output_path: str) -> None:
 
     # 3. Soldier Type Specific Gear
     if soldier_type == "player":
-        # Croatian Checkerboard Shoulder Patch on Left Shoulder
-        pw, ph = 2 * S, 2 * S
-        px0, py0 = cx - 4 * S, cy - 12 * S
+        # Croatian 5x5 šahovnica shoulder patch + small HV brigade patch
+        pw, ph = int(1.2 * S), int(1.2 * S)
+        px0, py0 = cx - 5 * S, cy - 13 * S
         colors = [COLOR_CRO_RED, COLOR_CRO_WHITE]
-        for row in range(3):
-            for col in range(3):
+        for row in range(5):
+            for col in range(5):
                 c = colors[(row + col) % 2]
-                draw.rectangle([px0 + col * pw, py0 + row * ph, px0 + (col + 1) * pw, py0 + (row + 1) * ph], fill=c)
-        draw.rectangle([px0, py0, px0 + 3 * pw, py0 + 3 * ph], outline=INK_DARK, width=S)
+                draw.rectangle([px0 + col * pw, py0 + row * ph,
+                                px0 + (col + 1) * pw, py0 + (row + 1) * ph], fill=c)
+        draw.rectangle([px0, py0, px0 + 5 * pw, py0 + 5 * ph], outline=INK_DARK, width=S)
+        # 9th Guards "Vukovi" wolf-motif badge (simplified)
+        draw.ellipse([cx + 2 * S, cy - 12 * S, cx + 7 * S, cy - 7 * S],
+                     fill=(30, 30, 28, 255), outline=COLOR_CRO_RED, width=S)
 
-    elif soldier_type == "shotgunner":
+    elif soldier_type != "player":
+        # SVK Serbian tricolor armband on upper arm
+        band_y0 = cy - 4 * S
+        band_x0, band_x1 = cx - 11 * S, cx - 7 * S
+        draw.rectangle([band_x0, band_y0, band_x1, band_y0 + S], fill=COLOR_SVK_RED, outline=INK_DARK, width=1)
+        draw.rectangle([band_x0, band_y0 + S, band_x1, band_y0 + 2 * S], fill=COLOR_SVK_BLUE, outline=INK_DARK, width=1)
+        draw.rectangle([band_x0, band_y0 + 2 * S, band_x1, band_y0 + 3 * S], fill=COLOR_SVK_WHITE, outline=INK_DARK, width=1)
+
+    if soldier_type == "shotgunner":
         # Red shotgun shell bandolier across chest
         for bi in range(4):
             by = cy - 7 * S + bi * 4 * S
@@ -207,6 +226,12 @@ def generate_torso(soldier_type: str, output_path: str) -> None:
         draw.chord([cx + 3 * S, cy - 6 * S, cx + 9 * S, cy + 6 * S], -90, 90, fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
         # Gold cap emblem
         draw.ellipse([cx + 2 * S, cy - 2 * S, cx + 5 * S, cy + 2 * S], fill=(230, 200, 50, 255))
+        # Bearded militia cheek shadow
+        draw.arc([cx - 5 * S, cy - 1 * S, cx + 5 * S, cy + 7 * S], 20, 160, fill=COLOR_BEARD, width=2 * S)
+    elif soldier_type == "grenadier":
+        # Bearded Chetnik-style militia cheek fringe
+        draw.arc([cx - 6 * S, cy, cx + 6 * S, cy + 8 * S], 15, 165, fill=COLOR_BEARD, width=int(2.5 * S))
+        draw.arc([cx - 6 * S, cy - 6 * S, cx + 6 * S, cy + 6 * S], -90, 90, fill=INK_DARK, width=int(1.5 * S))
     elif soldier_type == "sniper":
         # Ghillie camo foliage frills around helmet
         for fi in range(8):
@@ -756,7 +781,7 @@ def generate_terrain_highway(output_path: str) -> None:
 
 
 def generate_terrain_urban(output_path: str) -> None:
-    """Generates 512x512 Urban Cobblestone & Pavement Street grid (Mission 4 - Petrinja) with 100% opacity."""
+    """Generates 512x512 Urban Cobblestone & Pavement Street grid (Mission 4 - Knin) with 100% opacity."""
     img = Image.new("RGBA", (512, 512), (130, 128, 122, 255))
     draw = ImageDraw.Draw(img)
 
@@ -1397,7 +1422,7 @@ def generate_minimap_compass(output_path: str) -> None:
 
 
 def generate_stamp_mission_complete(output_path: str) -> None:
-    """Generates 160x64 authentic red rubber ink stamp ('ZADATAK IZVRŠEN')."""
+    """Generates 160x64 authentic red rubber ink stamp ('ZADAĆA IZVRŠENA')."""
     S = 4
     W, H = 160 * S, 64 * S
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -1417,7 +1442,7 @@ def generate_stamp_mission_complete(output_path: str) -> None:
         font_large = ImageFont.load_default()
         font_small = ImageFont.load_default()
 
-    text1 = "★ ZADATAK IZVRŠEN ★"
+    text1 = "★ ZADAĆA IZVRŠENA ★"
     text2 = "OPERATION STORM 1995"
 
     bbox1 = draw.textbbox((0, 0), text1, font=font_large)
@@ -1437,12 +1462,86 @@ def generate_stamp_mission_complete(output_path: str) -> None:
     save_image(img, output_path, target_size=(160, 64))
 
 
+def generate_croatian_flag(output_path: str) -> None:
+    """Generates a proper Croatian flag with 5x5 šahovnica shield (not plain red/white bands)."""
+    S = 4
+    W, H = 48 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    band = H // 3
+    draw.rectangle([0, 0, W, band], fill=COLOR_CRO_RED)
+    draw.rectangle([0, band, W, band * 2], fill=COLOR_CRO_WHITE)
+    draw.rectangle([0, band * 2, W, H], fill=COLOR_CRO_BLUE)
+    # Šahovnica shield centered
+    sh_w, sh_h = 14 * S, 14 * S
+    sx0 = (W - sh_w) // 2
+    sy0 = (H - sh_h) // 2
+    cell = sh_w // 5
+    for row in range(5):
+        for col in range(5):
+            c = COLOR_CRO_RED if (row + col) % 2 == 0 else COLOR_CRO_WHITE
+            draw.rectangle([sx0 + col * cell, sy0 + row * cell,
+                            sx0 + (col + 1) * cell, sy0 + (row + 1) * cell], fill=c)
+    draw.rectangle([sx0, sy0, sx0 + 5 * cell, sy0 + 5 * cell], outline=INK_DARK, width=S)
+    draw.rectangle([0, 0, W - 1, H - 1], outline=INK_DARK, width=S)
+    save_image(img, output_path, target_size=(48, 32))
+
+
+def generate_svk_flag(output_path: str) -> None:
+    """Generates Serbian / SVK horizontal tricolor (red-blue-white)."""
+    S = 4
+    W, H = 48 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    band = H // 3
+    draw.rectangle([0, 0, W, band], fill=COLOR_SVK_RED)
+    draw.rectangle([0, band, W, band * 2], fill=COLOR_SVK_BLUE)
+    draw.rectangle([0, band * 2, W, H], fill=COLOR_SVK_WHITE)
+    draw.rectangle([0, 0, W - 1, H - 1], outline=INK_DARK, width=S)
+    save_image(img, output_path, target_size=(48, 32))
+
+
+def generate_svk_insignia(output_path: str) -> None:
+    """Generates a simple SAO Krajina / SVK shield insignia."""
+    S = 4
+    W, H = 32 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx, cy = W // 2, H // 2
+    # Shield outline
+    pts = [(cx, 4 * S), (W - 4 * S, 10 * S), (W - 6 * S, H - 6 * S), (cx, H - 3 * S), (6 * S, H - 6 * S), (4 * S, 10 * S)]
+    draw.polygon(pts, fill=(36, 40, 34, 255), outline=INK_DARK)
+    # Tricolor bands inside shield
+    draw.rectangle([cx - 6 * S, cy - 6 * S, cx + 6 * S, cy - 2 * S], fill=COLOR_SVK_RED)
+    draw.rectangle([cx - 6 * S, cy - 2 * S, cx + 6 * S, cy + 2 * S], fill=COLOR_SVK_BLUE)
+    draw.rectangle([cx - 6 * S, cy + 2 * S, cx + 6 * S, cy + 6 * S], fill=COLOR_SVK_WHITE)
+    draw.rectangle([cx - 6 * S, cy - 6 * S, cx + 6 * S, cy + 6 * S], outline=INK_DARK, width=S)
+    save_image(img, output_path, target_size=(32, 32))
+
+
+def generate_hv_insignia(output_path: str) -> None:
+    """Generates a compact HV šahovnica insignia badge."""
+    S = 4
+    W, H = 32 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cell = 5 * S
+    ox, oy = (W - 5 * cell) // 2, (H - 5 * cell) // 2
+    for row in range(5):
+        for col in range(5):
+            c = COLOR_CRO_RED if (row + col) % 2 == 0 else COLOR_CRO_WHITE
+            draw.rectangle([ox + col * cell, oy + row * cell,
+                            ox + (col + 1) * cell, oy + (row + 1) * cell], fill=c)
+    draw.rectangle([ox, oy, ox + 5 * cell, oy + 5 * cell], outline=INK_DARK, width=S)
+    save_image(img, output_path, target_size=(32, 32))
+
+
 # ---------------------------------------------------------------------------
 # Main Generation Pipeline
 # ---------------------------------------------------------------------------
 
 def generate_all_assets() -> None:
-    """Generates all 42 required War-Journal assets."""
+    """Generates all War-Journal assets including faction flags/insignia."""
     print("=== Generating War-Journal High-Definition Asset Library ===")
 
     # 1. Characters (10 assets)
@@ -1505,7 +1604,15 @@ def generate_all_assets() -> None:
     generate_minimap_compass("assets/sprites/ui/minimap_compass.png")
     generate_stamp_mission_complete("assets/sprites/ui/stamp_mission_complete.png")
 
-    print("\n=== All 42 Assets Generated Successfully! ===")
+    # 7. Faction flags & insignia
+    print("\n--- 7. Faction Flags & Insignia ---")
+    generate_croatian_flag("assets/sprites/flag.png")
+    generate_croatian_flag("assets/sprites/factions/hv_flag.png")
+    generate_svk_flag("assets/sprites/factions/svk_flag.png")
+    generate_hv_insignia("assets/sprites/factions/hv_insignia.png")
+    generate_svk_insignia("assets/sprites/factions/svk_insignia.png")
+
+    print("\n=== All Assets Generated Successfully! ===")
 
 
 if __name__ == "__main__":

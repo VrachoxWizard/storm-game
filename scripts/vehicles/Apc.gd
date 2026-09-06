@@ -1,7 +1,7 @@
 extends VehicleBase
 
-## B-80 APC -- 8-wheeled armored chassis with independent 360-degree twin MG turret.
-## Deploys infantry squads when damaged or engaging close targets.
+## SVK M-80 IFV -- 8-wheeled armored chassis with independent 360-degree twin MG turret.
+## Deploys SVK infantry squads when damaged or engaging close targets.
 
 @export var infantry_scene: PackedScene
 @export var bullet_scene: PackedScene
@@ -9,6 +9,8 @@ extends VehicleBase
 @export var turret_damage: int = 12
 @export var turret_turn_speed: float = 6.0
 
+var convoy_mode: bool = false
+var convoy_speed: float = 0.0
 var _deployed: bool = false
 var _patrol_dir: Vector2 = Vector2.RIGHT
 var _can_fire: bool = true
@@ -21,12 +23,24 @@ func _ready() -> void:
 	armor_threshold = 14
 	speed = 80.0
 	is_tank = false
+	unit_key = "apc"
 	super._ready()
 	_patrol_dir = Vector2.RIGHT
 
 
 func _vehicle_ai(delta: float) -> void:
 	if is_destroyed:
+		return
+
+	if convoy_mode:
+		velocity = Vector2.RIGHT * convoy_speed
+		rotation = 0.0
+		move_and_slide()
+		if is_instance_valid(target):
+			if turret:
+				turret.global_rotation = lerp_angle(turret.global_rotation, (target.global_position - turret.global_position).angle(), 1.0 - exp(-turret_turn_speed * delta))
+			if _can_fire and global_position.distance_to(target.global_position) < 350.0:
+				_fire_turret()
 		return
 
 	if target and is_instance_valid(target):
@@ -89,12 +103,17 @@ func _deploy_infantry() -> void:
 	if container == null:
 		return
 
+	var player := target
+	if player == null and is_inside_tree():
+		player = get_tree().get_first_node_in_group("player") as CharacterBody2D
 	for i in range(deploy_count):
 		var soldier: Node = infantry_scene.instantiate()
 		var offset := Vector2.RIGHT.rotated(float(i) * TAU / float(deploy_count)) * 45.0
 		container.add_child(soldier)
 		if soldier is Node2D:
 			(soldier as Node2D).global_position = global_position + offset
+		if soldier is EnemyBase and is_instance_valid(player):
+			(soldier as EnemyBase).order_assault(player)
 
 
 func _fire_turret() -> void:

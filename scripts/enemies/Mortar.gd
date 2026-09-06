@@ -13,6 +13,7 @@ var _warning: Sprite2D
 
 
 func _ready() -> void:
+	unit_key = "mortar"
 	super._ready()
 	max_health = 120
 	health = max_health
@@ -76,3 +77,7 @@ func _perform_attack() -> void:
 		ExplosionHelper.explode(get_tree(), impact_pos, splash_radius, splash_damage, 11.0, true)
 		_firing = false
 	)
+
+
+func has_clear_shot() -> bool:
+	return is_instance_valid(target) and target.get("_is_dead") != true

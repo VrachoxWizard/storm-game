@@ -22,6 +22,7 @@ func _ready() -> void:
 	damage = 10
 	attack_cooldown = 0.12
 	_facing = Vector2.RIGHT.rotated(rotation)
+	unit_key = "bunker"
 	add_to_group("emplacement")
 	add_to_group("bunker")
 
@@ -40,16 +41,23 @@ func _physics_process(delta: float) -> void:
 			pass
 
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, hit_from: Vector2 = Vector2.ZERO) -> void:
 	if current_state == State.DEAD:
 		return
 	var final_amount: int = amount
-	if target == null and get_tree():
-		var players := get_tree().get_nodes_in_group("player")
-		if not players.is_empty():
-			target = players[0]
-	if target and is_instance_valid(target):
-		var to_attacker := (target.global_position - global_position).normalized()
+	var attacker_pos: Vector2 = hit_from
+	if attacker_pos == Vector2.ZERO:
+		# Prefer the most recent damage source direction if provided via meta.
+		if has_meta("last_hit_from"):
+			attacker_pos = get_meta("last_hit_from")
+		elif target and is_instance_valid(target):
+			attacker_pos = target.global_position
+		elif get_tree():
+			var players := get_tree().get_nodes_in_group("player")
+			if not players.is_empty() and players[0] is Node2D:
+				attacker_pos = (players[0] as Node2D).global_position
+	if attacker_pos != Vector2.ZERO:
+		var to_attacker := (attacker_pos - global_position).normalized()
 		var facing_dot := _facing.dot(to_attacker)
 		if facing_dot > 0.2:
 			final_amount = int(float(amount) * front_armor_mult)
@@ -59,6 +67,7 @@ func take_damage(amount: int) -> void:
 
 
 func _die() -> void:
+	if current_state == State.DEAD: return
 	current_state = State.DEAD
 	destroyed.emit()
 	enemy_died.emit(self)
@@ -74,11 +83,8 @@ func _perform_attack() -> void:
 	var to_target := (target.global_position - global_position).normalized()
 	var angle_diff := absf(angle_difference(_facing.angle(), to_target.angle()))
 	if rad_to_deg(angle_diff) > fire_arc_degrees * 0.5:
-		_facing = _facing.lerp(to_target, 0.15).normalized()
-		look_at(global_position + _facing)
 		return
-	_facing = to_target
-	look_at(target.global_position)
+	_update_rig_aim(target.global_position)
 	var spread := randf_range(-0.08, 0.08)
 	var fire_rot := to_target.angle() + spread
 	var pool := ProjectilePool.get_pool(get_tree())
@@ -90,3 +96,8 @@ func _perform_attack() -> void:
 		if container:
 			container.add_child(bullet)
 			bullet.activate(global_position, fire_rot, 500.0, damage)
+
+
+## Explosives bypass the directional small-arms armor.
+func take_explosive_damage(amount: int) -> void:
+	super.take_damage(amount)

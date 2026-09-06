@@ -6,6 +6,7 @@ signal flag_raised
 
 @export var hold_time: float = 2.0
 
+var enabled: bool = false
 var _player_inside: bool = false
 var _hold: float = 0.0
 var _raised: bool = false
@@ -13,6 +14,7 @@ var _progress_bar: ProgressBar
 
 
 func _ready() -> void:
+	add_to_group("flag")
 	collision_layer = 0
 	collision_mask = 1
 	_progress_bar = ProgressBar.new()
@@ -38,9 +40,14 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if not enabled:
+		_hold = 0.0
+		_progress_bar.visible = false
+		return
 	if _raised:
 		return
-	if _player_inside:
+	if _player_inside and Input.is_action_pressed("interact"):
+		_progress_bar.visible = true
 		_hold += delta
 		_progress_bar.value = _hold
 		if _hold >= hold_time:
@@ -49,3 +56,4 @@ func _process(delta: float) -> void:
 			flag_raised.emit()
 	else:
 		_hold = 0.0
+		_progress_bar.value = 0.0

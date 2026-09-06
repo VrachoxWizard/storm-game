@@ -2,13 +2,28 @@
 
 This file provides comprehensive instructions and roadmap context for **Claude Code** and other AI agents to continue implementing **Operation Storm**.
 
-**Current status:** Phases 1–5 plus the Polish Elevation Pass are complete. Canonical mission titles: First Thunder, Breaking the Line, Open Road, The Heart, Victory (`GameManager.MISSION_NAMES`). See `AGENTS.md` and `docs/ARCHITECTURE.md` for systems detail.
+**Current status:** Phases 1–5, the Polish Elevation Pass, and the Authenticity Overhaul (6 Sep 2026) are complete. Canonical mission titles: First Thunder, Breaking the Line, Open Road, The Heart, Victory (`GameManager.MISSION_NAMES`). Each mission is anchored to real Oluja chronology via `GameManager.MISSION_META` (sector, HV unit, SVK unit, date). See `AGENTS.md` and `docs/ARCHITECTURE.md` for systems detail.
 
 ---
 
 ## 1. Project Overview & Current State
 
-**Operation Storm** is a top-down 2D arcade shooter built in **Godot 4.3+** with **typed GDScript**, set during the Croatian Homeland War (Operation Storm / Oluja, August 1995).
+**Operation Storm** is a top-down 2D arcade shooter built in **Godot 4.3+** with **typed GDScript**, set during the Croatian Homeland War (Operation Storm / Oluja, August 1995). The player fights as a Croatian HV soldier against the Serbian SVK (Srpska vojska Krajine / Republika Srpska Krajina) through a 5-mission campaign.
+
+### Faction Identity (Authenticity Overhaul — 6 Sep 2026)
+- **FactionResource** (`scripts/factions/FactionResource.gd`) + `resources/factions/hv_faction.tres` / `svk_faction.tres` define HV (Croatian, šahovnica) and SVK (Serbian Krajina, tricolor) sides.
+- `EnemyBase` and `VehicleBase` default to SVK; `Player` defaults to HV.
+- All 5 briefings rewritten with real Oluja chronology, HV brigades (9th Guards "Vukovi", 4th Guards, 118th), SVK corps (15th Lika, 7th Dalmatian, Knindže), sectors, dates, and Croatian battle cries.
+- B-80 APC renamed to **SVK M-80 IFV**; M75 grenade named; `Škorpion vz.61` diacritic fixed; `SoundManager.play_voice_line()`.
+- Visuals: proper 5×5 šahovnica flag, SVK tricolor + insignia, SVK armbands, bearded militia, HV brigade patch.
+- See `docs/authenticity-overhaul-2026-09-06.md` for the full change list and bug fixes.
+
+### Objective Guidance (6 Sep 2026)
+- Players always know the next step via world gold beacons (`ObjectiveMarker`), a screen-edge arrow with distance (`ObjectiveArrow`), and minimap gold blips (`"objective"` / `"flag"` groups).
+- `ObjectiveTracker.get_current_targets()` + `objective_target_changed` drive `ObjectiveGuidance`, which mission controllers bind via `MissionHelpers.bind_objective_guidance()`.
+- Mission 2 enforces bunker order (north → south → east breach) with per-bunker objectives and a visible `BREACH EAST` zone banner.
+- Missions 3–5 mark APC/T-55/village, mortars/approach, and tank/flag respectively; Mission 1 holdout remains text-only (enemies come to the player).
+- Headless coverage: `tests/test_objective_guidance.gd`.
 
 ### What Is Already Implemented (Phase 1 — Vertical Slice):
 - **Player Controller** (`scripts/player/Player.gd`, `scenes/player/Player.tscn`):
@@ -21,7 +36,7 @@ This file provides comprehensive instructions and roadmap context for **Claude C
   - 3 weapon slots: primary rifle, secondary pickup, permanent backup pistol.
   - Magazine + reserve ammo economy; reload draws from reserve; pistol unlimited.
   - Switching (keys 1, 2, 3), reloading (R), semi-auto and automatic fire.
-  - Weapons: Zastava M70, PHP Pistol, Hawk 12ga, Skorpion SMG, M48 Mauser, RPG-7.
+  - Weapons: Zastava M70, PHP Pistol, Hawk 12ga, Škorpion vz.61 SMG, M48 Mauser, RPG-7, M75 hand grenade.
 - **Projectile System** (`scripts/weapons/Projectile.gd`, `ProjectilePool.gd`):
   - Player pool (100) + shared enemy/vehicle pool under `Main/Projectiles`.
   - Area2D projectile physics with distinct Player (`layer 3`) and Enemy (`layer 4`) layers.
@@ -48,7 +63,14 @@ This file provides comprehensive instructions and roadmap context for **Claude C
 
 ## 2. Roadmap: Where to Proceed Next
 
-Follow the game design spec (`docs/superpowers/specs/2026-09-05-operation-storm-shooter-design.md`) for detailed gameplay rules. Here are the prioritized implementation phases:
+All planned phases (1–5) plus the Polish Elevation Pass and the Authenticity Overhaul are complete. The game is feature-complete and authentic to Operation Storm. Future work should focus on:
+
+- Playtesting and difficulty tuning (per-mission rank targets in `ScoreManager.gd` are hardcoded).
+- Additional voice-line audio assets (currently `play_voice_line()` remaps onto existing SFX).
+- Broader 1991-1995 Homeland War scope (Vukovar, Maslenica, Medak Pocket, Flash) — currently only Oluja is covered.
+- Localization pass (briefings are bilingual Croatian/English; HUD strings are English-only).
+
+The original phase roadmap is preserved below for historical reference.
 
 ### Phase 2: Remaining Enemies, Heavy Units & Emplacements
 

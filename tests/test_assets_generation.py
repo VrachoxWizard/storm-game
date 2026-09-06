@@ -51,6 +51,12 @@ REQUIRED_ASSETS = [
     ("assets/sprites/ui/hud_ammo_frame.png", (180, 44)),
     ("assets/sprites/ui/minimap_compass.png", (48, 48)),
     ("assets/sprites/ui/stamp_mission_complete.png", (160, 64)),
+    # Faction flags & insignia
+    ("assets/sprites/flag.png", (48, 32)),
+    ("assets/sprites/factions/hv_flag.png", (48, 32)),
+    ("assets/sprites/factions/svk_flag.png", (48, 32)),
+    ("assets/sprites/factions/hv_insignia.png", (32, 32)),
+    ("assets/sprites/factions/svk_insignia.png", (32, 32)),
 ]
 
 FULLY_OPAQUE_BACKGROUNDS = [

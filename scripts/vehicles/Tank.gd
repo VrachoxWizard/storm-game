@@ -20,9 +20,10 @@ func _ready() -> void:
 	armor_threshold = 18
 	speed = 45.0
 	is_tank = true
+	unit_key = "tank"
 	super._ready()
-	if weak_point_area:
-		weak_point_area.area_entered.connect(_on_weak_point_area_entered)
+	# Weak-point hits are routed exclusively through Projectile._on_area_entered
+	# to avoid double-applying 3x rear damage.
 
 
 func _vehicle_ai(delta: float) -> void:
@@ -71,9 +72,15 @@ func take_rear_damage(amount: int) -> void:
 
 
 func _on_weak_point_area_entered(area: Area2D) -> void:
+	if area.get("_active") == false:
+		return
+	if area.get("_weak_point_handled") == true:
+		return
 	if is_destroyed:
 		return
 	if (area.collision_layer & 4) != 0 or area.is_in_group("player_bullets"):
+		# Mark before damage so a second call (signal + sweep) cannot double-apply.
+		area.set("_weak_point_handled", true)
 		var dmg: int = 25
 		if "damage" in area:
 			dmg = area.damage

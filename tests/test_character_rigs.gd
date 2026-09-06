@@ -1,6 +1,12 @@
 extends SceneTree
 
 func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	# Dummy audio playback is not part of these rendering/structure checks.
+	root.get_node("SoundManager")._sfx.clear()
 	# 1. Initialize DecalManager for decal stamping assertions
 	var decal_script = load("res://scripts/effects/DecalManager.gd")
 	if decal_script == null:
@@ -135,5 +141,15 @@ func _init() -> void:
 		quit(1)
 		return
 
+	await create_timer(0.3).timeout
 	print("PASS: Character rig hierarchy verified")
-	quit(0)
+	for audio in root.find_children("*", "AudioStreamPlayer", true, false):
+		audio.stop()
+		audio.stream = null
+	for child in root.get_children():
+		if child.name not in ["GameManager", "ScoreManager", "SaveManager", "SoundManager"]:
+			child.queue_free()
+	await process_frame
+	await process_frame
+	await create_timer(0.35).timeout
+	call_deferred("quit", 0)

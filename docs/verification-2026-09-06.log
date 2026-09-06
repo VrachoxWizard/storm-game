@@ -1,0 +1,114 @@
+============================================================
+Operation Storm - Visual Overhaul Full Test Runner
+============================================================
+
+[RUNNING] Gameplay Reliability (tests/test_gameplay_reliability.gd)...
+[PASS] Gameplay Reliability
+[WARNING] Godot reported retained resources during shutdown:
+WARNING: 30 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 11 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+  PASS: Camera scale unchanged with six nearby enemies
+  PASS: Camera scale unchanged after enemies disappear
+  PASS: Camera uses map boundaries
+  PASS: Repeated fire cannot bypass cooldown
+  PASS: Weapon switching preserves firing cooldown
+  PASS: Repeated reload does not restart timer
+  PASS: Cannot fire while reloading
+  PASS: Death disables player weapon actions
+  PASS: Dead player cannot move
+  PASS: Checkpoint restores living player and weapons
+  PASS: Brief respawn protection prevents instant repeat death
+  PASS: Fast projectile hits thin target without tunneling
+  PASS: Pooled projectile deals damage only once
+  PASS: Swept rear hit preserves tank weak-point multiplier
+  PASS: Weak point cannot count the same bullet twice
+  PASS: Hidden encounter cannot collide or detect
+  PASS: Inactive enemy cannot be damaged early
+  PASS: Reactivated encounter restores collision layers
+  PASS: Holdout attacker is ordered to pursue player
+  PASS: Sniper provides aim windup
+  PASS: Cancelled sniper shot cannot damage player
+  PASS: Future target destruction waits for current objective
+  PASS: Early destroyed target completes when unlocked
+  PASS: Grenade reaches targeted landing position
+
+[RUNNING] Campaign Progression (tests/test_campaign_progression.gd)...
+[PASS] Campaign Progression
+  PASS: Mission 1 has authored cover and landmarks
+  PASS: Mission 1 camera bounds match map
+  PASS: Mission 1 supplies reachable with player-sized clearance: []
+  PASS: Holdout wave 1 attackers pursue the position
+  PASS: Holdout wave 2 attackers pursue the position
+  PASS: Holdout wave 3 attackers pursue the position
+  PASS: All three holdout waves complete
+  PASS: Mission 2 has authored cover and landmarks
+  PASS: Mission 2 camera bounds match map
+  PASS: Mission 2 supplies reachable with player-sized clearance: []
+  PASS: Bunker assault completes at breach exit
+  PASS: Mission 3 has authored cover and landmarks
+  PASS: Mission 3 camera bounds match map
+  PASS: Mission 3 supplies reachable with player-sized clearance: []
+  PASS: Later tank has no invisible collision
+  PASS: Convoy waits while player collects starting equipment
+  PASS: Convoy starts at ambush approach
+  PASS: APC destruction activates tank
+  PASS: Armor encounter completes at village
+  PASS: Mission 4 has authored cover and landmarks
+  PASS: Mission 4 camera bounds match map
+  PASS: Mission 4 supplies reachable with player-sized clearance: []
+  PASS: Urban mission requires three streets, mortars, and exit
+  PASS: Killing mortars and rushing exit cannot skip streets
+  PASS: Urban mission completes while already standing in exit after street clears
+  PASS: Mission 5 has authored cover and landmarks
+  PASS: Mission 5 camera bounds match map
+  PASS: Mission 5 supplies reachable with player-sized clearance: []
+  PASS: Early flag interaction cannot consume victory trigger
+  PASS: Fortress approach unlocks tank stage
+  PASS: Courtyard clear unlocks flag
+  PASS: Flag requires holding interact
+  PASS: Fortress victory remains completable after early flag visit
+
+[RUNNING] Decal Manager (tests/test_decal_manager.gd)...
+[PASS] Decal Manager
+  PASS: DecalManager test passed successfully
+
+[RUNNING] Combat VFX & Dynamic Lighting (tests/test_combat_vfx.gd)...
+[PASS] Combat VFX & Dynamic Lighting
+  PASS: CombatVfx methods verified
+
+[RUNNING] Character Rigs & Animations (tests/test_character_rigs.gd)...
+[PASS] Character Rigs & Animations
+[WARNING] Godot reported retained resources during shutdown:
+WARNING: 30 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 11 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+  PASS: Character rig hierarchy verified
+
+[RUNNING] Vehicles & Destruction (tests/test_vehicles_visual.gd)...
+[PASS] Vehicles & Destruction
+  PASS: Vehicle visual architecture verified
+
+[RUNNING] Environment & Maps (tests/test_missions_visual.gd)...
+[PASS] Environment & Maps
+  PASS: All 5 missions verified with visual upgrades
+
+[RUNNING] UI & Paper Shader (tests/test_ui_visual.gd)...
+[PASS] UI & Paper Shader
+  PASS: UI visual architecture verified
+
+[RUNNING] Player Bullet Firing & Damage (tests/test_bullet_firing.gd)...
+[PASS] Player Bullet Firing & Damage
+  === Testing Player Bullet Firing & Damage Pipeline ===
+  PASS: Bullet successfully activated at (20.0, 0.0) with rotation -0.019842
+  PASS: Bullet traveled 35.000000 pixels in 0.050000s
+  PASS: Enemy took 15 damage, remaining health: 85
+  PASS: Bullet correctly deactivated on impact
+  === Bullet Firing & Damage Pipeline Fully Verified! ===
+
+============================================================
+ALL 9 TEST SUITES PASSED THEIR ASSERTIONS WITHOUT RUNTIME ERRORS.
+Shutdown resource warnings remain in: Gameplay Reliability, Character Rigs & Animations
+============================================================

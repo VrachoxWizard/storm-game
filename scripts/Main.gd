@@ -73,6 +73,8 @@ func _on_mission_briefing_requested(mission_index: int) -> void:
 
 func _on_mission_started(_mission_index: int) -> void:
 	briefing_screen.visible = false
+	results_screen.visible = false
+	projectiles.process_mode = Node.PROCESS_MODE_INHERIT
 	hud.visible = true
 
 	_teardown_world()
@@ -96,6 +98,7 @@ func _on_mission_started(_mission_index: int) -> void:
 
 func _on_mission_completed(_mission_index: int) -> void:
 	ScoreManager.stop_tracking()
+	projectiles.process_mode = Node.PROCESS_MODE_DISABLED
 	hud.visible = false
 	if _current_world:
 		_current_world.process_mode = Node.PROCESS_MODE_DISABLED

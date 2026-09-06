@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/Rifleman.tscn" id="2_rifleman"]
@@ -16,6 +16,13 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_trenches.png" id="14_ground"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="15_sandbag"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/barbed_wire.png" id="16_wire"]
+
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTinRoof.tscn" id="detail_tin"]
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTileRoof.tscn" id="detail_tile"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="detail_bag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1400, 20)
@@ -35,12 +42,32 @@ size = Vector2(64, 24)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wire"]
 size = Vector2(64, 20)
 
+[sub_resource type="RectangleShape2D" id="detail_TrenchLip0"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_TrenchLip1"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_TrenchLip2"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_TrenchLip3"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_TrenchLip4"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_TrenchLip5"]
+size = Vector2(64, 24)
+
 [node name="Mission2" type="Node2D"]
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 color = Color(0.768627, 0.8, 0.768627, 1)
 
 [node name="Ground" type="TextureRect" parent="."]
+z_index = -3
+mouse_filter = 2
 offset_right = 1400.0
 offset_bottom = 880.0
 texture = ExtResource("14_ground")
@@ -176,3 +203,101 @@ shape = SubResource("RectangleShape2D_vert")
 [node name="WallRight" type="CollisionShape2D" parent="Boundary"]
 position = Vector2(1410, 440)
 shape = SubResource("RectangleShape2D_vert")
+
+[node name="AuthoredTerrain" type="Node2D" parent="."]
+z_index = -2
+
+[node name="Fieldworks" type="Node2D" parent="."]
+
+[node name="CommunicationTrench" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.29, 0.25, 0.18, 0.28)
+polygon = PackedVector2Array(420, 150, 485, 150, 485, 310, 760, 310, 760, 375, 420, 375)
+
+[node name="SouthernTrench" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.29, 0.25, 0.18, 0.28)
+polygon = PackedVector2Array(760, 490, 820, 490, 820, 660, 1040, 660, 1040, 730, 760, 730)
+
+[node name="TrenchLip0" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(590, 210)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/TrenchLip0"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/TrenchLip0"]
+shape = SubResource("detail_TrenchLip0")
+
+[node name="TrenchLip1" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(590, 290)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/TrenchLip1"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/TrenchLip1"]
+shape = SubResource("detail_TrenchLip1")
+
+[node name="TrenchLip2" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(820, 500)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/TrenchLip2"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/TrenchLip2"]
+shape = SubResource("detail_TrenchLip2")
+
+[node name="TrenchLip3" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(820, 580)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/TrenchLip3"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/TrenchLip3"]
+shape = SubResource("detail_TrenchLip3")
+
+[node name="TrenchLip4" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(1050, 350)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/TrenchLip4"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/TrenchLip4"]
+shape = SubResource("detail_TrenchLip4")
+
+[node name="TrenchLip5" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(1060, 610)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/TrenchLip5"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/TrenchLip5"]
+shape = SubResource("detail_TrenchLip5")
+
+[node name="CommandDugout" parent="Fieldworks" instance=ExtResource("detail_tin")]
+position = Vector2(1120, 150)
+scale = Vector2(0.75, 0.75)
+
+[node name="BreachAmmo" parent="Pickups" instance=ExtResource("detail_ammo")]
+position = Vector2(1020, 440)

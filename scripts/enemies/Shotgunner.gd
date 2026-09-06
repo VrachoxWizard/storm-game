@@ -9,6 +9,7 @@ const SHOTGUN_SPREAD: float = 0.4
 
 
 func _ready() -> void:
+	unit_key = "shotgunner"
 	super._ready()
 	speed = 150.0
 	max_health = 35
@@ -28,7 +29,7 @@ func _process_attack(delta: float) -> void:
 	velocity = dir * speed * speed_buff * 0.7
 	move_and_slide()
 	_update_legs(delta)
-	if global_position.distance_to(target.global_position) > attack_range * 1.8:
+	if not has_clear_shot() or global_position.distance_to(target.global_position) > attack_range * 1.8:
 		_enter_chase()
 
 

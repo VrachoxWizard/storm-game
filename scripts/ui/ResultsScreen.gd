@@ -1,6 +1,8 @@
 extends Control
 
-## Post-mission results screen showing score, stats, rank, and stamped official seal.
+## Post-mission results screen showing score, stats, rank, debrief lore, and stamped seal.
+
+const Briefings = preload("res://scripts/missions/MissionBriefings.gd")
 
 @onready var score_label: Label = $CenterContainer/VBoxContainer/ScoreLabel
 @onready var kills_label: Label = $CenterContainer/VBoxContainer/KillsLabel
@@ -11,6 +13,8 @@ extends Control
 @onready var next_button: Button = $CenterContainer/VBoxContainer/NextButton
 @onready var complete_stamp: TextureRect = get_node_or_null("CenterContainer/VBoxContainer/StampContainer/CompleteStamp")
 @onready var detail_label: Label = get_node_or_null("CenterContainer/VBoxContainer/DetailLabel")
+
+var _debrief_label: Label
 
 
 func _ready() -> void:
@@ -23,9 +27,26 @@ func _ready() -> void:
 		var vbox := $CenterContainer/VBoxContainer
 		vbox.add_child(detail_label)
 		vbox.move_child(detail_label, rank_label.get_index() + 1)
+	_ensure_debrief_label()
+
+
+func _ensure_debrief_label() -> void:
+	var vbox := $CenterContainer/VBoxContainer
+	_debrief_label = vbox.get_node_or_null("DebriefLabel") as Label
+	if _debrief_label == null:
+		_debrief_label = Label.new()
+		_debrief_label.name = "DebriefLabel"
+		_debrief_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_debrief_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_debrief_label.add_theme_font_size_override("font_size", 14)
+		_debrief_label.add_theme_color_override("font_color", Color(0.28, 0.22, 0.16, 1))
+		vbox.add_child(_debrief_label)
+		var insert_at: int = detail_label.get_index() + 1 if detail_label else rank_label.get_index() + 1
+		vbox.move_child(_debrief_label, insert_at)
 
 
 func show_results() -> void:
+	_ensure_debrief_label()
 	var sm = get_node_or_null("/root/ScoreManager")
 	var gm = get_node_or_null("/root/GameManager")
 	var svm = get_node_or_null("/root/SaveManager")
@@ -45,6 +66,9 @@ func show_results() -> void:
 				sm.deaths,
 				"  |  No-Death Bonus!" if sm.deaths == 0 else "",
 			]
+
+	if gm:
+		_debrief_label.text = Briefings.get_debrief(gm.current_mission)
 
 	if gm and svm:
 		var next_idx: int = gm.current_mission + 1

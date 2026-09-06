@@ -153,6 +153,20 @@ func _update_state() -> void:
 - Weapon pickups inherit from `PickupBase.tscn`
 - Override `@export` properties in the inherited scene for type-specific values
 
+### Minimap / Objective Groups
+
+Nodes registered in these groups appear on the tactical minimap:
+
+| Group | Color | Used by |
+|-------|-------|---------|
+| `enemies` | Red | `EnemyBase` |
+| `bunker` / `emplacement` | Purple | Bunkers, mortars |
+| `vehicle` | Blue | APC, Tank |
+| `objective` | Gold | Active `ObjectiveMarker` beacons |
+| `flag` | Gold | `FlagObjective` and flag-mode markers |
+
+Mission controllers should drive guidance through `ObjectiveGuidance` / `MissionHelpers.bind_objective_guidance()` rather than manually painting HUD arrows.
+
 ## Signals Over Direct References
 
 Prefer signals for communication between independent systems:
@@ -186,6 +200,15 @@ docs: update architecture diagram
 refactor: extract enemy state machine to separate script
 asset: add rifleman sprite sheet
 ```
+
+## Documentation Update Policy (Required)
+
+- **Update docs after bigger changes**: If you make a major gameplay/system/UI change (new feature, new autoload, new resource type, input remap, mission logic change, balance changes, new/changed assets), you **must** update the relevant `.md` documentation in the same change.
+- **Docs to keep current**:
+  - **Gameplay/UX changes**: `README.md` (player-facing), and `docs/ARCHITECTURE.md` when systems/flows change.
+  - **Code/architecture changes**: `docs/ARCHITECTURE.md`, and `AGENTS.md` when core systems/patterns change.
+  - **Rules/conventions changes**: `docs/CONVENTIONS.md`.
+- **Commit expectation**: Documentation updates should be included in the same PR/commit series as the code changes (`docs:` when docs-only).
 
 ### What to Commit
 

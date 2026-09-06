@@ -11,6 +11,7 @@ var data: Dictionary = {
 		"music_volume": 0.8,
 		"sfx_volume": 1.0,
 		"screen_shake": true,
+		"difficulty": "normal",
 	},
 }
 
@@ -62,4 +63,18 @@ func load_data() -> void:
 		var error := json.parse(file.get_as_text())
 		file.close()
 		if error == OK and json.data is Dictionary:
-			data = json.data
+			_merge_defaults(json.data as Dictionary)
+
+
+func _merge_defaults(loaded: Dictionary) -> void:
+	## Merge saved data into defaults so older saves keep new settings keys.
+	var defaults: Dictionary = data.duplicate(true)
+	for key in loaded.keys():
+		if key == "settings" and loaded[key] is Dictionary and defaults.has("settings"):
+			var merged_settings: Dictionary = defaults["settings"].duplicate(true)
+			for sk in (loaded["settings"] as Dictionary).keys():
+				merged_settings[sk] = loaded["settings"][sk]
+			defaults["settings"] = merged_settings
+		else:
+			defaults[key] = loaded[key]
+	data = defaults

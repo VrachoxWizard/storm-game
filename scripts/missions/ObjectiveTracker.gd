@@ -5,6 +5,7 @@ extends Node
 ## Supports sequential gating so later objectives cannot complete until prior ones finish.
 
 signal objective_updated(completed: int, total: int)
+signal objective_target_changed(targets: Array, label: String)
 signal all_objectives_complete
 
 enum ObjectiveType { DESTROY, AREA, KILL_COUNT, SURVIVE }
@@ -28,10 +29,9 @@ func add_destroy_objective(targets: Array, label: String = "Destroy targets") ->
 		"label": label,
 		"targets": remaining,
 		"remaining": remaining.size(),
-		"done": remaining.is_empty(),
+		"done": false,
 	})
-	if remaining.is_empty():
-		_completed_count += 1
+
 	objective_updated.emit(_completed_count, _objectives.size())
 
 
@@ -39,6 +39,7 @@ func add_area_objective(area: Area2D, label: String = "Reach objective") -> void
 	var idx: int = _objectives.size()
 	_objectives.append({
 		"type": ObjectiveType.AREA,
+		"area": area,
 		"label": label,
 		"done": false,
 	})
@@ -67,10 +68,7 @@ func add_survive_objective(duration: float, label: String = "Survive") -> void:
 		"label": label,
 		"done": false,
 	})
-	get_tree().create_timer(duration).timeout.connect(func() -> void:
-		if idx < _objectives.size() and not _objectives[idx]["done"] and _can_complete(idx):
-			_complete_objective(idx)
-	)
+	_objectives[idx]["time_left"] = duration
 
 
 func register_enemy_kill() -> void:
@@ -98,6 +96,34 @@ func get_current_label() -> String:
 	return "Complete"
 
 
+func get_current_targets() -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	for obj in _objectives:
+		if obj["done"]:
+			continue
+		match obj["type"]:
+			ObjectiveType.DESTROY:
+				for t in obj["targets"]:
+					if is_instance_valid(t) and t is Node2D:
+						if t is EnemyBase and t.current_state == EnemyBase.State.DEAD:
+							continue
+						if t.get("is_destroyed") == true:
+							continue
+						result.append(t as Node2D)
+			ObjectiveType.AREA:
+				var area: Variant = obj.get("area")
+				if is_instance_valid(area) and area is Node2D:
+					result.append(area as Node2D)
+			_:
+				pass
+		return result
+	return result
+
+
+func emit_initial_target() -> void:
+	objective_target_changed.emit(get_current_targets(), get_current_label())
+
+
 func _can_complete(index: int) -> bool:
 	if not sequential:
 		return true
@@ -111,11 +137,11 @@ func _connect_destroy_target(target: Node, obj_idx: int) -> void:
 	var callback := func(_a = null, _b = null) -> void:
 		_on_destroy_progress(obj_idx)
 	if target.has_signal("enemy_died"):
-		target.enemy_died.connect(callback)
+		target.enemy_died.connect(callback, CONNECT_ONE_SHOT)
 	elif target.has_signal("destroyed"):
-		target.destroyed.connect(callback)
+		target.destroyed.connect(callback, CONNECT_ONE_SHOT)
 	elif target.has_signal("died"):
-		target.died.connect(callback)
+		target.died.connect(callback, CONNECT_ONE_SHOT)
 
 
 func _on_destroy_progress(obj_idx: int) -> void:
@@ -125,8 +151,12 @@ func _on_destroy_progress(obj_idx: int) -> void:
 	if obj["type"] != ObjectiveType.DESTROY or obj["done"]:
 		return
 	obj["remaining"] = maxi(int(obj["remaining"]) - 1, 0)
+	# Partial progress feedback before the objective fully completes.
+	objective_updated.emit(_completed_count, _objectives.size())
 	if int(obj["remaining"]) <= 0 and _can_complete(obj_idx):
 		_complete_objective(obj_idx)
+	else:
+		objective_target_changed.emit(get_current_targets(), get_current_label())
 
 
 func _complete_objective(index: int) -> void:
@@ -139,6 +169,26 @@ func _complete_objective(index: int) -> void:
 	_objectives[index]["done"] = true
 	_completed_count += 1
 	objective_updated.emit(_completed_count, _objectives.size())
+	objective_target_changed.emit(get_current_targets(), get_current_label())
 	if _completed_count >= _objectives.size() and not _mission_complete:
 		_mission_complete = true
 		all_objectives_complete.emit()
+
+
+func _process(delta: float) -> void:
+	if _mission_complete: return
+	for i in range(_objectives.size()):
+		var obj: Dictionary = _objectives[i]
+		if obj["done"] or not _can_complete(i): continue
+		match obj["type"]:
+			ObjectiveType.DESTROY:
+				if int(obj["remaining"]) <= 0: _complete_objective(i)
+			ObjectiveType.AREA:
+				var area: Area2D = obj["area"]
+				if is_instance_valid(area):
+					for body in area.get_overlapping_bodies():
+						if body.is_in_group("player") and body.get("_is_dead") != true:
+							_complete_objective(i)
+			ObjectiveType.SURVIVE:
+				obj["time_left"] = maxf(0.0, float(obj["time_left"]) - delta)
+				if float(obj["time_left"]) <= 0.0: _complete_objective(i)

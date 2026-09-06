@@ -18,6 +18,7 @@ var slots: Array[WeaponResource] = []
 var ammo: Array[int] = []  ## magazine ammo per slot (-1 = unlimited)
 var reserve: Array[int] = []  ## spare ammo per slot (-1 = unlimited)
 var current_slot: int = 0
+var _last_slot: int = 0
 var can_fire: bool = true
 var is_reloading: bool = false
 
@@ -60,6 +61,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		switch_to_slot(1)
 	elif event.is_action_pressed("weapon_3"):
 		switch_to_slot(PISTOL_SLOT)
+	elif event.is_action_pressed("weapon_next"):
+		_cycle_slot(1)
+	elif event.is_action_pressed("weapon_prev"):
+		_cycle_slot(-1)
+	elif event.is_action_pressed("quick_swap"):
+		quick_swap()
 	elif event.is_action_pressed("reload"):
 		_start_reload()
 
@@ -90,6 +97,8 @@ func get_current_reserve() -> int:
 
 
 func fire() -> void:
+	if not can_fire or is_reloading or not can_process():
+		return
 	var weapon := get_current_weapon()
 	if weapon == null:
 		return
@@ -119,9 +128,34 @@ func switch_to_slot(slot: int) -> void:
 		is_reloading = false
 		reload_timer.stop()
 
+	if slot != current_slot:
+		_last_slot = current_slot
 	current_slot = slot
-	can_fire = true
+	can_fire = fire_timer.is_stopped()
 	_emit_current_state()
+
+
+func quick_swap() -> void:
+	if _last_slot == current_slot:
+		return
+	if _last_slot < 0 or _last_slot >= SLOT_COUNT:
+		return
+	if slots[_last_slot] == null:
+		return
+	switch_to_slot(_last_slot)
+
+
+func _cycle_slot(dir: int) -> void:
+	if dir == 0:
+		return
+	var start: int = current_slot
+	for i in range(SLOT_COUNT):
+		var idx := (start + dir * (i + 1)) % SLOT_COUNT
+		if idx < 0:
+			idx += SLOT_COUNT
+		if slots[idx] != null:
+			switch_to_slot(idx)
+			return
 
 
 func add_weapon(weapon_res: WeaponResource, total_rounds: int) -> Dictionary:
@@ -171,6 +205,8 @@ func get_total_ammo_for_slot(slot: int) -> int:
 
 
 func _start_reload() -> void:
+	if is_reloading:
+		return
 	var weapon := get_current_weapon()
 	if weapon == null or weapon.is_pistol:
 		return
@@ -180,8 +216,6 @@ func _start_reload() -> void:
 		if ammo[current_slot] == 0:
 			_play_sfx("dry_fire")
 		return
-	if ammo[current_slot] == 0:
-		_play_sfx("dry_fire")
 
 	is_reloading = true
 	reload_timer.wait_time = weapon.reload_time
@@ -218,3 +252,11 @@ func _emit_current_state() -> void:
 		weapon_switched.emit(weapon)
 		ammo_changed.emit(ammo[current_slot], weapon.max_ammo)
 		reserve_changed.emit(reserve[current_slot])
+
+
+## Clears transient actions when restoring a checkpoint.
+func reset_action_state() -> void:
+	fire_timer.stop()
+	reload_timer.stop()
+	can_fire = true
+	is_reloading = false

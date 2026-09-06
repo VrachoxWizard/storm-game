@@ -7,6 +7,7 @@ extends EnemyBase
 
 
 func _ready() -> void:
+	unit_key = "grenadier"
 	super._ready()
 	max_health = 55
 	health = max_health
@@ -34,3 +35,7 @@ func _perform_attack() -> void:
 	grenade.explosion_damage = damage
 	grenade.throw_at(spawn_pos, dir, false)
 	apply_recoil(5.0)
+
+
+func has_clear_shot() -> bool:
+	return is_instance_valid(target) and target.get("_is_dead") != true

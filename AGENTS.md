@@ -19,20 +19,27 @@ This file provides context for AI coding agents (Cursor, Cline, Copilot, Antigra
 
 | System | Location | Description |
 |--------|----------|-------------|
-| GameManager | `scripts/autoloads/GameManager.gd` | Singleton — scene transitions, game state, mission flow |
+| GameManager | `scripts/autoloads/GameManager.gd` | Singleton — scene transitions, game state, mission flow, `MISSION_META` (sector/brigade/SVK-corp/date) |
 | ScoreManager | `scripts/autoloads/ScoreManager.gd` | Singleton — kill tracking, accuracy, scoring, ranks |
-| SaveManager | `scripts/autoloads/SaveManager.gd` | Singleton — mission unlock progress, high scores persistence |
-| SoundManager | `scripts/autoloads/SoundManager.gd` | Singleton — audio bus management, SFX, music, voice lines |
+| SaveManager | `scripts/autoloads/SaveManager.gd` | Singleton — mission unlock progress, high scores persistence, settings (merged with defaults) |
+| SoundManager | `scripts/autoloads/SoundManager.gd` | Singleton — audio bus management, SFX, music, voice lines (`play_voice_line`) |
 | DecalManager | `scripts/effects/DecalManager.gd` | Singleton/Manager — persistent ground decals (blood, scorch, casings, treads) capped at 250 FIFO |
-| CombatVfx | `scripts/effects/CombatVfx.gd` | Singleton/Helper — multi-stage charcoal explosions, dynamic point lights, muzzle flashes |
-| Player | `scripts/player/Player.gd` | CharacterBody2D — modular rig, movement, aim, health, dodge-roll |
+| CombatVfx | `scripts/effects/CombatVfx.gd` | Singleton/Helper — multi-stage charcoal explosions, dynamic point lights, muzzle flashes, burning-wreck cap (6) |
+| FactionResource | `scripts/factions/FactionResource.gd` | Resource — HV/SVK faction identity (side, display_name, flag, insignia, uniform tint, unit names); `.tres` in `resources/factions/` |
+| ObjectiveTracker | `scripts/missions/ObjectiveTracker.gd` | Mission objectives — DESTROY/AREA/KILL_COUNT/SURVIVE, sequential gating, `get_current_targets()`, `objective_target_changed` |
+| ObjectiveGuidance | `scripts/missions/ObjectiveGuidance.gd` | Binds tracker/manual targets to world markers + HUD edge arrow |
+| ObjectiveMarker | `scripts/effects/ObjectiveMarker.gd` | World-space gold beacon; joins `"objective"` / `"flag"` groups for minimap |
+| ObjectiveArrow | `scripts/ui/ObjectiveArrow.gd` | Screen-edge pointer + distance readout toward off-screen objectives |
+| Player | `scripts/player/Player.gd` | CharacterBody2D — modular rig, movement, aim, health, dodge-roll, HV faction |
 | WeaponManager | `scripts/player/WeaponManager.gd` | Weapon slots, switching, firing, ammo management |
-| EnemyBase | `scripts/enemies/EnemyBase.gd` | Base class for all enemies — state machine AI, modular rig, casualty decals |
-| VehicleBase | `scripts/vehicles/VehicleBase.gd` | Base class for vehicles — independent turrets, tread decals, weak points, wrecks |
+| EnemyBase | `scripts/enemies/EnemyBase.gd` | Base class for all enemies — state machine AI, modular rig, casualty decals, SVK faction |
+| VehicleBase | `scripts/vehicles/VehicleBase.gd` | Base class for vehicles — independent turrets, tread decals, weak points, wrecks, SVK faction |
 
 ### Key Patterns
 
 - **Autoload singletons** for global managers (GameManager, ScoreManager, SaveManager, SoundManager, DecalManager, CombatVfx)
+- **Faction identity** via `FactionResource` (.tres) — HV (Croatian) and SVK (Serbian Krajina) sides drive unit names, uniform tints, flags, insignia, and minimap colors
+- **Objective guidance** — `ObjectiveTracker` + `ObjectiveGuidance` drive world beacons (`ObjectiveMarker`), screen-edge arrows (`ObjectiveArrow`), and minimap gold blips via `"objective"` / `"flag"` groups
 - **Inheritance** for enemy types — all extend `EnemyBase`; vehicles extend `VehicleBase`
 - **Composition** for weapons — `WeaponManager` manages weapon instances on the player
 - **Signals** for loose coupling — objectives, pickups, and UI communicate via Godot signals
@@ -44,7 +51,7 @@ This file provides context for AI coding agents (Cursor, Cline, Copilot, Antigra
 - **Vehicle Mechanics & Destruction States**: Independent rotating turrets, continuous tread tracks, rear engine weak points (3x multiplier on Tank), and destruction states (wreck sprite swap, fire/smoke emitters, disabled collisions)
 - **Atmospheric Lighting & Themed Terrain**: Seamless 512x512 ground textures, per-mission `CanvasModulate` atmospheric color grading, and illustrated architectural cover props (`BuildingTileRoof`, `BuildingTinRoof`, `BunkerEmplacement`)
 - **Paper Overlay Shader & Sketched UI**: Hand-drawn paper texture overlay shader (`paper_overlay.gdshader`), chromatic aberration shock waves, sketched HUD frames, compass minimap, and ink-stamped mission completion reports
-- **Procedural Asset Pipeline**: `tools/generate_war_journal_assets.py` generates 42 hand-drawn, cross-hatched, watercolor-washed sprites deterministically using Python/Pillow, validated by `tests/test_assets_generation.py`
+- **Procedural Asset Pipeline**: `tools/generate_war_journal_assets.py` generates 47 hand-drawn, cross-hatched, watercolor-washed sprites (characters, vehicles, terrain, props, VFX, UI, faction flags & insignia) deterministically using Python/Pillow, validated by `tests/test_assets_generation.py`
 
 ### Collision Layers
 
@@ -80,6 +87,7 @@ This file provides context for AI coding agents (Cursor, Cline, Copilot, Antigra
 - Use `@onready` for node references instead of `get_node()` in `_ready()`
 - Keep scripts under 300 lines — split into components if growing larger
 - Document `@export` vars and public functions with `##` doc comments
+- **Update documentation after bigger changes** — when you add/modify major gameplay systems, inputs, UI/UX, missions, autoloads, or resources, update the relevant `.md` files in the same change (see `docs/CONVENTIONS.md`).
 
 ## Common Godot 4 Patterns
 
@@ -159,16 +167,16 @@ Always consult this spec before implementing gameplay features.
    - Grenadier / RPG Infantry (`Grenadier.gd`, `Grenadier.tscn`): Rocket projectiles with Area2D splash radius.
    - Machine Gunner (`MachineGunner.gd`, `MachineGunner.tscn`): Sustained suppressing fire with spread cone.
    - Officer (`Officer.gd`, `Officer.tscn`): Speed & fire-rate buff aura for nearby infantry.
-   - B-80 APC (`Apc.gd`, `Apc.tscn`): Layer 7 vehicle, rotating machine gun turret, infantry deployment.
-   - T-55 Tank (`Tank.gd`, `Tank.tscn`): Boss vehicle, rotating cannon turret, rear engine weak point (3x dmg).
+   - B-80 APC → **SVK M-80 IFV** (`Apc.gd`, `Apc.tscn`): Layer 7 vehicle, rotating machine gun turret, infantry deployment with `order_assault`, SVK tricolor hull marking.
+   - T-55 Tank (`Tank.gd`, `Tank.tscn`): Boss vehicle, rotating cannon turret, rear engine weak point (3x dmg), weak-point double-damage guard.
    - Sandbag Bunker / MG Nest (`Bunker.gd`, `Bunker.tscn`) & Mortar Pit (`Mortar.gd`, `Mortar.tscn`).
 
 3. **Phase 3: Full 5-Mission Campaign (Complete)**
-   - Mission 1: "First Thunder" — Staging grounds holdout, defensive waves, airfield perimeter.
-   - Mission 2: "Breaking the Line" — Fortified bunker line assault with reinforcements.
-   - Mission 3: "Open Road" — Intercept APC convoy before escape, then T-55, liberate village.
-   - Mission 4: "The Heart" — Street-by-street clearing, mortar battery, fortress approach.
-   - Mission 5: "Victory" — Fortress climb, T-55 boss, courtyard clear, flag raise.
+   - Mission 1: "First Thunder" — Aug 4 dawn, Lika/Gospić staging grounds holdout vs SVK 15th Lika Corps.
+   - Mission 2: "Breaking the Line" — Aug 4-5, Medak axis fortified bunker line assault vs SVK 15th Lika Corps.
+   - Mission 3: "Open Road" — Aug 5, Sinj/Vrlika approach; intercept SVK M-80 convoy, T-55, liberate Kijevo/Vrlika.
+   - Mission 4: "The Heart" — Aug 5 afternoon, Knin street-by-street clearing vs Knindže, mortar battery, fortress approach.
+   - Mission 5: "Victory" — Aug 5 evening, Knin Fortress climb, T-55 boss, courtyard clear, raise the šahovnica.
 
 4. **Phase 4: Audio System (Complete)**
    - `SoundManager.gd` autoload: Gunfire SFX, shell casing clatters, impact sounds, low-pass filter on low HP.
@@ -187,6 +195,14 @@ Always consult this spec before implementing gameplay features.
    - Enemy projectile pool; Sniper LOS; per-type combat behaviors; sequential mission objectives.
    - Per-weapon/impact audio, music crossfade, journal Main Menu/Pause, HUD slots/toasts, per-mission ranks.
    - Minimap/zoom throttle, muzzle-light caps, FX cleanup between missions.
+
+7. **Authenticity Overhaul (Complete — 6 Sep 2026)**
+   - `FactionResource` system: HV (Croatian) vs SVK (Serbian Krajina) identity wired into enemies, vehicles, player, briefing UI, minimap.
+   - All 5 briefings rewritten with real Oluja chronology, HV brigades (9th Guards "Vukovi", 4th Guards, 118th), SVK corps (15th Lika, 7th Dalmatian, Knindže), sectors, dates, battle cries.
+   - Narrative debrief paragraphs on results screen; `GameManager.MISSION_META` exposes sector/brigade/SVK-corp/date.
+   - Visuals: proper 5×5 šahovnica flag, SVK tricolor + insignia, SVK armbands, bearded militia, HV brigade patch; M4 terrain relabeled Petrinja → Knin.
+   - B-80 APC renamed to SVK M-80 IFV; M75 grenade named; `Škorpion` diacritic fixed; `SoundManager.play_voice_line()`.
+   - Bug fixes: tank weak-point double-damage, sniper respawn i-frames, dry-fire, shotgun pellet loss, enemy pool cap, steering fallback, rocket layer filter, bunker hit direction, APC deploy assault order, M4/M5 HUD sync, Officer aura, burst tokens, accuracy scoring, settings persistence, SaveManager merge, burning-wreck cap. See `docs/authenticity-overhaul-2026-09-06.md`.
 
 ## Testing & Verification
 

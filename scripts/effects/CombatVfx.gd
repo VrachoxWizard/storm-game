@@ -12,8 +12,10 @@ const VfxComp = preload("res://scripts/effects/VfxComponents.gd")
 static var instance: CombatVfx = null
 static var _radial_light_texture: Texture2D = null
 const MAX_MUZZLE_LIGHTS: int = 8
+const MAX_BURNING_WRECKS: int = 6
 
 var _active_muzzle_lights: int = 0
+var _burning_wrecks: Array[Node2D] = []
 
 
 func _init() -> void:
@@ -246,7 +248,18 @@ func spawn_ricochet(pos: Vector2, normal: Vector2) -> void:
 
 ## Spawns a persistent burning wreck fire node with looping flame particles, charcoal smoke, and flickering light.
 func _do_spawn_burning_wreck_fire(pos: Vector2) -> Node2D:
-	return VfxComp.build_burning_fire(self, pos, EXPLOSION_CHARCOAL_TEX, get_radial_light_texture())
+	# Cap persistent emitters so long missions don't accumulate forever.
+	while _burning_wrecks.size() >= MAX_BURNING_WRECKS:
+		var oldest: Node2D = _burning_wrecks.pop_front()
+		if is_instance_valid(oldest):
+			oldest.queue_free()
+	var fire_node := VfxComp.build_burning_fire(self, pos, EXPLOSION_CHARCOAL_TEX, get_radial_light_texture())
+	if fire_node:
+		_burning_wrecks.append(fire_node)
+		fire_node.tree_exiting.connect(func() -> void:
+			_burning_wrecks.erase(fire_node)
+		)
+	return fire_node
 
 
 ## Spawns blood spray particles and stamps an ink-wash blood decal via DecalManager.

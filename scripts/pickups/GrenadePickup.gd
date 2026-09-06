@@ -1,6 +1,6 @@
 extends "res://scripts/pickups/PickupBase.gd"
 
-## Grants throwable grenades to the player.
+## Grants M75 hand grenades to the player.
 
 @export var grenade_count: int = 2
 

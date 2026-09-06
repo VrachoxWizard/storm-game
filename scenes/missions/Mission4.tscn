@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/Rifleman.tscn" id="2_rifle"]
@@ -20,6 +20,13 @@
 [ext_resource type="PackedScene" path="res://scenes/environment/BuildingTileRoof.tscn" id="18_b_tile"]
 [ext_resource type="PackedScene" path="res://scenes/environment/BuildingTinRoof.tscn" id="19_b_tin"]
 
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTinRoof.tscn" id="detail_tin"]
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTileRoof.tscn" id="detail_tile"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="detail_bag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1400, 20)
 
@@ -32,12 +39,23 @@ size = Vector2(100, 180)
 [sub_resource type="CircleShape2D" id="CircleShape2D_cp"]
 radius = 40.0
 
+[sub_resource type="RectangleShape2D" id="detail_Barricade0"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_Barricade1"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_Barricade2"]
+size = Vector2(64, 24)
+
 [node name="Mission4" type="Node2D"]
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 color = Color(0.815686, 0.741176, 0.666667, 1)
 
 [node name="Ground" type="TextureRect" parent="."]
+z_index = -3
+mouse_filter = 2
 offset_right = 1400.0
 offset_bottom = 980.0
 texture = ExtResource("17_ground")
@@ -148,3 +166,85 @@ shape = SubResource("RectangleShape2D_vert")
 [node name="WallRight" type="CollisionShape2D" parent="Boundary"]
 position = Vector2(1410, 490)
 shape = SubResource("RectangleShape2D_vert")
+
+[node name="AuthoredTerrain" type="Node2D" parent="."]
+z_index = -2
+
+[node name="Fieldworks" type="Node2D" parent="."]
+
+[node name="MarketStreet" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.24, 0.23, 0.21, 0.38)
+polygon = PackedVector2Array(0, 430, 1400, 430, 1400, 560, 0, 560)
+
+[node name="NorthAlley" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.29, 0.25, 0.18, 0.28)
+polygon = PackedVector2Array(500, 0, 610, 0, 610, 980, 500, 980)
+
+[node name="BatteryLane" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.29, 0.25, 0.18, 0.28)
+polygon = PackedVector2Array(1010, 0, 1130, 0, 1130, 980, 1010, 980)
+
+[node name="WestRow" parent="Fieldworks" instance=ExtResource("detail_tile")]
+position = Vector2(160, 190)
+scale = Vector2(1, 1)
+
+[node name="SouthRow" parent="Fieldworks" instance=ExtResource("detail_tile")]
+position = Vector2(200, 780)
+scale = Vector2(1, 1)
+
+[node name="MarketHall" parent="Fieldworks" instance=ExtResource("detail_tile")]
+position = Vector2(760, 760)
+scale = Vector2(1, 1)
+
+[node name="UpperBlock" parent="Fieldworks" instance=ExtResource("detail_tin")]
+position = Vector2(620, 170)
+scale = Vector2(1, 1)
+
+[node name="FortressGatehouse" parent="Fieldworks" instance=ExtResource("detail_tile")]
+position = Vector2(1240, 260)
+scale = Vector2(1, 1)
+
+[node name="Barricade0" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(540, 410)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Barricade0"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Barricade0"]
+shape = SubResource("detail_Barricade0")
+
+[node name="Barricade1" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(850, 570)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Barricade1"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Barricade1"]
+shape = SubResource("detail_Barricade1")
+
+[node name="Barricade2" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(1150, 410)
+rotation = 1.5708
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Barricade2"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Barricade2"]
+shape = SubResource("detail_Barricade2")
+
+[node name="MarketAmmo" parent="Pickups" instance=ExtResource("detail_ammo")]
+position = Vector2(610, 500)
+
+[node name="BatteryAid" parent="Pickups" instance=ExtResource("detail_health")]
+position = Vector2(1140, 640)

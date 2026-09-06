@@ -60,6 +60,7 @@ func _on_lifetime() -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
+	if not _active: return
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
 		if _from_player:
@@ -69,7 +70,13 @@ func _on_body_entered(body: Node2D) -> void:
 	_detonate()
 
 
-func _on_area_entered(_area: Area2D) -> void:
+func _on_area_entered(area: Area2D) -> void:
+	if not _active:
+		return
+	# Only detonate on solid combat layers: enemies(2), env(32), vehicles(64), player(1).
+	var layer: int = area.collision_layer
+	if (layer & (1 | 2 | 32 | 64)) == 0:
+		return
 	_detonate()
 
 
@@ -77,7 +84,7 @@ func _detonate() -> void:
 	if not _active:
 		return
 	_active = false
-	monitoring = false
+	set_deferred("monitoring", false)
 	var pos := global_position
 	exploded.emit(pos)
 	ExplosionHelper.explode(
@@ -86,6 +93,7 @@ func _detonate() -> void:
 		explosion_radius,
 		explosion_damage,
 		12.0,
-		not _from_player
+		not _from_player,
+		_from_player
 	)
 	queue_free()

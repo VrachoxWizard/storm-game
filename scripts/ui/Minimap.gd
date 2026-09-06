@@ -44,8 +44,8 @@ func _refresh_blip_cache() -> void:
 		return
 	_cache_group("bunker", Color(0.55, 0.18, 0.65), 3.5, false)
 	_cache_group("emplacement", Color(0.55, 0.18, 0.65), 3.5, false)
-	_cache_group("vehicle", Color(0.92, 0.52, 0.12), 3.5, true)
-	_cache_group("enemies", Color(0.85, 0.15, 0.15), 3.0, false)
+	_cache_group("vehicle", Color(0.12, 0.28, 0.72), 3.5, true)  ## SVK tricolor blue
+	_cache_group("enemies", Color(0.85, 0.15, 0.15), 3.0, false)  ## SVK red accent
 	_cache_group("objective", Color(0.95, 0.8, 0.2), 4.0, false)
 	_cache_group("flag", Color(0.95, 0.8, 0.2), 4.0, false)
 
@@ -53,6 +53,10 @@ func _refresh_blip_cache() -> void:
 func _cache_group(group: String, color: Color, blip_radius: float, is_box: bool) -> void:
 	for node in get_tree().get_nodes_in_group(group):
 		if node == _player or not (node is Node2D):
+			continue
+		if not node.is_visible_in_tree() or not node.can_process() or node.get("is_destroyed") == true:
+			continue
+		if node is EnemyBase and node.current_state == EnemyBase.State.DEAD:
 			continue
 		var offset: Vector2 = (node as Node2D).global_position - _player.global_position
 		if offset.length() > radar_range:
@@ -107,5 +111,7 @@ func _draw() -> void:
 	var p_tip: Vector2 = center + Vector2(6.0, 0.0).rotated(heading)
 	var p_left: Vector2 = center + Vector2(-4.0, -4.0).rotated(heading)
 	var p_right: Vector2 = center + Vector2(-4.0, 4.0).rotated(heading)
-	draw_colored_polygon([p_tip, p_left, p_right], Color(0.12, 0.32, 0.78, 0.95))
+	draw_colored_polygon([p_tip, p_left, p_right], Color(0.75, 0.12, 0.12, 0.95))  ## HV šahovnica red
 	draw_polyline([p_tip, p_left, p_right, p_tip], INK_DARK, 1.2)
+	# Tiny white checker accent on player blip
+	draw_circle(center, 1.6, Color(0.95, 0.95, 0.95, 0.9))

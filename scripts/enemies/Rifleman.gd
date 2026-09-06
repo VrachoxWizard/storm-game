@@ -1,8 +1,9 @@
 extends EnemyBase
 
-## Rifleman enemy — fires burst shots at the player with weapon recoil and muzzle flash.
+## SVK rifleman — fires burst shots at the player with weapon recoil and muzzle flash.
 
 var _burst_count: int = 0
+var _burst_generation: int = 0
 var _strafe_sign: float = 1.0
 const BURST_SIZE: int = 3
 const BURST_INTERVAL: float = 0.15
@@ -10,10 +11,16 @@ const BURST_INTERVAL: float = 0.15
 @export var bullet_scene: PackedScene
 
 
+func _ready() -> void:
+	unit_key = "rifleman"
+	super._ready()
+
+
 func _perform_attack() -> void:
 	_burst_count = 0
+	_burst_generation += 1
 	_strafe_sign = 1.0 if randf() > 0.5 else -1.0
-	_fire_burst()
+	_fire_burst(_burst_generation)
 
 
 func _process_attack(delta: float) -> void:
@@ -21,27 +28,31 @@ func _process_attack(delta: float) -> void:
 		current_state = State.PATROL
 		return
 	_update_rig_aim(target.global_position)
-	# Strafe while firing
 	var to_target := (target.global_position - global_position).normalized()
 	var strafe := Vector2(-to_target.y, to_target.x) * _strafe_sign
 	velocity = strafe * speed * speed_buff * 0.45
 	move_and_slide()
 	_update_legs(delta)
-	if global_position.distance_to(target.global_position) > attack_range * 1.2:
+	if not has_clear_shot() or global_position.distance_to(target.global_position) > attack_range * 1.2:
 		_enter_chase()
 
 
-func _fire_burst() -> void:
+func _fire_burst(generation: int) -> void:
+	if generation != _burst_generation:
+		return
 	if target == null or not is_instance_valid(target):
 		return
-	if current_state != State.ATTACK:
+	if current_state != State.ATTACK or current_state == State.DEAD or not has_clear_shot():
 		return
-
 	_spawn_enemy_bullet()
 	_burst_count += 1
-
 	if _burst_count < BURST_SIZE:
-		get_tree().create_timer(BURST_INTERVAL).timeout.connect(_fire_burst)
+		get_tree().create_timer(BURST_INTERVAL).timeout.connect(_fire_burst.bind(generation))
+
+
+func _die() -> void:
+	_burst_generation += 1
+	super._die()
 
 
 func _spawn_enemy_bullet() -> void:

@@ -105,7 +105,10 @@ func set_music_volume(linear: float) -> void:
 	if idx < 0:
 		return
 	AudioServer.set_bus_volume_db(idx, linear_to_db(clampf(linear, 0.0001, 1.0)))
+	if not SaveManager.data.has("settings"):
+		SaveManager.data["settings"] = {}
 	SaveManager.data["settings"]["music_volume"] = linear
+	SaveManager.save_data()
 
 
 func set_sfx_volume(linear: float) -> void:
@@ -113,7 +116,25 @@ func set_sfx_volume(linear: float) -> void:
 	if idx < 0:
 		return
 	AudioServer.set_bus_volume_db(idx, linear_to_db(clampf(linear, 0.0001, 1.0)))
+	if not SaveManager.data.has("settings"):
+		SaveManager.data["settings"] = {}
 	SaveManager.data["settings"]["sfx_volume"] = linear
+	SaveManager.save_data()
+
+
+## Plays a short Croatian radio/battle-cry cue remapped onto existing SFX.
+func play_voice_line(line_id: String) -> void:
+	match line_id:
+		"naprijed":
+			play_sfx("objective", 0.02, -2.0)
+		"pokrivaj":
+			play_sfx("checkpoint", 0.02, -2.0)
+		"za_dom":
+			play_sfx("objective", 0.02, 0.0)
+		"oluja":
+			play_sfx("objective", 0.0, 2.0)
+		_:
+			play_sfx("ui_click", 0.0, -4.0)
 
 
 func play_sfx(id: String, pitch_variance: float = 0.08, volume_db: float = 0.0) -> void:
@@ -148,7 +169,7 @@ func play_weapon_shoot(weapon_name: String) -> void:
 		key = "shoot_pistol"
 	elif "shotgun" in n or "hawk" in n:
 		key = "shoot_shotgun"
-	elif "skorpion" in n or "smg" in n:
+	elif "skorpion" in n or "škorpion" in n or "smg" in n:
 		key = "shoot_smg"
 	elif "mauser" in n or "sniper" in n or "m48" in n:
 		key = "shoot_sniper"

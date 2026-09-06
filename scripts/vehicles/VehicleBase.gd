@@ -17,6 +17,10 @@ const TREAD_DISTANCE_STEP: float = 20.0
 @export var speed: float = 60.0
 @export var detection_range: float = 400.0
 @export var wreck_texture: Texture2D = null
+## Faction identity — defaults to SVK (Srpska vojska Krajine).
+@export var faction: FactionResource = null
+## Unit key used with FactionResource.unit_names (apc, tank).
+@export var unit_key: String = "apc"
 
 var health: int = 300
 var target: CharacterBody2D = null
@@ -24,6 +28,8 @@ var is_destroyed: bool = false
 var is_tank: bool = false
 
 var _last_tread_pos: Vector2 = Vector2.ZERO
+var _faction_mark: Sprite2D = null
+const DEFAULT_SVK_FACTION: FactionResource = preload("res://resources/factions/svk_faction.tres")
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var turret: Node2D = get_node_or_null("Turret")
@@ -52,12 +58,58 @@ func _ready() -> void:
 	add_to_group("vehicle")
 	collision_layer = 64
 	collision_mask = 33  # Player + Environment
+	if faction == null:
+		faction = DEFAULT_SVK_FACTION
+	_apply_faction_mark()
 	if detection_area:
 		detection_area.body_entered.connect(_on_detect_entered)
 		detection_area.body_exited.connect(_on_detect_exited)
 	if attack_timer:
 		attack_timer.timeout.connect(_on_attack_timeout)
 		attack_timer.one_shot = true
+	# Deferred so Tank/Apc subclass _ready can set max_health first.
+	call_deferred("_apply_difficulty")
+
+
+## Scales vehicle health from DifficultyManager (turret fire stays authored).
+func _apply_difficulty() -> void:
+	if not is_inside_tree() or is_destroyed:
+		return
+	var dm := get_node_or_null("/root/DifficultyManager")
+	if dm == null:
+		return
+	max_health = maxi(1, int(round(float(max_health) * dm.get_multiplier("enemy_hp"))))
+	health = max_health
+
+
+func _apply_faction_mark() -> void:
+	if faction == null:
+		return
+	if sprite:
+		sprite.modulate = faction.uniform_tint
+	if _faction_mark == null:
+		_faction_mark = get_node_or_null("FactionMark") as Sprite2D
+	if _faction_mark == null:
+		_faction_mark = Sprite2D.new()
+		_faction_mark.name = "FactionMark"
+		_faction_mark.z_index = 3
+		_faction_mark.position = Vector2(0.0, -18.0)
+		_faction_mark.scale = Vector2(0.45, 0.45)
+		add_child(_faction_mark)
+	if faction.flag_texture:
+		_faction_mark.texture = faction.flag_texture
+		_faction_mark.visible = true
+	elif faction.insignia_texture:
+		_faction_mark.texture = faction.insignia_texture
+		_faction_mark.visible = true
+	else:
+		_faction_mark.visible = false
+
+
+func get_unit_label() -> String:
+	if faction:
+		return faction.get_unit_label(unit_key)
+	return unit_key
 
 
 func _physics_process(delta: float) -> void:
@@ -83,7 +135,7 @@ func _update_treads_and_dust() -> void:
 
 
 func take_damage(amount: int) -> void:
-	if is_destroyed:
+	if is_destroyed or not can_process():
 		return
 	_ensure_nodes()
 	var final_amount: int = amount
@@ -112,13 +164,13 @@ func destroy_vehicle() -> void:
 	# 1. Disable collision and detection
 	var col := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if col:
-		col.disabled = true
+		col.set_deferred("disabled", true)
 	if detection_area:
-		detection_area.monitoring = false
+		detection_area.set_deferred("monitoring", false)
 	var weak_point := get_node_or_null("EngineWeakPoint") as Area2D
 	if weak_point:
-		weak_point.monitoring = false
-		weak_point.monitorable = false
+		weak_point.set_deferred("monitoring", false)
+		weak_point.set_deferred("monitorable", false)
 
 	# 2. Halt dust emission
 	if dust_particles:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/Rifleman.tscn" id="2_rifle"]
@@ -19,6 +19,13 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="17_sandbag"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="18_tree"]
 
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTinRoof.tscn" id="detail_tin"]
+[ext_resource type="PackedScene" path="res://scenes/environment/BuildingTileRoof.tscn" id="detail_tile"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sandbag_straight.png" id="detail_bag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1600, 20)
 
@@ -34,12 +41,23 @@ size = Vector2(160, 160)
 [sub_resource type="CircleShape2D" id="CircleShape2D_cp"]
 radius = 40.0
 
+[sub_resource type="RectangleShape2D" id="detail_AmbushCover0"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_AmbushCover1"]
+size = Vector2(64, 24)
+
+[sub_resource type="RectangleShape2D" id="detail_AmbushCover2"]
+size = Vector2(64, 24)
+
 [node name="Mission3" type="Node2D"]
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 color = Color(0.94902, 0.921569, 0.878431, 1)
 
 [node name="Ground" type="TextureRect" parent="."]
+z_index = -3
+mouse_filter = 2
 offset_right = 1600.0
 offset_bottom = 980.0
 texture = ExtResource("16_ground")
@@ -169,3 +187,121 @@ shape = SubResource("RectangleShape2D_vert")
 [node name="WallRight" type="CollisionShape2D" parent="Boundary"]
 position = Vector2(1610, 490)
 shape = SubResource("RectangleShape2D_vert")
+
+[node name="AuthoredTerrain" type="Node2D" parent="."]
+z_index = -2
+
+[node name="Fieldworks" type="Node2D" parent="."]
+
+[node name="ConvoyHighway" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.22, 0.23, 0.22, 0.5)
+polygon = PackedVector2Array(0, 345, 1600, 345, 1600, 455, 0, 455)
+
+[node name="VillageCrossroad" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.3, 0.27, 0.22, 0.32)
+polygon = PackedVector2Array(1260, 0, 1340, 0, 1340, 980, 1260, 980)
+
+[node name="RoadStripe0" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(20, 397, 85, 397, 85, 402, 20, 402)
+
+[node name="RoadStripe1" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(155, 397, 220, 397, 220, 402, 155, 402)
+
+[node name="RoadStripe2" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(290, 397, 355, 397, 355, 402, 290, 402)
+
+[node name="RoadStripe3" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(425, 397, 490, 397, 490, 402, 425, 402)
+
+[node name="RoadStripe4" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(560, 397, 625, 397, 625, 402, 560, 402)
+
+[node name="RoadStripe5" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(695, 397, 760, 397, 760, 402, 695, 402)
+
+[node name="RoadStripe6" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(830, 397, 895, 397, 895, 402, 830, 402)
+
+[node name="RoadStripe7" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(965, 397, 1030, 397, 1030, 402, 965, 402)
+
+[node name="RoadStripe8" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(1100, 397, 1165, 397, 1165, 402, 1100, 402)
+
+[node name="RoadStripe9" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(1235, 397, 1300, 397, 1300, 402, 1235, 402)
+
+[node name="RoadStripe10" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(1370, 397, 1435, 397, 1435, 402, 1370, 402)
+
+[node name="RoadStripe11" type="Polygon2D" parent="AuthoredTerrain"]
+color = Color(0.85, 0.78, 0.55, 0.65)
+polygon = PackedVector2Array(1505, 397, 1570, 397, 1570, 402, 1505, 402)
+
+[node name="Farmstead" parent="Fieldworks" instance=ExtResource("detail_tile")]
+position = Vector2(750, 200)
+scale = Vector2(1, 1)
+
+[node name="VillageNorth" parent="Fieldworks" instance=ExtResource("detail_tile")]
+position = Vector2(1440, 220)
+scale = Vector2(1, 1)
+
+[node name="VillageSouth" parent="Fieldworks" instance=ExtResource("detail_tile")]
+position = Vector2(1440, 750)
+scale = Vector2(1, 1)
+
+[node name="AmbushCover0" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(480, 280)
+rotation = 0
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/AmbushCover0"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/AmbushCover0"]
+shape = SubResource("detail_AmbushCover0")
+
+[node name="AmbushCover1" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(820, 600)
+rotation = 0
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/AmbushCover1"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/AmbushCover1"]
+shape = SubResource("detail_AmbushCover1")
+
+[node name="AmbushCover2" type="StaticBody2D" parent="Fieldworks"]
+position = Vector2(1100, 650)
+rotation = 0
+scale = Vector2(1, 1)
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Fieldworks/AmbushCover2"]
+texture = ExtResource("detail_bag")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/AmbushCover2"]
+shape = SubResource("detail_AmbushCover2")
+
+[node name="AntiArmorResupply" parent="Pickups" instance=ExtResource("detail_ammo")]
+position = Vector2(910, 570)
+
+[node name="VillageAid" parent="Pickups" instance=ExtResource("detail_health")]
+position = Vector2(1330, 570)

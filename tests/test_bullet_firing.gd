@@ -2,6 +2,12 @@
 extends SceneTree
 
 func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	# Dummy audio playback is not part of these rendering/structure checks.
+	root.get_node("SoundManager")._sfx.clear()
 	print("=== Testing Player Bullet Firing & Damage Pipeline ===")
 
 	var player_scene = load("res://scenes/player/Player.tscn")
@@ -20,9 +26,6 @@ func _init() -> void:
 
 	var player = player_scene.instantiate()
 	main_node.add_child(player)
-	player._ready()
-	if player.weapon_manager:
-		player.weapon_manager._ready()
 
 	# Verify projectile pool initialized
 	if player._projectile_pool.size() == 0:
@@ -108,7 +111,16 @@ func _init() -> void:
 	player.queue_free()
 
 	print("=== Bullet Firing & Damage Pipeline Fully Verified! ===")
-	quit(0)
+	for audio in root.find_children("*", "AudioStreamPlayer", true, false):
+		audio.stop()
+		audio.stream = null
+	for child in root.get_children():
+		if child.name not in ["GameManager", "ScoreManager", "SaveManager", "SoundManager"]:
+			child.queue_free()
+	await process_frame
+	await process_frame
+	await create_timer(0.35).timeout
+	call_deferred("quit", 0)
 
 
 class DummyEnemy extends CharacterBody2D:

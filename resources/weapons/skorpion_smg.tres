@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-weapon_name = "Skorpion vz.61"
+weapon_name = "Škorpion vz.61"
 damage = 7
 fire_rate = 0.08
 max_ammo = 20

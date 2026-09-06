@@ -11,6 +11,12 @@ graph TB
         SND["SoundManager"]
     end
 
+    subgraph Factions["Faction Identity"]
+        FR["FactionResource .tres"]
+        HV["hv_faction.tres<br/>Hrvatska vojska"]
+        SVK["svk_faction.tres<br/>Srpska vojska Krajine"]
+    end
+
     subgraph Effects["World FX under Main"]
         DM["DecalManager"]
         CV["CombatVfx"]
@@ -33,6 +39,11 @@ graph TB
         Objectives["ObjectiveTracker"]
     end
 
+    FR --> HV
+    FR --> SVK
+    HV --> PlayerNode
+    SVK --> Enemies
+    SVK --> Vehicles
     GM --> World
     GM --> UI
     SM --> RS
@@ -97,12 +108,12 @@ stateDiagram-v2
 ### Projectile Pools
 
 - Player: 100-bullet pool on Player
-- Enemy/vehicle: `ProjectilePool` on `Main/Projectiles` (80+)
+- Enemy/vehicle: `ProjectilePool` on `Main/Projectiles` (80 base, 120 hard cap — blocks spawn when full)
 - Rockets/grenades instantiate under Projectiles and are freed on mission exit
 
 ### Combat VFX & Decals
 
-- `CombatVfx`: muzzle flashes (capped lights), explosions, ricochets, blood/dust
+- `CombatVfx`: muzzle flashes (capped lights), explosions, ricochets, blood/dust; burning-wreck fire capped at 6 persistent emitters
 - `DecalManager`: FIFO 250 blood/scorch/casings/treads; cleared on mission exit
 
 ### Audio
@@ -114,6 +125,21 @@ stateDiagram-v2
 ### Objectives
 
 `ObjectiveTracker` supports DESTROY / AREA / KILL_COUNT / SURVIVE with optional **sequential** gating.
+
+- Emits `objective_updated` on partial destroy progress and `objective_target_changed(targets, label)` when the active target set changes
+- `get_current_targets()` returns the world `Node2D`s for the first incomplete positional objective
+- `ObjectiveGuidance` binds the tracker to world `ObjectiveMarker` beacons + HUD `ObjectiveArrow` edge pointer
+- Active markers join the `"objective"` / `"flag"` groups so the minimap draws gold blips
+- Area objectives (`ExitZone`, `VillageZone`, `ApproachZone`) get visible zone banners via `MissionHelpers.add_zone_banner()`
+
+### Faction System
+
+`FactionResource` (`scripts/factions/FactionResource.gd`) is a data-driven resource defining a faction's `side` (HV/SVK), `display_name`, `short_name`, `flag_texture`, `insignia_texture`, `uniform_tint`, `accent_color`, and `unit_names` dictionary.
+
+- `resources/factions/hv_faction.tres` — Hrvatska vojska (Croatian), šahovnica, olive-green tint
+- `resources/factions/svk_faction.tres` — Srpska vojska Krajine (Serbian), tricolor, darker olive tint
+- `EnemyBase` and `VehicleBase` default to SVK; `Player` defaults to HV
+- Drives unit labels (`get_unit_label(unit_key)`), uniform modulate, armband/insignia sprites, and minimap blip colors
 
 ### Collision Layers
 
@@ -129,10 +155,10 @@ stateDiagram-v2
 
 ## Mission Titles (canonical)
 
-Aligned with `GameManager.MISSION_NAMES` and the design spec:
+Aligned with `GameManager.MISSION_NAMES`, `GameManager.MISSION_META`, and the design spec:
 
-1. First Thunder
-2. Breaking the Line
-3. Open Road
-4. The Heart
-5. Victory
+1. First Thunder — Aug 4 dawn, Lika/Gospić, HV 9th Guards "Vukovi" / 4th Guards vs SVK 15th Lika Corps
+2. Breaking the Line — Aug 4-5, Medak axis, HV 9th Guards "Vukovi" vs SVK 15th Lika Corps
+3. Open Road — Aug 5, Sinj/Vrlika, HV armored spearhead vs SVK 7th Dalmatian Corps
+4. The Heart — Aug 5 afternoon, Knin streets, HV 118th Brigade / 9th Guards vs SVK Knindže
+5. Victory — Aug 5 evening, Knin Fortress, HV assault detachment vs final SVK garrison

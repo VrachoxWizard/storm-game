@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="FactionResource" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/factions/FactionResource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/factions/hv_flag.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/factions/hv_insignia.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+side = 0
+display_name = "Hrvatska vojska"
+short_name = "HV"
+flag_texture = ExtResource("2")
+insignia_texture = ExtResource("3")
+uniform_tint = Color(0.92, 1, 0.88, 1)
+accent_color = Color(0.75, 0.12, 0.12, 1)
+unit_names = {
+"player": "HV Guards",
+"guards": "9. gardijska brigada \"Vukovi\"",
+"brigade_118": "118. brigada HV"
+}

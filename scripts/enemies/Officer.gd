@@ -1,6 +1,7 @@
+class_name Officer
 extends EnemyBase
 
-## Officer — buffs nearby enemies with speed and fire-rate aura.
+## SVK officer — buffs nearby SVK infantry with speed and fire-rate aura.
 
 @export var bullet_scene: PackedScene
 @export var aura_radius: float = 150.0
@@ -13,6 +14,7 @@ var _buffed: Dictionary = {}
 
 
 func _ready() -> void:
+	unit_key = "officer"
 	super._ready()
 	max_health = 60
 	health = max_health
@@ -66,7 +68,7 @@ func _on_aura_exit(body: Node2D) -> void:
 
 
 func _refresh_buffs_on(enemy: EnemyBase) -> void:
-	## Recompute buffs from any remaining living officers.
+	## Recompute buffs from any remaining living SVK officers.
 	enemy.speed_buff = 1.0
 	enemy.fire_rate_buff = 1.0
 	if not is_inside_tree() or get_tree() == null:
@@ -74,7 +76,7 @@ func _refresh_buffs_on(enemy: EnemyBase) -> void:
 	for node in get_tree().get_nodes_in_group("enemies"):
 		if node == enemy or not is_instance_valid(node):
 			continue
-		if node.get_script() == get_script() and node.has_method("_applies_aura_to"):
+		if node is Officer and node.has_method("_applies_aura_to"):
 			if node._applies_aura_to(enemy):
 				enemy.speed_buff = maxf(enemy.speed_buff, node.speed_bonus)
 				enemy.fire_rate_buff = maxf(enemy.fire_rate_buff, node.fire_rate_bonus)

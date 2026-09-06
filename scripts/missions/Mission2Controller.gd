@@ -1,6 +1,6 @@
 extends Node
 
-## Mission 2 — Breaking the Line: destroy bunkers (ordered), then breach east.
+## Mission 2 — Breaking the Line: destroy bunkers in order (north then south), then breach east.
 ## Reinforcements spawn when the first bunker takes damage.
 
 @export var rifleman_scene: PackedScene
@@ -15,6 +15,7 @@ extends Node
 
 var _mission_complete: bool = false
 var _reinforcements_spawned: bool = false
+var _guidance: ObjectiveGuidance = null
 
 
 func _ready() -> void:
@@ -22,12 +23,24 @@ func _ready() -> void:
 	MissionHelpers.connect_checkpoints(get_parent(), player)
 	_add_extra_checkpoint(Vector2(1000, 440))
 	_spawn_defenders()
+	MissionHelpers.add_zone_banner(exit_area, "BREACH EAST")
 	objective_tracker.sequential = true
 	var bunkers: Array = bunkers_node.get_children()
-	objective_tracker.add_destroy_objective(bunkers, "Destroy bunker emplacements")
-	objective_tracker.add_area_objective(exit_area, "Breach the line")
+	# Enforce north bunker first, then south — matches briefing "in order".
+	var ordered: Array = bunkers.duplicate()
+	ordered.sort_custom(func(a: Node, b: Node) -> bool:
+		if not (a is Node2D) or not (b is Node2D):
+			return false
+		return (a as Node2D).position.y < (b as Node2D).position.y
+	)
+	if ordered.size() >= 1:
+		objective_tracker.add_destroy_objective([ordered[0]], "Destroy SVK bunker 1 (north)")
+	if ordered.size() >= 2:
+		objective_tracker.add_destroy_objective([ordered[1]], "Destroy SVK bunker 2 (south)")
+	objective_tracker.add_area_objective(exit_area, "Breach the Medak line (east)")
 	objective_tracker.all_objectives_complete.connect(_on_all_complete)
 	objective_tracker.objective_updated.connect(_on_objective_updated)
+	_guidance = MissionHelpers.bind_objective_guidance(self, objective_tracker)
 	_hook_bunker_alerts(bunkers)
 	_update_hud_objective()
 
@@ -57,9 +70,7 @@ func _hook_bunker_alerts(bunkers: Array) -> void:
 	for b in bunkers:
 		if not is_instance_valid(b):
 			continue
-		# Poll health via take_damage override is hard; use timer to detect damage
 		b.set_meta("start_health", b.get("health") if "health" in b else 200)
-	# Check periodically for damaged bunkers
 	var timer := Timer.new()
 	timer.wait_time = 0.5
 	timer.autostart = true
@@ -98,9 +109,10 @@ func _spawn_reinforcements() -> void:
 	for i in range(scenes.size()):
 		if scenes[i] == null or markers.is_empty():
 			continue
-		var pos: Vector2 = markers[i % markers.size()].global_position + Vector2(randf_range(-30, 30), randf_range(-30, 30))
-		MissionHelpers.spawn_enemy_at(scenes[i], enemies_container, pos)
-	MissionHelpers.set_hud_objective(get_tree(), "Reinforcements inbound! Destroy bunkers, then breach east")
+		var pos: Vector2 = Vector2(1180, 230 + i * 210)
+		var enemy := MissionHelpers.spawn_enemy_at(scenes[i], enemies_container, pos)
+		if enemy is EnemyBase: enemy.order_assault(player)
+	MissionHelpers.set_hud_objective(get_tree(), "SVK 15th Lika reinforcements inbound! Finish the bunkers north→south, then breach east")
 
 
 func _on_objective_updated(completed: int, total: int) -> void:

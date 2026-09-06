@@ -29,6 +29,46 @@ const MISSION_NAMES: Array[String] = [
 	"Victory",
 ]
 
+## Authentic Oluja metadata aligned with MissionBriefings.
+const MISSION_META: Array[Dictionary] = [
+	{
+		"date": "4. kolovoza 1995. — zora",
+		"sector": "Lika / Gospić",
+		"hv_unit": "9. gardijska brigada \"Vukovi\" / 4. gardijska brigada",
+		"svk_unit": "15. lički korpus SVK",
+	},
+	{
+		"date": "4.–5. kolovoza 1995.",
+		"sector": "Lika fortified line — Medak axis",
+		"hv_unit": "9. gardijska brigada \"Vukovi\"",
+		"svk_unit": "15. lički korpus SVK",
+	},
+	{
+		"date": "5. kolovoza 1995.",
+		"sector": "Dalmatian approach — Sinj / Vrlika",
+		"hv_unit": "HV armored spearhead",
+		"svk_unit": "7. dalmatinski korpus SVK",
+	},
+	{
+		"date": "5. kolovoza 1995. — poslijepodne",
+		"sector": "Knin — streets",
+		"hv_unit": "118. brigada HV / 9. gardijska brigada",
+		"svk_unit": "Knindže special detachment",
+	},
+	{
+		"date": "5. kolovoza 1995. — večer",
+		"sector": "Knin Fortress",
+		"hv_unit": "HV assault detachment",
+		"svk_unit": "Final SVK fortress garrison",
+	},
+]
+
+
+func get_mission_meta(mission_index: int) -> Dictionary:
+	if mission_index >= 0 and mission_index < MISSION_META.size():
+		return MISSION_META[mission_index]
+	return {}
+
 
 func start_mission(mission_index: int) -> void:
 	current_mission = mission_index
@@ -43,14 +83,15 @@ func begin_gameplay() -> void:
 
 
 func complete_mission() -> void:
+	if current_state != GameState.PLAYING: return
 	current_state = GameState.RESULTS
-	mission_completed.emit(current_mission)
 	SaveManager.save_mission_score(
 		current_mission,
 		ScoreManager.get_total_score(),
 		ScoreManager.get_rank(),
 		ScoreManager.elapsed_time
 	)
+	mission_completed.emit(current_mission)
 
 
 func toggle_pause() -> void:

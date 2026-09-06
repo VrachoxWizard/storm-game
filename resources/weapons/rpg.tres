@@ -17,4 +17,4 @@ projectile_count = 1
 is_pistol = false
 is_explosive = true
 explosion_radius = 80.0
-explosion_damage = 50
+explosion_damage = 100

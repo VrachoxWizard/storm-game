@@ -11,27 +11,37 @@ extends Node
 var _mission_complete: bool = false
 var _segment: int = 0
 var _segment_groups: Array[Array] = []
+var _guidance: ObjectiveGuidance = null
+var _street_objective_count: int = 0
 
 
 func _ready() -> void:
 	player.died.connect(func() -> void: MissionHelpers.handle_player_died(player))
 	MissionHelpers.connect_checkpoints(get_parent(), player)
 	_add_extra_checkpoint(Vector2(750, 500))
+	MissionHelpers.add_zone_banner(approach_zone, "FORTRESS APPROACH")
 	_partition_street_segments()
 	# Activate only first segment enemies; defer rest
 	for i in range(1, _segment_groups.size()):
 		for e in _segment_groups[i]:
 			if is_instance_valid(e):
-				e.process_mode = Node.PROCESS_MODE_DISABLED
-				e.visible = false
+				MissionHelpers.set_group_active(e, false)
 	objective_tracker.sequential = true
-	objective_tracker.add_destroy_objective(mortars_node.get_children(), "Destroy mortar battery")
-	objective_tracker.add_area_objective(approach_zone, "Reach fortress approach")
+	for i in range(_segment_groups.size()):
+		objective_tracker.add_destroy_objective(_segment_groups[i], "Clear Knin street block %d" % (i + 1))
+	_street_objective_count = _segment_groups.size()
+	objective_tracker.add_destroy_objective(mortars_node.get_children(), "Destroy SVK mortar battery")
+	objective_tracker.add_area_objective(approach_zone, "Reach Knin fortress approach")
 	objective_tracker.all_objectives_complete.connect(_complete)
 	objective_tracker.objective_updated.connect(_on_progress)
+	_guidance = ObjectiveGuidance.new()
+	_guidance.name = "ObjectiveGuidance"
+	add_child(_guidance)
+	# During street clears, omit noisy per-enemy markers — enable at mortars+.
 	_watch_segment_clears()
-	_on_progress(0, 2)
-	MissionHelpers.set_hud_objective(get_tree(), "Clear the first street — push east under mortar fire")
+	var total_objectives: int = int(objective_tracker.get_progress()["total"])
+	_on_progress(0, total_objectives)
+	MissionHelpers.set_hud_objective(get_tree(), "Clear the first Knin street — push east under SVK mortar fire")
 
 
 func _add_extra_checkpoint(pos: Vector2) -> void:
@@ -57,7 +67,6 @@ func _add_extra_checkpoint(pos: Vector2) -> void:
 
 func _partition_street_segments() -> void:
 	var children := enemies_node.get_children()
-	# Split by x position into 2–3 blocks
 	var seg_a: Array = []
 	var seg_b: Array = []
 	var seg_c: Array = []
@@ -94,16 +103,9 @@ func _check_segments() -> void:
 		return
 	var alive: int = 0
 	for e in _segment_groups[_segment]:
-		if is_instance_valid(e) and e.get("current_state") != null:
-			# EnemyBase has DEAD state — if freed, not valid
-			alive += 1
-		elif is_instance_valid(e):
-			alive += 1
-	# Recount properly
-	alive = 0
-	for e in _segment_groups[_segment]:
 		if is_instance_valid(e) and not e.is_queued_for_deletion():
-			alive += 1
+			if not (e is EnemyBase) or e.current_state != EnemyBase.State.DEAD:
+				alive += 1
 	if alive <= 0:
 		_advance_segment()
 
@@ -115,16 +117,24 @@ func _advance_segment() -> void:
 	if _segment < _segment_groups.size():
 		for e in _segment_groups[_segment]:
 			if is_instance_valid(e):
-				e.process_mode = Node.PROCESS_MODE_INHERIT
-				e.visible = true
-		MissionHelpers.set_hud_objective(get_tree(), "Street %d clear — push to the next block" % _segment)
+				MissionHelpers.set_group_active(e, true)
+				if e is EnemyBase: e.order_assault(player)
+		MissionHelpers.set_hud_objective(get_tree(), "Knin street %d clear — push to the next block" % _segment)
 	else:
-		MissionHelpers.set_hud_objective(get_tree(), "Streets clear — destroy mortars, reach fortress")
+		MissionHelpers.set_hud_objective(get_tree(), "Streets clear — destroy SVK mortars, reach the fortress")
+		# Enable positional guidance for mortars / approach.
+		if _guidance and objective_tracker:
+			_guidance.set_targets(objective_tracker.get_current_targets())
 
 
 func _on_progress(completed: int, total: int) -> void:
 	var label := objective_tracker.get_current_label()
 	MissionHelpers.set_hud_objective(get_tree(), "Objectives: %d/%d — %s" % [completed, total, label])
+	# Only show markers once street clears are done (mortars + approach).
+	if _guidance and completed >= _street_objective_count:
+		_guidance.set_targets(objective_tracker.get_current_targets())
+	elif _guidance and completed < _street_objective_count:
+		_guidance.clear()
 
 
 func _complete() -> void:

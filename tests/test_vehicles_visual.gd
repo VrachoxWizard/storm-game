@@ -1,6 +1,12 @@
 extends SceneTree
 
 func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	# Dummy audio playback is not part of these rendering/structure checks.
+	root.get_node("SoundManager")._sfx.clear()
 	# 1. Initialize DecalManager and CombatVfx in tree
 	var decal_script = load("res://scripts/effects/DecalManager.gd")
 	if decal_script == null:
@@ -79,7 +85,6 @@ func _init() -> void:
 	var bullet_scene := load("res://scenes/weapons/Projectile.tscn")
 	var dummy_bullet: Area2D = bullet_scene.instantiate()
 	root.add_child(dummy_bullet)
-	dummy_bullet._ready()
 	dummy_bullet.activate(tank.global_position + Vector2(-54, 0), 0.0, 400.0, 20)
 
 	var hp_before_weak_point: int = tank.health
@@ -124,6 +129,7 @@ func _init() -> void:
 	# 8. Test destruction states: hull texture swap, turret offset, collision disabled
 	var apc_wreck_tex = load("res://assets/sprites/vehicles/apc_wreck.png")
 	apc.destroy_vehicle()
+	await process_frame
 	if not apc.is_destroyed:
 		print("FAIL: APC is_destroyed flag not set")
 		quit(1)
@@ -140,6 +146,7 @@ func _init() -> void:
 
 	var tank_wreck_tex = load("res://assets/sprites/vehicles/tank_wreck.png")
 	tank.destroy_vehicle()
+	await process_frame
 	if not tank.is_destroyed:
 		print("FAIL: Tank is_destroyed flag not set")
 		quit(1)
@@ -155,4 +162,13 @@ func _init() -> void:
 		return
 
 	print("PASS: Vehicle visual architecture verified")
-	quit(0)
+	for audio in root.find_children("*", "AudioStreamPlayer", true, false):
+		audio.stop()
+		audio.stream = null
+	for child in root.get_children():
+		if child.name not in ["GameManager", "ScoreManager", "SaveManager", "SoundManager"]:
+			child.queue_free()
+	await process_frame
+	await process_frame
+	await create_timer(0.35).timeout
+	call_deferred("quit", 0)

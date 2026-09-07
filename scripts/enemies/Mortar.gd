@@ -73,8 +73,12 @@ func _perform_attack() -> void:
 	_warning.modulate = Color(1, 0.15, 0.15, 0.45)
 	_warning.visible = true
 	get_tree().create_timer(telegraph_time).timeout.connect(func() -> void:
-		_warning.visible = false
-		ExplosionHelper.explode(get_tree(), impact_pos, splash_radius, splash_damage, 11.0, true)
+		if not is_instance_valid(self):
+			return
+		if is_instance_valid(_warning):
+			_warning.visible = false
+		if is_inside_tree() and get_tree():
+			ExplosionHelper.explode(get_tree(), impact_pos, splash_radius, splash_damage, 11.0, true)
 		_firing = false
 	)
 

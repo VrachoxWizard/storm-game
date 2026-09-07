@@ -112,5 +112,6 @@ func _on_flag_raised() -> void:
 	if snd and snd.has_method("play_voice_line"):
 		snd.play_voice_line("oluja")
 	get_tree().create_timer(1.5).timeout.connect(func() -> void:
-		MissionHelpers.complete_mission(get_tree())
+		if is_instance_valid(self) and is_inside_tree() and get_tree():
+			MissionHelpers.complete_mission(get_tree())
 	)

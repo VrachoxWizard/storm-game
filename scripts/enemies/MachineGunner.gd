@@ -53,7 +53,9 @@ func _fire_next(generation: int) -> void:
 	_spawn_enemy_bullet()
 	_shots_fired += 1
 	if _shots_fired < shots_per_burst:
-		get_tree().create_timer(shot_interval).timeout.connect(_fire_next.bind(generation))
+		get_tree().create_timer(shot_interval).timeout.connect(func() -> void:
+			if is_instance_valid(self):
+				_fire_next(generation))
 
 
 func _die() -> void:

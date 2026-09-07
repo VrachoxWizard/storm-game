@@ -26,6 +26,13 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stone_scatter.png" id="detail_rubble"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stone_wall.png" id="detail_wall"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/wrecked_car.png" id="detail_car"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/road_sign.png" id="detail_sign"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/fuel_drum.png" id="detail_drum"]
+[ext_resource type="Resource" path="res://resources/weapons/m80_zolja.tres" id="detail_zolja"]
+[ext_resource type="Resource" path="res://resources/weapons/zastava_m76.tres" id="detail_m76"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1400, 20)
@@ -243,8 +250,75 @@ texture = ExtResource("detail_bag")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Barricade2"]
 shape = SubResource("detail_Barricade2")
 
+[node name="Props" type="Node2D" parent="."]
+
+[node name="WreckedCar1" type="Sprite2D" parent="Props"]
+position = Vector2(430, 495)
+texture = ExtResource("detail_car")
+
+[node name="WreckedCar2" type="Sprite2D" parent="Props"]
+position = Vector2(950, 480)
+rotation = 1.5708
+texture = ExtResource("detail_car")
+
+[node name="FuelDrum1" type="Sprite2D" parent="Props"]
+position = Vector2(600, 215)
+texture = ExtResource("detail_drum")
+
+[node name="RoadSign1" type="Sprite2D" parent="Props"]
+position = Vector2(180, 420)
+texture = ExtResource("detail_sign")
+
+[node name="TreeCourtyard" type="Sprite2D" parent="Props"]
+position = Vector2(690, 880)
+texture = ExtResource("detail_tree")
+
+[node name="WallRuin1" type="Sprite2D" parent="Props"]
+position = Vector2(1000, 560)
+texture = ExtResource("detail_wall")
+
+[node name="WallRuin2" type="Sprite2D" parent="Props"]
+position = Vector2(370, 700)
+rotation = 1.5708
+texture = ExtResource("detail_wall")
+
+[node name="GroundDetail" type="Node2D" parent="Props"]
+z_index = -1
+
+[node name="Rubble1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(300, 470)
+texture = ExtResource("detail_rubble")
+
+[node name="Rubble2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(700, 390)
+texture = ExtResource("detail_rubble")
+
+[node name="Rubble3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1050, 610)
+texture = ExtResource("detail_rubble")
+
+[node name="Rubble4" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(520, 250)
+texture = ExtResource("detail_rubble")
+
+[node name="Rubble5" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(880, 300)
+texture = ExtResource("detail_rubble")
+
+[node name="Rubble6" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(220, 610)
+texture = ExtResource("detail_rubble")
+
 [node name="MarketAmmo" parent="Pickups" instance=ExtResource("detail_ammo")]
 position = Vector2(610, 500)
 
 [node name="BatteryAid" parent="Pickups" instance=ExtResource("detail_health")]
 position = Vector2(1140, 640)
+
+[node name="ZoljaCache" parent="Pickups" instance=ExtResource("10_weapon")]
+position = Vector2(560, 300)
+weapon_resource = ExtResource("detail_zolja")
+
+[node name="MarksmanPost" parent="Pickups" instance=ExtResource("10_weapon")]
+position = Vector2(1200, 700)
+weapon_resource = ExtResource("detail_m76")

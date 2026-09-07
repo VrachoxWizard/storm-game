@@ -109,6 +109,8 @@ func _apply_faction_visuals() -> void:
 		return
 	if body_sprite:
 		body_sprite.modulate = faction.uniform_tint
+		# Remember the tint so hit-flash feedback can restore it (not hard white).
+		body_sprite.set_meta("base_modulate", faction.uniform_tint)
 	_ensure_faction_badge()
 
 
@@ -322,8 +324,28 @@ func _on_detection_body_entered(body: Node2D) -> void:
 func _on_detection_body_exited(body: Node2D) -> void:
 	if body == target and not _assault_target:
 		if current_state != State.DEAD:
-			target = null
-			current_state = State.PATROL
+			# Pursuit grace: keep chasing briefly instead of instantly resetting
+			# to PATROL when the player steps one pixel outside the detection circle.
+			_enter_chase()
+			if state_timer != null and state_timer.is_inside_tree():
+				if not state_timer.timeout.is_connected(_on_pursuit_timeout):
+					state_timer.timeout.connect(_on_pursuit_timeout)
+				state_timer.start(2.5)
+			else:
+				target = null
+				current_state = State.PATROL
+
+
+func _on_pursuit_timeout() -> void:
+	if current_state == State.DEAD or _assault_target:
+		return
+	if target == null or not is_instance_valid(target):
+		current_state = State.PATROL
+		return
+	# Drop the target only if the player truly got away.
+	if global_position.distance_to(target.global_position) > detection_range * 1.1:
+		target = null
+		current_state = State.PATROL
 
 func _flash_hit() -> void:
 	HitFeedback.flash_hit(self)

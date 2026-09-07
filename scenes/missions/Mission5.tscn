@@ -17,7 +17,7 @@
 [ext_resource type="Script" path="res://scripts/missions/FlagObjective.gd" id="15_flag"]
 [ext_resource type="Resource" path="res://resources/weapons/rpg.tres" id="16_rpg"]
 [ext_resource type="Texture2D" path="res://assets/sprites/terrain/terrain_fortress.png" id="17_ground"]
-[ext_resource type="Texture2D" path="res://assets/sprites/flag.png" id="18_flagtex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/factions/hv_flag.png" id="18_flagtex"]
 
 [ext_resource type="PackedScene" path="res://scenes/environment/BuildingTinRoof.tscn" id="detail_tin"]
 [ext_resource type="PackedScene" path="res://scenes/environment/BuildingTileRoof.tscn" id="detail_tile"]
@@ -25,6 +25,12 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stone_wall.png" id="detail_wall"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/grass_tuft.png" id="detail_grass"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stone_scatter.png" id="detail_stone"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/fuel_drum.png" id="detail_drum"]
+[ext_resource type="Resource" path="res://resources/weapons/m80_zolja.tres" id="detail_zolja"]
+[ext_resource type="Resource" path="res://resources/weapons/m72_rpk.tres" id="detail_rpk"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1400, 20)
@@ -126,7 +132,7 @@ script = ExtResource("15_flag")
 
 [node name="Sprite2D" type="Sprite2D" parent="FlagObjective"]
 texture = ExtResource("18_flagtex")
-scale = Vector2(2, 2)
+scale = Vector2(1.5, 1.5)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FlagObjective"]
 shape = SubResource("CircleShape2D_flag")
@@ -196,12 +202,12 @@ polygon = PackedVector2Array(930, 280, 1310, 280, 1310, 730, 930, 730)
 [node name="Rampart0" type="StaticBody2D" parent="Fieldworks"]
 position = Vector2(320, 240)
 rotation = 1.5708
-scale = Vector2(3, 1.5)
+scale = Vector2(2.5, 1)
 collision_layer = 32
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Rampart0"]
-texture = ExtResource("detail_bag")
+texture = ExtResource("detail_wall")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Rampart0"]
 shape = SubResource("detail_Rampart0")
@@ -209,12 +215,12 @@ shape = SubResource("detail_Rampart0")
 [node name="Rampart1" type="StaticBody2D" parent="Fieldworks"]
 position = Vector2(480, 790)
 rotation = 0
-scale = Vector2(3, 1.5)
+scale = Vector2(2.5, 1)
 collision_layer = 32
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Rampart1"]
-texture = ExtResource("detail_bag")
+texture = ExtResource("detail_wall")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Rampart1"]
 shape = SubResource("detail_Rampart1")
@@ -222,12 +228,12 @@ shape = SubResource("detail_Rampart1")
 [node name="Rampart2" type="StaticBody2D" parent="Fieldworks"]
 position = Vector2(610, 180)
 rotation = 0
-scale = Vector2(3, 1.5)
+scale = Vector2(2.5, 1)
 collision_layer = 32
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Rampart2"]
-texture = ExtResource("detail_bag")
+texture = ExtResource("detail_wall")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Rampart2"]
 shape = SubResource("detail_Rampart2")
@@ -235,12 +241,12 @@ shape = SubResource("detail_Rampart2")
 [node name="Rampart3" type="StaticBody2D" parent="Fieldworks"]
 position = Vector2(890, 250)
 rotation = 1.5708
-scale = Vector2(2, 1.5)
+scale = Vector2(2, 1)
 collision_layer = 32
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Rampart3"]
-texture = ExtResource("detail_bag")
+texture = ExtResource("detail_wall")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Rampart3"]
 shape = SubResource("detail_Rampart3")
@@ -248,12 +254,12 @@ shape = SubResource("detail_Rampart3")
 [node name="Rampart4" type="StaticBody2D" parent="Fieldworks"]
 position = Vector2(890, 720)
 rotation = 1.5708
-scale = Vector2(2, 1.5)
+scale = Vector2(2, 1)
 collision_layer = 32
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Rampart4"]
-texture = ExtResource("detail_bag")
+texture = ExtResource("detail_wall")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Rampart4"]
 shape = SubResource("detail_Rampart4")
@@ -261,12 +267,12 @@ shape = SubResource("detail_Rampart4")
 [node name="Rampart5" type="StaticBody2D" parent="Fieldworks"]
 position = Vector2(1190, 210)
 rotation = 0
-scale = Vector2(3, 1.5)
+scale = Vector2(2.5, 1)
 collision_layer = 32
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Rampart5"]
-texture = ExtResource("detail_bag")
+texture = ExtResource("detail_wall")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Rampart5"]
 shape = SubResource("detail_Rampart5")
@@ -274,18 +280,71 @@ shape = SubResource("detail_Rampart5")
 [node name="Rampart6" type="StaticBody2D" parent="Fieldworks"]
 position = Vector2(1190, 790)
 rotation = 0
-scale = Vector2(3, 1.5)
+scale = Vector2(2.5, 1)
 collision_layer = 32
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Fieldworks/Rampart6"]
-texture = ExtResource("detail_bag")
+texture = ExtResource("detail_wall")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fieldworks/Rampart6"]
 shape = SubResource("detail_Rampart6")
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Tree1" type="Sprite2D" parent="Props"]
+position = Vector2(150, 220)
+texture = ExtResource("detail_tree")
+
+[node name="Tree2" type="Sprite2D" parent="Props"]
+position = Vector2(1290, 860)
+texture = ExtResource("detail_tree")
+
+[node name="FuelDrum1" type="Sprite2D" parent="Props"]
+position = Vector2(980, 320)
+texture = ExtResource("detail_drum")
+
+[node name="FuelDrum2" type="Sprite2D" parent="Props"]
+position = Vector2(1004, 332)
+texture = ExtResource("detail_drum")
+
+[node name="GroundDetail" type="Node2D" parent="Props"]
+z_index = -1
+
+[node name="Stones1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(300, 500)
+texture = ExtResource("detail_stone")
+
+[node name="Stones2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(700, 350)
+texture = ExtResource("detail_stone")
+
+[node name="Stones3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1150, 600)
+texture = ExtResource("detail_stone")
+
+[node name="Stones4" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(520, 720)
+texture = ExtResource("detail_stone")
+
+[node name="Grass1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(200, 850)
+texture = ExtResource("detail_grass")
+
+[node name="Grass2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1260, 300)
+texture = ExtResource("detail_grass")
 
 [node name="TankAmmo" parent="Pickups" instance=ExtResource("detail_ammo")]
 position = Vector2(590, 610)
 
 [node name="CourtyardAid" parent="Pickups" instance=ExtResource("detail_health")]
 position = Vector2(920, 500)
+
+[node name="ZoljaCache" parent="Pickups" instance=ExtResource("9_weapon")]
+position = Vector2(310, 560)
+weapon_resource = ExtResource("detail_zolja")
+
+[node name="RpkCache" parent="Pickups" instance=ExtResource("9_weapon")]
+position = Vector2(880, 620)
+weapon_resource = ExtResource("detail_rpk")

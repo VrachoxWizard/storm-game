@@ -2,7 +2,7 @@
 
 This file provides comprehensive instructions and roadmap context for **Claude Code** and other AI agents to continue implementing **Operation Storm**.
 
-**Current status:** Phases 1–5, the Polish Elevation Pass, and the Authenticity Overhaul (6 Sep 2026) are complete. Canonical mission titles: First Thunder, Breaking the Line, Open Road, The Heart, Victory (`GameManager.MISSION_NAMES`). Each mission is anchored to real Oluja chronology via `GameManager.MISSION_META` (sector, HV unit, SVK unit, date). See `AGENTS.md` and `docs/ARCHITECTURE.md` for systems detail.
+**Current status:** Phases 1–5, the Polish Elevation Pass, the Authenticity Overhaul (6 Sep 2026), and the Visual, Shooting & Content Overhaul (7 Sep 2026) are complete — M70 full-auto with spread bloom, rewritten high-visibility crosshair with hit/kill markers, three new era-correct weapons (M72 RPK, Zastava M76, disposable M80 "Zolja"), per-weapon held sprites, heraldic flag regeneration, a 5-mission density pass, and a bug audit with regression tests (`tests/test_overhaul_regressions.gd`, run without `--quit`). Canonical mission titles: First Thunder, Breaking the Line, Open Road, The Heart, Victory (`GameManager.MISSION_NAMES`). Each mission is anchored to real Oluja chronology via `GameManager.MISSION_META` (sector, HV unit, SVK unit, date). See `AGENTS.md`, `docs/ARCHITECTURE.md`, and `docs/visual-combat-overhaul-2026-09-07.md` for systems detail.
 
 ---
 

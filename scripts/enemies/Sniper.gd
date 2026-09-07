@@ -54,7 +54,7 @@ func _perform_attack() -> void:
 	_aim_generation += 1
 	var generation: int = _aim_generation
 	get_tree().create_timer(aim_time).timeout.connect(func() -> void:
-		if generation == _aim_generation and _aiming:
+		if is_instance_valid(self) and generation == _aim_generation and _aiming:
 			_fire_sniper_shot()
 	)
 

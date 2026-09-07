@@ -42,7 +42,7 @@ func _ensure_meta_ui() -> void:
 		vbox.move_child(row, _meta_label.get_index() + 1)
 		_hv_icon = TextureRect.new()
 		_hv_icon.name = "HvIcon"
-		_hv_icon.custom_minimum_size = Vector2(48, 32)
+		_hv_icon.custom_minimum_size = Vector2(72, 36)
 		_hv_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_hv_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(_hv_icon)
@@ -52,7 +52,7 @@ func _ensure_meta_ui() -> void:
 		row.add_child(vs)
 		_svk_icon = TextureRect.new()
 		_svk_icon.name = "SvkIcon"
-		_svk_icon.custom_minimum_size = Vector2(48, 32)
+		_svk_icon.custom_minimum_size = Vector2(72, 36)
 		_svk_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_svk_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(_svk_icon)

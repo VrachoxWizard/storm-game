@@ -7,9 +7,15 @@ signal weapon_switched(weapon_resource: WeaponResource)
 signal ammo_changed(current: int, max_ammo: int)
 signal reserve_changed(reserve: int)
 signal weapon_fired
+## Emitted whenever sustained-fire spread bloom changes (for crosshair ring).
+signal bloom_changed(bloom: float)
+## Emitted when a disposable launcher (M80 Zolja) is spent and tossed away.
+signal weapon_discarded(weapon_resource: WeaponResource)
 
 const SLOT_COUNT: int = 3
 const PISTOL_SLOT: int = 2  ## slot index for permanent pistol
+## How fast spread bloom recovers per second when not firing.
+const BLOOM_RECOVERY_RATE: float = 0.30
 
 @export var default_weapon: WeaponResource
 @export var pistol_weapon: WeaponResource
@@ -21,6 +27,10 @@ var current_slot: int = 0
 var _last_slot: int = 0
 var can_fire: bool = true
 var is_reloading: bool = false
+## Extra spread (radians) accumulated from sustained automatic fire.
+var current_bloom: float = 0.0
+## How many projectiles the last trigger pull actually spawned (pool may be short).
+var last_pellet_count: int = 1
 
 @onready var fire_timer: Timer = $FireTimer
 @onready var reload_timer: Timer = $ReloadTimer
@@ -71,7 +81,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		_start_reload()
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	# Bloom recovers whenever the weapon is not cycling.
+	if current_bloom > 0.0:
+		var recovered: float = maxf(0.0, current_bloom - BLOOM_RECOVERY_RATE * delta)
+		if not is_equal_approx(recovered, current_bloom):
+			current_bloom = recovered
+			bloom_changed.emit(current_bloom)
+
 	var weapon := get_current_weapon()
 	if weapon == null:
 		return
@@ -107,6 +124,16 @@ func fire() -> void:
 		_start_reload()
 		return
 
+	# Pre-check the projectile pool so a shortfall never burns ammo for nothing.
+	last_pellet_count = maxi(1, weapon.projectile_count)
+	if not weapon.is_explosive:
+		var shooter := get_parent()
+		if shooter and shooter.has_method("count_free_projectiles"):
+			var free_count: int = shooter.count_free_projectiles()
+			if free_count <= 0:
+				return  # Pool exhausted: no shot, no ammo spent.
+			last_pellet_count = mini(last_pellet_count, free_count)
+
 	if ammo[current_slot] > 0:
 		ammo[current_slot] -= 1
 
@@ -114,9 +141,43 @@ func fire() -> void:
 	fire_timer.wait_time = weapon.fire_rate
 	fire_timer.start()
 
+	# Sustained-fire spread bloom.
+	if weapon.bloom_per_shot > 0.0:
+		current_bloom = minf(current_bloom + weapon.bloom_per_shot, weapon.max_bloom)
+		bloom_changed.emit(current_bloom)
+
 	weapon_fired.emit()
 	ammo_changed.emit(ammo[current_slot], weapon.max_ammo)
 	reserve_changed.emit(reserve[current_slot])
+
+	# Disposable launchers (M80 Zolja) are tossed away after the single shot.
+	if weapon.is_disposable and ammo[current_slot] <= 0 and reserve[current_slot] <= 0:
+		_discard_current_weapon()
+
+
+## Removes the current (spent disposable) weapon and falls back to a carried one.
+func _discard_current_weapon() -> void:
+	var tossed := slots[current_slot]
+	slots[current_slot] = null
+	ammo[current_slot] = 0
+	reserve[current_slot] = 0
+	if tossed:
+		weapon_discarded.emit(tossed)
+	# Prefer the previous slot, then any other non-empty slot, else the pistol.
+	var fallback: int = -1
+	if _last_slot != current_slot and _last_slot >= 0 and _last_slot < SLOT_COUNT and slots[_last_slot] != null:
+		fallback = _last_slot
+	else:
+		for i in range(SLOT_COUNT):
+			if slots[i] != null:
+				fallback = i
+				break
+	if fallback >= 0:
+		# _last_slot bookkeeping: don't point at the now-empty slot.
+		_last_slot = fallback
+		switch_to_slot(fallback)
+	else:
+		_emit_current_state()
 
 
 func switch_to_slot(slot: int) -> void:
@@ -132,6 +193,10 @@ func switch_to_slot(slot: int) -> void:
 		_last_slot = current_slot
 	current_slot = slot
 	can_fire = fire_timer.is_stopped()
+	# Switching weapons resets sustained-fire bloom.
+	if current_bloom > 0.0:
+		current_bloom = 0.0
+		bloom_changed.emit(0.0)
 	_emit_current_state()
 
 
@@ -188,11 +253,20 @@ func add_weapon(weapon_res: WeaponResource, total_rounds: int) -> Dictionary:
 
 func add_ammo(amount: int) -> void:
 	## Adds rounds to the currently held weapon's reserve.
+	## If the pistol is held (unlimited ammo), redirect to the best carried gun instead.
+	var target_slot: int = current_slot
 	var weapon := get_current_weapon()
 	if weapon == null or weapon.is_pistol:
-		return
-	reserve[current_slot] += amount
-	ammo_changed.emit(ammo[current_slot], weapon.max_ammo)
+		target_slot = -1
+		for i in range(PISTOL_SLOT):
+			if slots[i] != null:
+				target_slot = i
+				break
+		if target_slot < 0:
+			return
+		weapon = slots[target_slot]
+	reserve[target_slot] += amount
+	ammo_changed.emit(ammo[current_slot], get_current_weapon().max_ammo if get_current_weapon() else 0)
 	reserve_changed.emit(reserve[current_slot])
 
 
@@ -260,3 +334,6 @@ func reset_action_state() -> void:
 	reload_timer.stop()
 	can_fire = true
 	is_reloading = false
+	if current_bloom > 0.0:
+		current_bloom = 0.0
+		bloom_changed.emit(0.0)

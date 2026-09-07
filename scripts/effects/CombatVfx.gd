@@ -13,9 +13,13 @@ static var instance: CombatVfx = null
 static var _radial_light_texture: Texture2D = null
 const MAX_MUZZLE_LIGHTS: int = 8
 const MAX_BURNING_WRECKS: int = 6
+## Distant-war ambience cadence (seconds between far-off smoke/rumble events).
+const AMBIENCE_MIN: float = 9.0
+const AMBIENCE_MAX: float = 18.0
 
 var _active_muzzle_lights: int = 0
 var _burning_wrecks: Array[Node2D] = []
+var _ambience_timer: float = 6.0
 
 
 func _init() -> void:
@@ -30,6 +34,40 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	if instance == self:
 		instance = null
+
+
+func _process(delta: float) -> void:
+	# Ambient war layer: far-off artillery rumble + distant smoke columns while playing.
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or int(gm.get("current_state")) != 2:  # GameState.PLAYING
+		return
+	_ambience_timer -= delta
+	if _ambience_timer > 0.0:
+		return
+	_ambience_timer = randf_range(AMBIENCE_MIN, AMBIENCE_MAX)
+	_spawn_distant_war_signs()
+
+
+## Slow charcoal smoke column + low rumble, placed well outside the player's position.
+func _spawn_distant_war_signs() -> void:
+	var origin := global_position
+	var players := get_tree().get_nodes_in_group("player") if is_inside_tree() else []
+	if not players.is_empty() and is_instance_valid(players[0]):
+		origin = (players[0] as Node2D).global_position
+	var angle := randf_range(0.0, TAU)
+	var dist := randf_range(650.0, 1000.0)
+	var pos := origin + Vector2(cos(angle), sin(angle)) * dist
+	# Smoke column: tall slow drift, dark charcoal
+	var smoke := VfxComp.create_burst(10, 2.8, Color(0.30, 0.28, 0.26, 0.45), 8.0, 22.0, 12.0, Vector3(0, -18.0, 0), Vector3(0, -1, 0))
+	add_child(smoke)
+	smoke.global_position = pos
+	smoke.z_index = 1
+	smoke.emitting = true
+	VfxComp.auto_free(smoke, smoke.lifetime + 0.2)
+	# Distant artillery rumble, quiet and low.
+	var snd := get_node_or_null("/root/SoundManager")
+	if snd and snd.has_method("play_sfx"):
+		snd.play_sfx("explosion", 0.18, -17.0)
 
 
 # ---------------------------------------------------------
@@ -54,9 +92,9 @@ static func get_radial_light_texture() -> Texture2D:
 
 
 ## Static helper to spawn a muzzle flash via the active CombatVfx instance.
-static func vfx_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle") -> void:
+static func vfx_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle", eject_casing: bool = true) -> void:
 	if instance:
-		instance.spawn_muzzle_flash(pos, rot, weapon_type)
+		instance.spawn_muzzle_flash(pos, rot, weapon_type, eject_casing)
 
 
 ## Static helper to spawn a multi-stage explosion via the active CombatVfx instance.
@@ -105,9 +143,10 @@ static func vfx_dust(pos: Vector2) -> void:
 # ---------------------------------------------------------
 
 ## Spawns a weapon-scaled muzzle flash with dynamic PointLight2D and casing ejection.
-func spawn_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle") -> void:
+## Pass eject_casing = false when the shooter ejects its own brass (player BrassMarker).
+func spawn_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle", eject_casing: bool = true) -> void:
 	var wtype := weapon_type.to_lower()
-	var is_shotgun := "shotgun" in wtype
+	var is_shotgun := "shotgun" in wtype or "hawk" in wtype
 	var flash_scale := Vector2(1.0, 0.8)
 	var light_energy := 1.8
 	var light_scale := 1.2
@@ -142,12 +181,13 @@ func spawn_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle")
 		speed_min = 100.0
 		speed_max = 200.0
 
-	# 1. Flash Sprite
+	# 1. Flash Sprite (above characters at z_index 1 so it never hides under the shooter)
 	var sprite := Sprite2D.new()
 	sprite.texture = tex
 	sprite.rotation = rot
 	sprite.scale = flash_scale
 	sprite.modulate = Color(1.0, 0.95, 0.6, 0.95)
+	sprite.z_index = 2
 	add_child(sprite)
 	sprite.global_position = pos + Vector2.RIGHT.rotated(rot) * (10.0 * flash_scale.x)
 
@@ -164,7 +204,8 @@ func spawn_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle")
 		_active_muzzle_lights += 1
 		VfxComp.create_transient_light(self, pos + Vector2.RIGHT.rotated(rot) * (8.0 * flash_scale.x), get_radial_light_texture(), Color(1.0, 0.82, 0.4), light_energy, light_scale, light_duration)
 		get_tree().create_timer(light_duration + 0.05).timeout.connect(func() -> void:
-			_active_muzzle_lights = maxi(_active_muzzle_lights - 1, 0)
+			if is_instance_valid(self):
+				_active_muzzle_lights = maxi(_active_muzzle_lights - 1, 0)
 		)
 
 	# 3. Particle Sparks
@@ -175,9 +216,17 @@ func spawn_muzzle_flash(pos: Vector2, rot: float, weapon_type: String = "rifle")
 	flash_p.emitting = true
 	VfxComp.auto_free(flash_p, flash_p.lifetime + 0.1)
 
+	# 3b. Muzzle smoke wisp for bolt-action / marksman class weapons
+	if "m48" in wtype or "mauser" in wtype or "m76" in wtype or "sniper" in wtype:
+		var smoke := VfxComp.create_burst(5, 0.9, Color(0.62, 0.60, 0.56, 0.5), 12.0, 26.0, 26.0, Vector3(0, -10.0, 0), Vector3(0, -1, 0))
+		add_child(smoke)
+		smoke.global_position = pos + Vector2.RIGHT.rotated(rot) * 6.0
+		smoke.emitting = true
+		VfxComp.auto_free(smoke, smoke.lifetime + 0.1)
+
 	# 4. Spent Casing Ejection via DecalManager (omitted for rockets / heavy artillery)
-	var is_heavy_explosive := "rocket" in wtype or "rpg" in wtype or "cannon" in wtype
-	if not is_heavy_explosive:
+	var is_heavy_explosive := "rocket" in wtype or "rpg" in wtype or "cannon" in wtype or "zolja" in wtype
+	if eject_casing and not is_heavy_explosive:
 		var eject_angle: float = rot + randf_range(1.2, 1.9)
 		var eject_dir := Vector2.RIGHT.rotated(eject_angle)
 		DecalManager.spawn_casing(pos, eject_dir, is_shotgun)

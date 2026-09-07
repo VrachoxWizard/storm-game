@@ -23,6 +23,13 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/grass_tuft.png" id="detail_grass"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stone_scatter.png" id="detail_stone"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/fuel_drum.png" id="detail_drum"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/telegraph_pole.png" id="detail_pole"]
+[ext_resource type="Texture2D" path="res://assets/sprites/minefield.png" id="detail_minesign"]
+[ext_resource type="Resource" path="res://resources/weapons/m80_zolja.tres" id="detail_zolja"]
+[ext_resource type="Resource" path="res://resources/weapons/zastava_m76.tres" id="detail_m76"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1400, 20)
@@ -299,5 +306,93 @@ shape = SubResource("detail_TrenchLip5")
 position = Vector2(1120, 150)
 scale = Vector2(0.75, 0.75)
 
+[node name="Props" type="Node2D" parent="."]
+
+[node name="FuelDrum1" type="Sprite2D" parent="Props"]
+position = Vector2(1180, 210)
+texture = ExtResource("detail_drum")
+
+[node name="FuelDrum2" type="Sprite2D" parent="Props"]
+position = Vector2(1204, 222)
+texture = ExtResource("detail_drum")
+
+[node name="Pole1" type="Sprite2D" parent="Props"]
+position = Vector2(240, 120)
+texture = ExtResource("detail_pole")
+
+[node name="Pole2" type="Sprite2D" parent="Props"]
+position = Vector2(520, 110)
+texture = ExtResource("detail_pole")
+
+[node name="Pole3" type="Sprite2D" parent="Props"]
+position = Vector2(800, 120)
+texture = ExtResource("detail_pole")
+
+[node name="Pole4" type="Sprite2D" parent="Props"]
+position = Vector2(1080, 110)
+texture = ExtResource("detail_pole")
+
+[node name="Pole5" type="Sprite2D" parent="Props"]
+position = Vector2(1320, 120)
+texture = ExtResource("detail_pole")
+
+[node name="MineSign1" type="Sprite2D" parent="Props"]
+position = Vector2(620, 180)
+texture = ExtResource("detail_minesign")
+
+[node name="MineSign2" type="Sprite2D" parent="Props"]
+position = Vector2(640, 720)
+texture = ExtResource("detail_minesign")
+
+[node name="Tree1" type="Sprite2D" parent="Props"]
+position = Vector2(160, 740)
+texture = ExtResource("detail_tree")
+
+[node name="Tree2" type="Sprite2D" parent="Props"]
+position = Vector2(1260, 760)
+texture = ExtResource("detail_tree")
+
+[node name="GroundDetail" type="Node2D" parent="Props"]
+z_index = -1
+
+[node name="Grass1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(200, 260)
+texture = ExtResource("detail_grass")
+
+[node name="Grass2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(380, 700)
+texture = ExtResource("detail_grass")
+
+[node name="Grass3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(960, 300)
+texture = ExtResource("detail_grass")
+
+[node name="Grass4" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1240, 560)
+texture = ExtResource("detail_grass")
+
+[node name="Stones1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(460, 560)
+texture = ExtResource("detail_stone")
+
+[node name="Stones2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1150, 640)
+texture = ExtResource("detail_stone")
+
+[node name="Stones3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(700, 780)
+texture = ExtResource("detail_stone")
+
 [node name="BreachAmmo" parent="Pickups" instance=ExtResource("detail_ammo")]
 position = Vector2(1020, 440)
+
+[node name="ZoljaCache" parent="Pickups" instance=ExtResource("8_weapon")]
+position = Vector2(430, 240)
+weapon_resource = ExtResource("detail_zolja")
+
+[node name="MarksmanRifle" parent="Pickups" instance=ExtResource("8_weapon")]
+position = Vector2(190, 600)
+weapon_resource = ExtResource("detail_m76")
+
+[node name="ForwardAid" parent="Pickups" instance=ExtResource("detail_health")]
+position = Vector2(880, 380)

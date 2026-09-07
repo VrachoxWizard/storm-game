@@ -11,6 +11,8 @@ var _player_inside: bool = false
 var _hold: float = 0.0
 var _raised: bool = false
 var _progress_bar: ProgressBar
+var _flag_sprite: Sprite2D
+var _flag_rest_y: float = 0.0
 
 
 func _ready() -> void:
@@ -25,6 +27,12 @@ func _ready() -> void:
 	_progress_bar.visible = false
 	_progress_bar.position = Vector2(-32, -40)
 	add_child(_progress_bar)
+	# The flag starts lowered at the pole base; it rises when the objective completes.
+	_flag_sprite = get_node_or_null("Sprite2D") as Sprite2D
+	if _flag_sprite:
+		_flag_rest_y = _flag_sprite.position.y
+		_flag_sprite.position.y = _flag_rest_y + 30.0
+		_flag_sprite.modulate.a = 0.45
 	body_entered.connect(func(body: Node2D) -> void:
 		if body.is_in_group("player"):
 			_player_inside = true
@@ -53,6 +61,13 @@ func _process(delta: float) -> void:
 		if _hold >= hold_time:
 			_raised = true
 			_progress_bar.visible = false
+			# Raise the šahovnica up the pole.
+			if _flag_sprite and is_inside_tree():
+				var tween := create_tween()
+				if tween:
+					tween.set_parallel(true)
+					tween.tween_property(_flag_sprite, "position:y", _flag_rest_y - 12.0, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+					tween.tween_property(_flag_sprite, "modulate:a", 1.0, 0.6)
 			flag_raised.emit()
 	else:
 		_hold = 0.0

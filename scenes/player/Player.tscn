@@ -32,12 +32,13 @@ hframes = 4
 texture = ExtResource("7_torso")
 
 [node name="WeaponSprite" type="Sprite2D" parent="TorsoContainer"]
+position = Vector2(16, 2)
 
 [node name="MuzzleMarker" type="Marker2D" parent="TorsoContainer"]
-position = Vector2(24, 0)
+position = Vector2(32, 2)
 
 [node name="BrassMarker" type="Marker2D" parent="TorsoContainer"]
-position = Vector2(8, 2)
+position = Vector2(10, 5)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")

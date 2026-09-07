@@ -151,7 +151,8 @@ func _do_spawn_casing(pos: Vector2, eject_dir: Vector2, is_shotgun: bool = false
 	sprite.rotation = randf_range(0.0, TAU)
 
 	if is_shotgun:
-		sprite.modulate = Color(0.9, 0.35, 0.35, 1.0)
+		# Deep shellac red hull (reads as a shotgun shell, not pink litter)
+		sprite.modulate = Color(0.62, 0.16, 0.12, 1.0)
 	else:
 		sprite.modulate = Color(0.95, 0.85, 0.5, 1.0)
 

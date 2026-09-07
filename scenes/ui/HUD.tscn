@@ -32,9 +32,9 @@ mouse_filter = 2
 texture = ExtResource("4_health_frame")
 
 [node name="AmmoFrame" type="TextureRect" parent="."]
-offset_left = 330.0
+offset_left = 380.0
 offset_top = 10.0
-offset_right = 510.0
+offset_right = 560.0
 offset_bottom = 54.0
 mouse_filter = 2
 texture = ExtResource("5_ammo_frame")
@@ -87,6 +87,15 @@ theme_override_colors/font_color = Color(0.9, 0.25, 0.2, 1)
 theme_override_font_sizes/font_size = 12
 visible = false
 
+[node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = ""
+
+[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
 [node name="BottomBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 mouse_filter = 2
@@ -113,10 +122,6 @@ custom_minimum_size = Vector2(220, 28)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("9_gear")
-
-[node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = ""
 
 [node name="ToastLabel" type="Label" parent="."]
 anchors_preset = 8

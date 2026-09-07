@@ -153,6 +153,22 @@ func _update_state() -> void:
 - Weapon pickups inherit from `PickupBase.tscn`
 - Override `@export` properties in the inherited scene for type-specific values
 
+### Authoring New Weapons
+
+Every `WeaponResource` (.tres in `resources/weapons/`) must set the full field contract so
+downstream systems (crosshair, SFX, held sprite, VFX) resolve it correctly:
+
+- `weapon_id` — unique StringName (`m70`, `php`, `hawk`, `skorpion`, `m48`, `rpg`, `m72`, `m76`, `zolja`); drives the crosshair reticle, `SoundManager.play_weapon_shoot` matching, and muzzle-flash style.
+- `held_sprite` — slim held-weapon texture from `assets/sprites/weapons/` (generate via `tools/generate_war_journal_assets.py`); rendered by `Player.WeaponSprite`.
+- `is_automatic` — hold-to-fire vs per-click; pair automatic weapons with `bloom_per_shot` / `max_bloom` for sustained-fire spread.
+- `is_disposable` — single-shot launchers (Zolja) auto-discard after firing; keep `max_ammo = 1` and `starting_reserve = 0`.
+
+### Deferred Timers on Freed Nodes
+
+Any `get_tree().create_timer(...).timeout` callback that touches `self` must guard with
+`is_instance_valid(self)` (and `is_inside_tree()` where tree access is needed). Nodes can be
+freed mid-cooldown (enemy deaths, mission exits), and unguarded callbacks spam runtime errors.
+
 ### Minimap / Objective Groups
 
 Nodes registered in these groups appear on the tactical minimap:

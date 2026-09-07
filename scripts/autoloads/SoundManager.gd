@@ -163,6 +163,7 @@ func play_sfx(id: String, pitch_variance: float = 0.08, volume_db: float = 0.0) 
 
 
 func play_weapon_shoot(weapon_name: String) -> void:
+	## Accepts a WeaponResource.weapon_id (preferred) or a display name (legacy).
 	var key := "shoot_rifle"
 	var n := weapon_name.to_lower()
 	if "pistol" in n or "php" in n:
@@ -171,10 +172,12 @@ func play_weapon_shoot(weapon_name: String) -> void:
 		key = "shoot_shotgun"
 	elif "skorpion" in n or "škorpion" in n or "smg" in n:
 		key = "shoot_smg"
-	elif "mauser" in n or "sniper" in n or "m48" in n:
+	elif "mauser" in n or "sniper" in n or "m48" in n or "m76" in n or "dmr" in n:
 		key = "shoot_sniper"
-	elif "rpg" in n:
+	elif "rpg" in n or "zolja" in n or "m80" in n:
 		key = "shoot_rpg"
+	elif "m72" in n or "rpk" in n or "lmg" in n:
+		key = "shoot_smg"  # RPK reuses the rapid automatic bark until dedicated audio exists
 	play_sfx(key)
 
 

@@ -13,6 +13,7 @@ GODOT_BIN = r"C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine
 
 TESTS = [
     ("Gameplay Reliability", "tests/test_gameplay_reliability.gd"),
+    ("Overhaul Regressions", "tests/test_overhaul_regressions.gd"),
     ("Campaign Progression", "tests/test_campaign_progression.gd"),
     ("Objective Guidance", "tests/test_objective_guidance.gd"),
     ("Decal Manager", "tests/test_decal_manager.gd"),

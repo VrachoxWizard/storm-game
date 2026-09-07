@@ -151,5 +151,6 @@ func _fire_turret() -> void:
 				tw.tween_property(t_sprite, "position:x", 0.0, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	get_tree().create_timer(0.25).timeout.connect(func() -> void:
-		_can_fire = true
+		if is_instance_valid(self):
+			_can_fire = true
 	)

@@ -78,6 +78,7 @@ func _run() -> void:
 	var kit_hp: int = player.max_health
 	check(not player._is_dead and player.health == kit_hp and wm.can_process(), "Checkpoint restores living player and weapons")
 	_test_weapon_switching_ux(wm)
+	_test_held_weapon_sprite(wm)
 	_test_hud_nodes_exist()
 	player.take_damage(40)
 	check(player.health == kit_hp, "Brief respawn protection prevents instant repeat death")
@@ -139,6 +140,20 @@ func _test_weapon_switching_ux(wm: Node) -> void:
 	var after_cycle: int = int(wm.current_slot)
 	wm._unhandled_input(swap_ev)
 	check(int(wm.current_slot) != after_cycle, "quick_swap returns to previous slot")
+
+
+func _test_held_weapon_sprite(wm: Node) -> void:
+	# Held-weapon overlay follows the equipped weapon (overhaul: fixes the "log" torso).
+	wm.switch_to_slot(0)
+	var rifle: WeaponResource = wm.get_current_weapon()
+	check(player.weapon_sprite != null and player.weapon_sprite.texture == rifle.held_sprite,
+		"Player held sprite matches the rifle's held_sprite")
+	check(player.weapon_sprite.visible, "Player held sprite is visible while armed")
+	wm.switch_to_slot(2)
+	var pistol: WeaponResource = wm.get_current_weapon()
+	check(player.weapon_sprite.texture == pistol.held_sprite,
+		"Player held sprite swaps to the pistol's held_sprite")
+	wm.switch_to_slot(0)
 
 
 func _test_hud_nodes_exist() -> void:

@@ -1,17 +1,22 @@
-[gd_resource type="Resource" script_class="WeaponResource" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/m70_rifle.png" id="2"]
 
 [resource]
 script = ExtResource("1")
+weapon_id = &"m70"
 weapon_name = "Zastava M70"
 damage = 15
-fire_rate = 0.15
+fire_rate = 0.13
 max_ammo = 30
 starting_reserve = 60
 reload_time = 1.8
-spread_angle = 0.05
+spread_angle = 0.04
 bullet_speed = 700.0
-is_automatic = false
+is_automatic = true
 projectile_count = 1
 is_pistol = false
+held_sprite = ExtResource("2")
+bloom_per_shot = 0.014
+max_bloom = 0.09

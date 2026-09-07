@@ -15,7 +15,9 @@ func _setup_overlay() -> void:
 	if _mat != null:
 		return
 	add_to_group("paper_overlay")
-	layer = 80
+	# Below the HUD/menus (default CanvasLayer 1) so UI text stays crisp;
+	# the parchment grain still washes over the whole game world (layer 0).
+	layer = 0
 	# Ensure we can read the back buffer
 	var copy := BackBufferCopy.new()
 	copy.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT

@@ -80,6 +80,7 @@ stateDiagram-v2
     ALERT --> CHASE: Alert timer 0.4-0.8s
     CHASE --> ATTACK: In attack range
     ATTACK --> CHASE: Player out of range
+    CHASE --> PATROL: Player escaped (2.5s pursuit grace)
     ATTACK --> DEAD: Health <= 0
     CHASE --> DEAD: Health <= 0
     PATROL --> DEAD: Health <= 0
@@ -102,8 +103,21 @@ stateDiagram-v2
 `WeaponManager` manages 3 slots with **magazine + reserve** ammo:
 
 - Reload draws from reserve; pistol unlimited
-- Ammo crates refill reserve; weapon pickups grant total rounds
+- Ammo crates refill reserve (redirected to a carried gun while the pistol is held); weapon pickups grant total rounds
+- **Automatic fire**: `WeaponResource.is_automatic` weapons fire while `shoot` is held; semi-autos use `is_action_just_pressed`
+- **Spread bloom**: sustained fire accumulates `current_bloom` (clamped by `max_bloom`), recovering at `BLOOM_RECOVERY_RATE`/s; emitted via `bloom_changed`, reset on weapon switch, applied to projectile spread and the crosshair ring
+- **Disposable launchers**: `is_disposable` weapons (M80 Zolja) discard themselves after their last round (`weapon_discarded`) and fall back to the previous slot
+- Firing pre-checks the projectile pool (`Player.count_free_projectiles()`) so pool exhaustion never burns ammo; partial pools trim shotgun pellets via `last_pellet_count`
+- Per-weapon `held_sprite` renders in `Player.WeaponSprite` (swapped on `weapon_switched`); `weapon_id` drives SFX/VFX/crosshair variants
 - Per-weapon SFX via `SoundManager.play_weapon_shoot`
+
+### Crosshair
+
+`scripts/ui/Crosshair.gd` (child of HUD, `setup(weapon_manager, player)`):
+
+- Dual-tone ink/parchment strokes; per-`weapon_id` reticles (auto cross + bloom ring, pistol, shotgun cone, DMR fine cross, RPG blast ring)
+- Hit/kill marker pulses via `ScoreManager.hit_registered` / `kill_registered`; fire flash via `weapon_fired`
+- Visible only in `GameState.PLAYING`; the OS cursor is hidden while PLAYING (`GameManager._apply_mouse_mode()`)
 
 ### Projectile Pools
 

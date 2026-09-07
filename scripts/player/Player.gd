@@ -78,7 +78,11 @@ func _ready() -> void:
 	if dodge_timer: dodge_timer.timeout.connect(func() -> void: can_dodge = true)
 	if dodge_duration_timer: dodge_duration_timer.timeout.connect(_on_dodge_duration_finished)
 	if hit_flash_timer: hit_flash_timer.timeout.connect(func() -> void: if body_sprite: body_sprite.modulate = Color.WHITE)
-	if weapon_manager: weapon_manager.weapon_fired.connect(_on_weapon_fired)
+	if weapon_manager:
+		weapon_manager.weapon_fired.connect(_on_weapon_fired)
+		if not weapon_manager.weapon_switched.is_connected(_on_weapon_switched):
+			weapon_manager.weapon_switched.connect(_on_weapon_switched)
+		call_deferred("_update_held_sprite", weapon_manager.get_current_weapon())
 	_init_projectile_pool()
 	# Deferred so HUD signal listeners are connected before kit emits.
 	call_deferred("_apply_difficulty_kit")
@@ -96,6 +100,10 @@ func _apply_difficulty_kit() -> void:
 	health_changed.emit(health)
 	add_armor(dm.get_player_kit("player_armor"))
 	add_grenades(dm.get_player_kit("player_grenades"))
+	# The mission-entry checkpoint was saved BEFORE this kit applied — refresh it
+	# so a respawn never strips the starting armor/grenades.
+	if not _checkpoint_data.is_empty():
+		save_checkpoint(_checkpoint_data.get("position", global_position))
 
 
 func _process(delta: float) -> void:
@@ -219,6 +227,33 @@ func _apply_recoil() -> void:
 		var tween := create_tween()
 		if tween: tween.tween_property(torso_container, "position", Vector2.ZERO, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
+func _on_weapon_switched(weapon: WeaponResource) -> void:
+	_update_held_sprite(weapon)
+
+
+## Swaps the visible held weapon to match the current WeaponResource.
+func _update_held_sprite(weapon: WeaponResource) -> void:
+	_ensure_rig()
+	if weapon_sprite == null:
+		return
+	if weapon and weapon.held_sprite:
+		weapon_sprite.texture = weapon.held_sprite
+		weapon_sprite.visible = true
+	else:
+		weapon_sprite.texture = null
+		weapon_sprite.visible = false
+
+
+## How many pooled player projectiles can fire right now (used by WeaponManager
+## to avoid burning ammo when the pool is exhausted).
+func count_free_projectiles() -> int:
+	var free_count: int = 0
+	for b in _projectile_pool:
+		if is_instance_valid(b) and not b._active:
+			free_count += 1
+	return free_count
+
+
 func _on_weapon_fired() -> void:
 	_apply_recoil()
 	if weapon_manager == null: return
@@ -226,13 +261,17 @@ func _on_weapon_fired() -> void:
 	if weapon == null: return
 	var spawn_pos: Vector2 = muzzle.global_position if muzzle else global_position
 	var fire_rot: float = torso_container.global_rotation if torso_container else rotation
-	var wtype: String = weapon.weapon_name if ("weapon_name" in weapon and weapon.weapon_name != "") else "rifle"
+	var wtype: String = String(weapon.weapon_id) if weapon.weapon_id != &"" else "rifle"
 	var snd = get_node_or_null("/root/SoundManager")
 	if snd and snd.has_method("play_weapon_shoot"):
 		snd.play_weapon_shoot(wtype)
 	else:
 		_play_sfx("shoot")
-	CombatVfxScript.vfx_muzzle_flash(spawn_pos, fire_rot, wtype)
+	CombatVfxScript.vfx_muzzle_flash(spawn_pos, fire_rot, wtype, false)
+	# Eject brass from the brass marker (not the muzzle) with a sideways toss.
+	if brass_marker and not weapon.is_explosive:
+		var eject_dir: Vector2 = Vector2.DOWN.rotated(fire_rot) * randf_range(18.0, 30.0)
+		DecalManagerScript.spawn_casing(brass_marker.global_position, eject_dir, wtype == "hawk")
 	var sm = get_node_or_null("/root/ScoreManager")
 	if weapon.is_explosive:
 		if sm and sm.has_method("record_shot_fired"):
@@ -241,7 +280,8 @@ func _on_weapon_fired() -> void:
 	# Count one trigger pull for accuracy, not one shot per pellet.
 	if sm and sm.has_method("record_shot_fired"):
 		sm.record_shot_fired()
-	var needed: int = weapon.projectile_count
+	# Only spawn as many pellets as the pool granted during fire() pre-check.
+	var needed: int = maxi(1, weapon_manager.last_pellet_count)
 	var acquired: Array[Area2D] = []
 	for b in _projectile_pool:
 		if acquired.size() >= needed:
@@ -250,9 +290,11 @@ func _on_weapon_fired() -> void:
 			acquired.append(b)
 	if acquired.is_empty():
 		return
+	# Effective spread = base spread + sustained-fire bloom.
+	var total_spread: float = weapon.spread_angle + weapon_manager.current_bloom
 	for i in range(acquired.size()):
 		var bullet: Area2D = acquired[i]
-		bullet.activate(spawn_pos, fire_rot + randf_range(-weapon.spread_angle, weapon.spread_angle), weapon.bullet_speed, weapon.damage)
+		bullet.activate(spawn_pos, fire_rot + randf_range(-total_spread, total_spread), weapon.bullet_speed, weapon.damage)
 
 func _fire_rocket(weapon: WeaponResource) -> void:
 	var container: Node = null

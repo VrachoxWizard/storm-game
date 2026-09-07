@@ -47,7 +47,9 @@ func _fire_burst(generation: int) -> void:
 	_spawn_enemy_bullet()
 	_burst_count += 1
 	if _burst_count < BURST_SIZE:
-		get_tree().create_timer(BURST_INTERVAL).timeout.connect(_fire_burst.bind(generation))
+		get_tree().create_timer(BURST_INTERVAL).timeout.connect(func() -> void:
+			if is_instance_valid(self):
+				_fire_burst(generation))
 
 
 func _die() -> void:

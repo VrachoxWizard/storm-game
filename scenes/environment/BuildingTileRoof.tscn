@@ -1,9 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/building_roof_tiles.png" id="1_roof"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/building_walls_tiles.png" id="2_walls"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(160, 120)
+size = Vector2(160, 148)
 
 [node name="BuildingTileRoof" type="StaticBody2D"]
 collision_layer = 32
@@ -14,8 +15,13 @@ modulate = Color(0, 0, 0, 0.35)
 position = Vector2(12, 14)
 texture = ExtResource("1_roof")
 
+[node name="Walls" type="Sprite2D" parent="."]
+position = Vector2(0, 72)
+texture = ExtResource("2_walls")
+
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_roof")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 14)
 shape = SubResource("RectangleShape2D_1")

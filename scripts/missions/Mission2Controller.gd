@@ -16,6 +16,7 @@ extends Node
 var _mission_complete: bool = false
 var _reinforcements_spawned: bool = false
 var _guidance: ObjectiveGuidance = null
+var _initial_bunker_count: int = 0
 
 
 func _ready() -> void:
@@ -67,10 +68,13 @@ func _add_extra_checkpoint(pos: Vector2) -> void:
 
 
 func _hook_bunker_alerts(bunkers: Array) -> void:
+	_initial_bunker_count = bunkers.size()
 	for b in bunkers:
 		if not is_instance_valid(b):
 			continue
-		b.set_meta("start_health", b.get("health") if "health" in b else 200)
+		# Deferred: difficulty scaling adjusts bunker health after _ready —
+		# snapshot AFTER it, else easy mode trips reinforcements instantly.
+		call_deferred("_snapshot_bunker_health", b)
 	var timer := Timer.new()
 	timer.wait_time = 0.5
 	timer.autostart = true
@@ -78,8 +82,17 @@ func _hook_bunker_alerts(bunkers: Array) -> void:
 	timer.timeout.connect(_check_bunker_damage)
 
 
+func _snapshot_bunker_health(b: Node) -> void:
+	if is_instance_valid(b):
+		b.set_meta("start_health", int(b.get("health")) if "health" in b else 200)
+
+
 func _check_bunker_damage() -> void:
 	if _reinforcements_spawned:
+		return
+	# A bunker destroyed outright (e.g. one-shot rocket) counts as "damaged".
+	if bunkers_node.get_child_count() < _initial_bunker_count:
+		_spawn_reinforcements()
 		return
 	for b in bunkers_node.get_children():
 		if not is_instance_valid(b):

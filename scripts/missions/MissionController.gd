@@ -32,9 +32,12 @@ func _start_wave(index: int) -> void:
 	_pending_spawns = int(data["riflemen"]) + int(data["shotgunners"])
 	_update_objective()
 	# Stagger arrivals so soldiers never stack on a reused marker.
+	# Guards against the controller being freed mid-stagger (mission exit/restart).
 	for i in range(_pending_spawns):
 		var scene: PackedScene = rifleman_scene if i < int(data["riflemen"]) else shotgunner_scene
-		get_tree().create_timer(1.0 + float(i) * 0.65).timeout.connect(_spawn_attacker.bind(scene, i))
+		get_tree().create_timer(1.0 + float(i) * 0.65).timeout.connect(func() -> void:
+			if is_instance_valid(self) and is_inside_tree() and not _mission_complete:
+				_spawn_attacker(scene, i))
 
 func _spawn_attacker(scene: PackedScene, index: int) -> void:
 	var routes: Array = WAVES[_wave]["routes"]
@@ -57,7 +60,9 @@ func _on_enemy_died(_enemy: CharacterBody2D) -> void:
 		player.save_checkpoint(player.global_position)
 		MissionHelpers.notify_checkpoint(player)
 		MissionHelpers.set_hud_objective(get_tree(), "HV position secure — regroup and reload")
-		get_tree().create_timer(4.0).timeout.connect(func() -> void: _start_wave(_wave + 1))
+		get_tree().create_timer(4.0).timeout.connect(func() -> void:
+			if is_instance_valid(self) and is_inside_tree() and not _mission_complete:
+				_start_wave(_wave + 1))
 
 func _complete_mission() -> void:
 	if _mission_complete: return

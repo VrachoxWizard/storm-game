@@ -129,5 +129,6 @@ func _fire_shell() -> void:
 		target.shake_camera(6.0)
 
 	get_tree().create_timer(fire_cooldown).timeout.connect(func() -> void:
-		_can_fire = true
+		if is_instance_valid(self):
+			_can_fire = true
 	)

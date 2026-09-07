@@ -2,6 +2,8 @@ extends Camera2D
 
 ## Stable tactical view. Enemy movement and kills never change magnification.
 @export var field_zoom: float = 1.15
+## Hard cap so ultra-wide windows never over-magnify sprites into blur.
+@export var max_zoom: float = 1.6
 var _ground: Control
 
 func _ready() -> void:
@@ -15,6 +17,7 @@ func _configure_view() -> void:
 		var bounds := _ground.get_global_rect()
 		var viewport_size := get_viewport_rect().size
 		magnification = maxf(field_zoom, maxf(viewport_size.x / bounds.size.x, viewport_size.y / bounds.size.y))
+		magnification = clampf(magnification, field_zoom, max_zoom)
 		limit_left = int(bounds.position.x)
 		limit_top = int(bounds.position.y)
 		limit_right = int(bounds.end.x)

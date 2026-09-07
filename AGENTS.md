@@ -204,13 +204,26 @@ Always consult this spec before implementing gameplay features.
    - B-80 APC renamed to SVK M-80 IFV; M75 grenade named; `Škorpion` diacritic fixed; `SoundManager.play_voice_line()`.
    - Bug fixes: tank weak-point double-damage, sniper respawn i-frames, dry-fire, shotgun pellet loss, enemy pool cap, steering fallback, rocket layer filter, bunker hit direction, APC deploy assault order, M4/M5 HUD sync, Officer aura, burst tokens, accuracy scoring, settings persistence, SaveManager merge, burning-wreck cap. See `docs/authenticity-overhaul-2026-09-06.md`.
 
+8. **Visual, Shooting & Content Overhaul (Complete — 7 Sep 2026)**
+   - M70 full-auto + spread bloom/recovery (`bloom_changed`); OS cursor hides while PLAYING; projectile pool pre-check trims pellets instead of wasting ammo.
+   - New weapons: **M72 RPK** (LMG), **Zastava M76** (DMR), **M80 "Zolja"** (disposable one-shot rocket, auto-discards via `is_disposable`/`weapon_discarded`).
+   - Per-weapon `held_sprite` on `WeaponResource` wired to `Player.WeaponSprite`; baked torso rifle slimmed; brass ejects from `BrassMarker`.
+   - `Crosshair.gd` rewritten: dual-tone high-contrast reticles per weapon, live bloom ring, hit/kill marker pulses (via `ScoreManager.hit_registered`/`kill_registered`).
+   - Flags regenerated at 96×48 2:1 (crowned šahovnica, SVK tricolor) with pixel-assertion tests; M5 flag-raise tweened.
+   - Density pass on all 5 missions: terrain detail, scatter props, buildings with walls, new pickups (ArmorVest, grenades, RPK/M76/Zolja), camera `max_zoom` clamp.
+   - Tracer bullet sprites, muzzle smoke, ambient war layer, muzzle-flash `z_index` fix; PaperOverlay below HUD; HUD bottom bar re-anchored.
+   - Bug audit: faction-tint restore on hit flash, checkpoint-after-difficulty-kit, M2 reinforcement timing, 2.5s enemy pursuit grace, `minf` accuracy, freed-node timer guards, pistol ammo redirect. See `docs/visual-combat-overhaul-2026-09-07.md`.
+
 ## Testing & Verification
 
 Run the master visual test suite and individual verification suites using the Godot headless console:
 
 ```powershell
-# Run all 6 visual test suites sequentially via Python runner
+# Run all 11 test suites sequentially via Python runner
 python tools/run_visual_tests.py
+
+# Overhaul regression suite (run WITHOUT --quit; it self-quits after timer awaits)
+& "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --path . --script tests/test_overhaul_regressions.gd
 
 # Master visual test runner (headless Godot compilation check)
 & "C:\Users\user1\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --headless --script tests/run_all_visual_tests.gd --quit

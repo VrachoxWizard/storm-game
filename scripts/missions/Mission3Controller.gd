@@ -99,6 +99,8 @@ func _on_convoy_escaped() -> void:
 	MissionHelpers.set_hud_objective(get_tree(), "Convoy escaped — regrouping for another attempt")
 	_apc.convoy_speed = 0.0
 	get_tree().create_timer(2.5).timeout.connect(func() -> void:
+		if not is_instance_valid(self) or not is_inside_tree():
+			return
 		var gm := get_node_or_null("/root/GameManager")
 		if gm and gm.current_state == gm.GameState.PLAYING:
 			gm.start_mission(2)

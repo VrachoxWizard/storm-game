@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="WeaponResource" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/php_pistol.png" id="2"]
 
 [resource]
 script = ExtResource("1")
+weapon_id = &"php"
 weapon_name = "PHP Pistol"
 damage = 8
 fire_rate = 0.25
@@ -14,3 +16,4 @@ bullet_speed = 600.0
 is_automatic = false
 projectile_count = 1
 is_pistol = true
+held_sprite = ExtResource("2")

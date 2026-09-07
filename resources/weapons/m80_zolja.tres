@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/m80_zolja.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+weapon_id = &"zolja"
+weapon_name = "M80 \"Zolja\""
+damage = 20
+fire_rate = 1.0
+max_ammo = 1
+starting_reserve = 0
+reload_time = 1.6
+spread_angle = 0.02
+bullet_speed = 320.0
+is_automatic = false
+projectile_count = 1
+is_pistol = false
+held_sprite = ExtResource("2")
+is_explosive = true
+explosion_radius = 60.0
+explosion_damage = 70
+is_disposable = true

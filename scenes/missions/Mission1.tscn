@@ -20,6 +20,13 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/grass_tuft.png" id="detail_grass"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stone_scatter.png" id="detail_stone"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/fuel_drum.png" id="detail_drum"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/hay_bale.png" id="detail_hay"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/road_sign.png" id="detail_sign"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ArmorVest.tscn" id="detail_vest"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/GrenadePickup.tscn" id="detail_grenade"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1240, 20)
@@ -190,6 +197,89 @@ texture = ExtResource("13_tree")
 position = Vector2(1050, 680)
 texture = ExtResource("13_tree")
 
+[node name="Tree3" type="Sprite2D" parent="Props"]
+position = Vector2(980, 140)
+texture = ExtResource("13_tree")
+
+[node name="Tree4" type="Sprite2D" parent="Props"]
+position = Vector2(80, 640)
+texture = ExtResource("13_tree")
+
+[node name="FuelDrum1" type="Sprite2D" parent="Props"]
+position = Vector2(228, 246)
+texture = ExtResource("detail_drum")
+
+[node name="FuelDrum2" type="Sprite2D" parent="Props"]
+position = Vector2(252, 258)
+texture = ExtResource("detail_drum")
+
+[node name="FuelDrum3" type="Sprite2D" parent="Props"]
+position = Vector2(240, 588)
+texture = ExtResource("detail_drum")
+
+[node name="HayBale1" type="Sprite2D" parent="Props"]
+position = Vector2(760, 690)
+texture = ExtResource("detail_hay")
+
+[node name="HayBale2" type="Sprite2D" parent="Props"]
+position = Vector2(800, 720)
+texture = ExtResource("detail_hay")
+
+[node name="RoadSign1" type="Sprite2D" parent="Props"]
+position = Vector2(380, 432)
+texture = ExtResource("detail_sign")
+
+[node name="GroundDetail" type="Node2D" parent="Props"]
+z_index = -1
+
+[node name="Grass1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(420, 380)
+texture = ExtResource("detail_grass")
+
+[node name="Grass2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(610, 320)
+texture = ExtResource("detail_grass")
+
+[node name="Grass3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(830, 430)
+texture = ExtResource("detail_grass")
+
+[node name="Grass4" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(300, 620)
+texture = ExtResource("detail_grass")
+
+[node name="Grass5" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1000, 480)
+texture = ExtResource("detail_grass")
+
+[node name="Grass6" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(520, 700)
+texture = ExtResource("detail_grass")
+
+[node name="Grass7" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1120, 250)
+texture = ExtResource("detail_grass")
+
+[node name="Grass8" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(180, 420)
+texture = ExtResource("detail_grass")
+
+[node name="Stones1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(680, 180)
+texture = ExtResource("detail_stone")
+
+[node name="Stones2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(920, 640)
+texture = ExtResource("detail_stone")
+
+[node name="Stones3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(420, 560)
+texture = ExtResource("detail_stone")
+
+[node name="Stones4" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1080, 380)
+texture = ExtResource("detail_stone")
+
 [node name="Checkpoints" type="Node2D" parent="."]
 
 [node name="Boundary" type="StaticBody2D" parent="."]
@@ -290,3 +380,9 @@ position = Vector2(260, 480)
 
 [node name="SouthAid" parent="Pickups" instance=ExtResource("detail_health")]
 position = Vector2(520, 650)
+
+[node name="DepotVest" parent="Pickups" instance=ExtResource("detail_vest")]
+position = Vector2(300, 380)
+
+[node name="DepotGrenades" parent="Pickups" instance=ExtResource("detail_grenade")]
+position = Vector2(300, 424)

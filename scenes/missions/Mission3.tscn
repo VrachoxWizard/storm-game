@@ -25,6 +25,14 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree_ink_sketch.png" id="detail_tree"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/AmmoCrate.tscn" id="detail_ammo"]
 [ext_resource type="PackedScene" path="res://scenes/pickups/HealthKit.tscn" id="detail_health"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/grass_tuft.png" id="detail_grass"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stone_scatter.png" id="detail_stone"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/hay_bale.png" id="detail_hay"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/wrecked_car.png" id="detail_car"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/telegraph_pole.png" id="detail_pole"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/road_sign.png" id="detail_sign"]
+[ext_resource type="Resource" path="res://resources/weapons/m72_rpk.tres" id="detail_rpk"]
+[ext_resource type="Resource" path="res://resources/weapons/m80_zolja.tres" id="detail_zolja"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
 size = Vector2(1600, 20)
@@ -162,6 +170,103 @@ texture = ExtResource("18_tree")
 [node name="Tree2" type="Sprite2D" parent="Props"]
 position = Vector2(1100, 800)
 texture = ExtResource("18_tree")
+
+[node name="WreckedCar1" type="Sprite2D" parent="Props"]
+position = Vector2(620, 322)
+texture = ExtResource("detail_car")
+
+[node name="WreckedCar2" type="Sprite2D" parent="Props"]
+position = Vector2(1020, 476)
+rotation = 3.14159
+texture = ExtResource("detail_car")
+
+[node name="Pole1" type="Sprite2D" parent="Props"]
+position = Vector2(180, 316)
+texture = ExtResource("detail_pole")
+
+[node name="Pole2" type="Sprite2D" parent="Props"]
+position = Vector2(430, 316)
+texture = ExtResource("detail_pole")
+
+[node name="Pole3" type="Sprite2D" parent="Props"]
+position = Vector2(680, 316)
+texture = ExtResource("detail_pole")
+
+[node name="Pole4" type="Sprite2D" parent="Props"]
+position = Vector2(930, 316)
+texture = ExtResource("detail_pole")
+
+[node name="Pole5" type="Sprite2D" parent="Props"]
+position = Vector2(1180, 316)
+texture = ExtResource("detail_pole")
+
+[node name="Pole6" type="Sprite2D" parent="Props"]
+position = Vector2(1430, 316)
+texture = ExtResource("detail_pole")
+
+[node name="RoadSign1" type="Sprite2D" parent="Props"]
+position = Vector2(240, 470)
+texture = ExtResource("detail_sign")
+
+[node name="RoadSign2" type="Sprite2D" parent="Props"]
+position = Vector2(1240, 470)
+rotation = 3.14159
+texture = ExtResource("detail_sign")
+
+[node name="HayBale1" type="Sprite2D" parent="Props"]
+position = Vector2(520, 760)
+texture = ExtResource("detail_hay")
+
+[node name="HayBale2" type="Sprite2D" parent="Props"]
+position = Vector2(560, 800)
+texture = ExtResource("detail_hay")
+
+[node name="HayBale3" type="Sprite2D" parent="Props"]
+position = Vector2(180, 720)
+texture = ExtResource("detail_hay")
+
+[node name="Tree3" type="Sprite2D" parent="Props"]
+position = Vector2(880, 120)
+texture = ExtResource("detail_tree")
+
+[node name="Tree4" type="Sprite2D" parent="Props"]
+position = Vector2(60, 880)
+texture = ExtResource("detail_tree")
+
+[node name="GroundDetail" type="Node2D" parent="Props"]
+z_index = -1
+
+[node name="Grass1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(400, 560)
+texture = ExtResource("detail_grass")
+
+[node name="Grass2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(760, 720)
+texture = ExtResource("detail_grass")
+
+[node name="Grass3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1080, 240)
+texture = ExtResource("detail_grass")
+
+[node name="Grass4" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1320, 880)
+texture = ExtResource("detail_grass")
+
+[node name="Grass5" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(220, 640)
+texture = ExtResource("detail_grass")
+
+[node name="Stones1" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(540, 240)
+texture = ExtResource("detail_stone")
+
+[node name="Stones2" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(980, 860)
+texture = ExtResource("detail_stone")
+
+[node name="Stones3" type="Sprite2D" parent="Props/GroundDetail"]
+position = Vector2(1500, 520)
+texture = ExtResource("detail_stone")
 
 [node name="MissionController" type="Node" parent="."]
 script = ExtResource("11_ctrl")
@@ -305,3 +410,11 @@ position = Vector2(910, 570)
 
 [node name="VillageAid" parent="Pickups" instance=ExtResource("detail_health")]
 position = Vector2(1330, 570)
+
+[node name="RpkPickup" parent="Pickups" instance=ExtResource("8_weapon")]
+position = Vector2(480, 500)
+weapon_resource = ExtResource("detail_rpk")
+
+[node name="ZoljaPickup" parent="Pickups" instance=ExtResource("8_weapon")]
+position = Vector2(860, 620)
+weapon_resource = ExtResource("detail_zolja")

@@ -2,6 +2,11 @@ extends Node
 
 ## Singleton — tracks kills, accuracy, time, and calculates score/rank.
 
+## Emitted when a player projectile damages something (for crosshair hit markers).
+signal hit_registered
+## Emitted when the player scores a kill (for crosshair kill markers).
+signal kill_registered
+
 var kills: int = 0
 var shots_fired: int = 0
 var shots_hit: int = 0
@@ -44,6 +49,7 @@ func stop_tracking() -> void:
 
 func record_kill() -> void:
 	kills += 1
+	kill_registered.emit()
 
 
 func record_shot_fired() -> void:
@@ -52,6 +58,7 @@ func record_shot_fired() -> void:
 
 func record_shot_hit() -> void:
 	shots_hit += 1
+	hit_registered.emit()
 
 
 func record_vehicle_destroyed() -> void:
@@ -69,7 +76,7 @@ func record_death() -> void:
 func get_accuracy() -> float:
 	if shots_fired == 0:
 		return 0.0
-	return mini(float(shots_hit) / float(shots_fired) * 100.0, 100.0)
+	return minf(float(shots_hit) / float(shots_fired) * 100.0, 100.0)
 
 
 func get_total_score() -> int:

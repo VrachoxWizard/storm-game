@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/m72_rpk.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+weapon_id = &"m72"
+weapon_name = "M72 RPK"
+damage = 14
+fire_rate = 0.09
+max_ammo = 60
+starting_reserve = 60
+reload_time = 3.2
+spread_angle = 0.08
+bullet_speed = 720.0
+is_automatic = true
+projectile_count = 1
+is_pistol = false
+held_sprite = ExtResource("2")
+bloom_per_shot = 0.016
+max_bloom = 0.13

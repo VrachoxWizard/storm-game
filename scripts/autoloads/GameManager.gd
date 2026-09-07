@@ -70,21 +70,34 @@ func get_mission_meta(mission_index: int) -> Dictionary:
 	return {}
 
 
+func _ready() -> void:
+	_apply_mouse_mode()
+
+
+## The OS cursor hides during gameplay (custom crosshair owns the screen),
+## and returns for all menu/briefing/results states.
+func _apply_mouse_mode() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if current_state == GameState.PLAYING else Input.MOUSE_MODE_VISIBLE
+
+
 func start_mission(mission_index: int) -> void:
 	current_mission = mission_index
 	current_state = GameState.BRIEFING
+	_apply_mouse_mode()
 	ScoreManager.reset()
 	mission_briefing_requested.emit(mission_index)
 
 
 func begin_gameplay() -> void:
 	current_state = GameState.PLAYING
+	_apply_mouse_mode()
 	mission_started.emit(current_mission)
 
 
 func complete_mission() -> void:
 	if current_state != GameState.PLAYING: return
 	current_state = GameState.RESULTS
+	_apply_mouse_mode()
 	SaveManager.save_mission_score(
 		current_mission,
 		ScoreManager.get_total_score(),
@@ -99,14 +112,17 @@ func toggle_pause() -> void:
 		_previous_state = current_state
 		current_state = GameState.PAUSED
 		get_tree().paused = true
+		_apply_mouse_mode()
 		game_paused.emit(true)
 	elif current_state == GameState.PAUSED:
 		current_state = _previous_state
 		get_tree().paused = false
+		_apply_mouse_mode()
 		game_paused.emit(false)
 
 
 func return_to_menu() -> void:
 	get_tree().paused = false
 	current_state = GameState.MENU
+	_apply_mouse_mode()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")

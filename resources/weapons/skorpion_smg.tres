@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="WeaponResource" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="WeaponResource" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/weapons/WeaponResource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/skorpion_smg.png" id="2"]
 
 [resource]
 script = ExtResource("1")
+weapon_id = &"skorpion"
 weapon_name = "Škorpion vz.61"
 damage = 7
 fire_rate = 0.08
@@ -15,3 +17,6 @@ bullet_speed = 550.0
 is_automatic = true
 projectile_count = 1
 is_pistol = false
+held_sprite = ExtResource("2")
+bloom_per_shot = 0.02
+max_bloom = 0.12

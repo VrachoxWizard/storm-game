@@ -184,12 +184,12 @@ def generate_torso(soldier_type: str, output_path: str) -> None:
                      fill=(30, 30, 28, 255), outline=COLOR_CRO_RED, width=S)
 
     elif soldier_type != "player":
-        # SVK Serbian tricolor armband on upper arm
-        band_y0 = cy - 4 * S
-        band_x0, band_x1 = cx - 11 * S, cx - 7 * S
-        draw.rectangle([band_x0, band_y0, band_x1, band_y0 + S], fill=COLOR_SVK_RED, outline=INK_DARK, width=1)
-        draw.rectangle([band_x0, band_y0 + S, band_x1, band_y0 + 2 * S], fill=COLOR_SVK_BLUE, outline=INK_DARK, width=1)
-        draw.rectangle([band_x0, band_y0 + 2 * S, band_x1, band_y0 + 3 * S], fill=COLOR_SVK_WHITE, outline=INK_DARK, width=1)
+        # SVK Serbian tricolor armband on upper arm (bold enough to read at zoom)
+        band_y0 = cy - 6 * S
+        band_x0, band_x1 = cx - 12 * S, cx - 5 * S
+        draw.rectangle([band_x0, band_y0, band_x1, band_y0 + 2 * S], fill=COLOR_SVK_RED, outline=INK_DARK, width=1)
+        draw.rectangle([band_x0, band_y0 + 2 * S, band_x1, band_y0 + 4 * S], fill=COLOR_SVK_BLUE, outline=INK_DARK, width=1)
+        draw.rectangle([band_x0, band_y0 + 4 * S, band_x1, band_y0 + 6 * S], fill=COLOR_SVK_WHITE, outline=INK_DARK, width=1)
 
     if soldier_type == "shotgunner":
         # Red shotgun shell bandolier across chest
@@ -253,29 +253,33 @@ def generate_torso(soldier_type: str, output_path: str) -> None:
     draw.line([(cx + 2 * S, cy + 10 * S), (cx + 11 * S, cy + 4 * S)], fill=torso_color, width=3 * S)
     draw.line([(cx + 2 * S, cy + 10 * S), (cx + 11 * S, cy + 4 * S)], fill=INK_DARK, width=int(1.5 * S))
 
-    # Hands (Skin tone)
-    draw.ellipse([cx + 13 * S, cy - 5 * S, cx + 17 * S, cy - 1 * S], fill=COLOR_SKIN, outline=INK_DARK, width=S)
-    draw.ellipse([cx + 10 * S, cy + 2 * S, cx + 14 * S, cy + 6 * S], fill=COLOR_SKIN, outline=INK_DARK, width=S)
+    # Hands (Skin tone) — kept small so they don't read as pink blobs at zoom
+    draw.ellipse([cx + 13 * S, cy - 4 * S, cx + 16 * S, cy - 1 * S], fill=COLOR_SKIN, outline=INK_DARK, width=1)
+    draw.ellipse([cx + 10 * S, cy + 3 * S, cx + 13 * S, cy + 6 * S], fill=COLOR_SKIN, outline=INK_DARK, width=1)
 
-    # 6. Weapon Barrel & Receiver extending to the right (+X)
-    if soldier_type == "officer":
-        draw.rectangle([cx + 12 * S, cy + 2 * S, cx + 22 * S, cy + 4 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+    # 6. Weapon Barrel & Receiver extending to the right (+X) — slim, dark, never a "log"
+    if soldier_type == "player":
+        # Minimal barrel stub only; the real per-weapon art rides on the WeaponSprite node
+        draw.rectangle([cx + 10 * S, cy - 1 * S, cx + 20 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+    elif soldier_type == "officer":
+        draw.rectangle([cx + 12 * S, cy + 2 * S, cx + 22 * S, cy + 3 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
     elif soldier_type == "shotgunner":
-        draw.rectangle([cx + 10 * S, cy - 2 * S, cx + 24 * S, cy + 3 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
-        draw.rectangle([cx + 14 * S, cy - 1 * S, cx + 19 * S, cy + 3 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+        draw.rectangle([cx + 10 * S, cy - 1 * S, cx + 24 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.rectangle([cx + 14 * S, cy, cx + 19 * S, cy + 2 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=1)
     elif soldier_type == "mg":
-        draw.rectangle([cx + 10 * S, cy - 3 * S, cx + 26 * S, cy + 3 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
-        draw.line([(cx + 18 * S, cy - 4 * S), (cx + 25 * S, cy - 4 * S)], fill=COLOR_STEEL_LIGHT, width=S)
+        draw.rectangle([cx + 10 * S, cy - 2 * S, cx + 26 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.line([(cx + 18 * S, cy - 3 * S), (cx + 25 * S, cy - 3 * S)], fill=COLOR_STEEL_LIGHT, width=1)
     elif soldier_type == "sniper":
-        draw.rectangle([cx + 8 * S, cy - 1 * S, cx + 27 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
-        draw.rectangle([cx + 12 * S, cy - 4 * S, cx + 18 * S, cy - 2 * S], fill=COLOR_STEEL_LIGHT, outline=INK_DARK, width=S)
+        draw.rectangle([cx + 8 * S, cy - 1 * S, cx + 27 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.rectangle([cx + 12 * S, cy - 3 * S, cx + 18 * S, cy - 2 * S], fill=COLOR_STEEL_LIGHT, outline=INK_DARK, width=1)
     elif soldier_type == "grenadier":
-        draw.rectangle([cx + 10 * S, cy - 2 * S, cx + 23 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
-        draw.rectangle([cx + 15 * S, cy + 1 * S, cx + 21 * S, cy + 4 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=S)
+        draw.rectangle([cx + 10 * S, cy - 1 * S, cx + 23 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.rectangle([cx + 15 * S, cy + 1 * S, cx + 21 * S, cy + 3 * S], fill=COLOR_OLIVE_DARK, outline=INK_DARK, width=1)
     else:
-        draw.rectangle([cx + 8 * S, cy - 2 * S, cx + 24 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
-        draw.rectangle([cx + 12 * S, cy - 1 * S, cx + 17 * S, cy + 2 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
-        draw.arc([cx + 10 * S, cy + 1 * S, cx + 16 * S, cy + 7 * S], 0, 90, fill=INK_DARK, width=int(1.5 * S))
+        # Rifleman: slim barrel + small wood furniture (kept dark so it reads as steel, not a log)
+        draw.rectangle([cx + 8 * S, cy - 1 * S, cx + 24 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.rectangle([cx + 12 * S, cy, cx + 17 * S, cy + 1 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=1)
+        draw.arc([cx + 10 * S, cy + 1 * S, cx + 16 * S, cy + 6 * S], 0, 90, fill=INK_DARK, width=1)
 
     save_image(img, output_path, target_size=(48, 48))
 
@@ -658,12 +662,28 @@ def generate_terrain_staging(output_path: str) -> None:
     overlay = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
     draw_ov = ImageDraw.Draw(overlay)
 
-    # 1. Warm olive grass wash patches
+    # 1. Warm olive grass wash patches + tilled soil patches
     for _ in range(40):
         px = random.randint(0, 512)
         py = random.randint(0, 512)
         pr = random.randint(30, 90)
         draw_ov.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(138, 156, 114, 45))
+    for _ in range(22):
+        px = random.randint(0, 512)
+        py = random.randint(0, 512)
+        pr = random.randint(18, 55)
+        draw_ov.ellipse([px - pr, py - pr // 2, px + pr, py + pr // 2], fill=(150, 122, 84, 38))
+    # Grass blade strokes and hay speckles (hand-sketched ground detail)
+    for _ in range(420):
+        gx = random.randint(0, 511)
+        gy = random.randint(0, 511)
+        ln = random.randint(3, 7)
+        tilt = random.randint(-3, 3)
+        draw_ov.line([(gx, gy), (gx + tilt, gy - ln)], fill=(104, 122, 74, 70), width=1)
+    for _ in range(260):
+        sx = random.randint(0, 511)
+        sy = random.randint(0, 511)
+        draw_ov.point((sx, sy), fill=(178, 152, 96, 90))
 
     # 2. Hand-inked topographic contour lines
     for contour_y in range(40, 500, 64):
@@ -699,12 +719,20 @@ def generate_terrain_trenches(output_path: str) -> None:
     overlay = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
     draw_ov = ImageDraw.Draw(overlay)
 
-    # 1. Mud churn washes
+    # 1. Mud churn washes + wet puddle sheen + boot/track scuffs
     for _ in range(50):
         px = random.randint(0, 512)
         py = random.randint(0, 512)
         pr = random.randint(25, 80)
         draw_ov.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(85, 65, 42, 70))
+    for _ in range(14):
+        px = random.randint(0, 480)
+        py = random.randint(0, 480)
+        draw_ov.ellipse([px, py, px + random.randint(14, 34), py + random.randint(8, 16)], fill=(70, 78, 84, 60))
+    for _ in range(300):
+        sx = random.randint(0, 511)
+        sy = random.randint(0, 511)
+        draw_ov.line([(sx, sy), (sx + random.randint(-6, 6), sy + random.randint(-4, 4))], fill=(60, 46, 30, 60), width=1)
 
     # Craters outer rims on overlay
     craters = [(100, 200, 32), (380, 210, 40), (260, 370, 30), (420, 380, 26)]
@@ -746,11 +774,19 @@ def generate_terrain_highway(output_path: str) -> None:
     overlay = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
     draw_ov = ImageDraw.Draw(overlay)
 
-    # 1. Balkan scrubland texture
+    # 1. Balkan scrubland texture + dry grass strokes + gravel speckle
     for _ in range(40):
         px = random.randint(0, 512)
         py = random.randint(0, 512)
         draw_ov.ellipse([px - 30, py - 30, px + 30, py + 30], fill=(135, 125, 95, 60))
+    for _ in range(380):
+        gx = random.randint(0, 511)
+        gy = random.randint(0, 511)
+        if 160 < gy < 350:
+            continue  # keep the asphalt clean
+        draw_ov.line([(gx, gy), (gx + random.randint(-3, 3), gy - random.randint(3, 6))], fill=(150, 138, 92, 70), width=1)
+    for _ in range(220):
+        draw_ov.point((random.randint(0, 511), random.randint(0, 511)), fill=(96, 90, 74, 110))
 
     img = Image.alpha_composite(img, overlay)
     draw = ImageDraw.Draw(img)
@@ -820,6 +856,18 @@ def generate_terrain_urban(output_path: str) -> None:
             by = ry + random.randint(-20, 20)
             draw.rectangle([bx, by, bx + 6, by + 4], fill=(165, 85, 50, 255), outline=INK_DARK, width=1)
 
+    # Ash smudges & glass/spall speckle (war-torn street detail)
+    overlay_ash = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+    draw_ash = ImageDraw.Draw(overlay_ash)
+    for _ in range(18):
+        ax = random.randint(0, 480)
+        ay = random.randint(0, 480)
+        draw_ash.ellipse([ax, ay, ax + random.randint(20, 60), ay + random.randint(10, 30)], fill=(40, 38, 36, 40))
+    for _ in range(240):
+        draw_ash.point((random.randint(0, 511), random.randint(0, 511)), fill=(200, 196, 186, 90))
+    img = Image.alpha_composite(img, overlay_ash)
+    draw = ImageDraw.Draw(img)
+
     img.putalpha(255)  # Enforce 100% solid opacity
     save_image(img, output_path, target_size=(512, 512))
 
@@ -875,19 +923,25 @@ def generate_building_roof_tiles(output_path: str) -> None:
 
     # 2. Main terracotta roof slab
     rx0, ry0, rx1, ry1 = 4 * S, 4 * S, 152 * S, 112 * S
-    draw.rectangle([rx0, ry0, rx1, ry1], fill=(195, 96, 58, 255), outline=INK_DARK, width=int(2.5 * S))
+    draw.rectangle([rx0, ry0, rx1, ry1], fill=(186, 88, 52, 255), outline=INK_DARK, width=int(2.5 * S))
 
-    # 3. Scalloped overlapping terracotta tile rows
+    # 3. Scalloped overlapping terracotta tile rows with alternating row shading
     row_h = 8 * S
     tile_w = 12 * S
-    for y in range(ry0, ry1, row_h):
+    for ri, y in enumerate(range(ry0, ry1, row_h)):
+        shade = (208, 104, 64, 255) if ri % 2 == 0 else (170, 78, 44, 255)
+        draw.rectangle([rx0, y, rx1, y + row_h], fill=shade)
+        draw.line([(rx0, y), (rx1, y)], fill=INK_DARK, width=int(1.2 * S))
         for x in range(rx0, rx1, tile_w):
-            draw.arc([x, y, x + tile_w, y + row_h * 2], 180, 360, fill=INK_DARK, width=int(1.5 * S))
-            draw.line([(x + tile_w // 2, y), (x + tile_w // 2, y + row_h)], fill=(225, 120, 80, 255), width=S)
+            draw.arc([x, y - 2 * S, x + tile_w, y + row_h * 2], 180, 360, fill=INK_MID, width=int(1.8 * S))
+            draw.line([(x + tile_w // 2, y + 2 * S), (x + tile_w // 2, y + row_h - 2 * S)],
+                      fill=(232, 130, 84, 255), width=int(1.5 * S))
 
-    # 4. Central Roof Ridge Cap line
+    # 4. Central Roof Ridge Cap line (thicker, tiled caps)
     mid_y = (ry0 + ry1) // 2
-    draw.rectangle([rx0, mid_y - 3 * S, rx1, mid_y + 3 * S], fill=(170, 75, 42, 255), outline=INK_DARK, width=int(1.5 * S))
+    draw.rectangle([rx0, mid_y - 4 * S, rx1, mid_y + 4 * S], fill=(150, 64, 36, 255), outline=INK_DARK, width=int(1.5 * S))
+    for x in range(rx0 + 2 * S, rx1 - 4 * S, 10 * S):
+        draw.arc([x, mid_y - 4 * S, x + 10 * S, mid_y + 4 * S], 180, 360, fill=INK_MID, width=int(1.5 * S))
 
     # 5. Small brick chimney stack
     draw.rectangle([120 * S, 16 * S, 136 * S, 32 * S], fill=(140, 60, 35, 255), outline=INK_DARK, width=int(1.5 * S))
@@ -1105,6 +1159,404 @@ def generate_tree_ink_sketch(output_path: str) -> None:
         draw.line([(cx, cy), (bx, by)], fill=INK_DARK, width=int(1.5 * S))
 
     save_image(img, output_path, target_size=(80, 80))
+
+
+def generate_health_kit(output_path: str, large: bool = False) -> None:
+    """Field dressing kit: olive satchel + white roundel + red cross. NOT a red box."""
+    size = 40 if large else 32
+    S = 4
+    W, H = size * S, size * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    pad = 4 * S
+    # Olive canvas satchel with flap
+    draw.rounded_rectangle([pad, pad + 2 * S, W - pad, H - pad], radius=3 * S,
+                           fill=(96, 104, 74, 255), outline=INK_DARK, width=int(1.5 * S))
+    draw.line([(pad, pad + 6 * S), (W - pad, pad + 6 * S)], fill=INK_MID, width=S)  # flap seam
+    draw.line([(W // 2, pad + 2 * S), (W // 2, H - pad)], fill=INK_FAINT, width=S)   # strap shadow
+    # White roundel + red cross
+    r = 8 * S if large else 6 * S
+    draw.ellipse([W // 2 - r, H // 2 - r, W // 2 + r, H // 2 + r], fill=(238, 236, 228, 255),
+                 outline=INK_DARK, width=int(1.5 * S))
+    cw = (r * 2) // 3
+    ch = cw // 3
+    draw.rectangle([W // 2 - cw // 2, H // 2 - r + ch, W // 2 + cw // 2, H // 2 + r - ch], fill=COLOR_CRO_RED)
+    draw.rectangle([W // 2 - ch // 2, H // 2 - r + cw // 2 - ch // 2, W // 2 + ch // 2, H // 2 + r - cw // 2 + ch // 2], fill=COLOR_CRO_RED)
+    if large:
+        # Carry handle for the big kit
+        draw.arc([W // 2 - 6 * S, pad - 3 * S, W // 2 + 6 * S, pad + 4 * S], 180, 360, fill=INK_DARK, width=int(1.5 * S))
+    img = draw_crosshatch(img, pad + S, pad + 3 * S, W - pad - S, H - pad - S,
+                          spacing=4 * S, angle=45, color=INK_FAINT, width=S)
+    save_image(img, output_path, target_size=(size, size))
+
+
+def generate_weapon_pickup(output_path: str) -> None:
+    """Weapon crate: dark green box, rifle silhouette, gold glint corner."""
+    S = 4
+    W, H = 32 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rounded_rectangle([3 * S, 6 * S, 29 * S, 26 * S], radius=2 * S, fill=(54, 62, 44, 255),
+                           outline=INK_DARK, width=int(1.5 * S))
+    draw.line([(3 * S, 12 * S), (29 * S, 12 * S)], fill=INK_MID, width=S)
+    # Rifle silhouette
+    draw.rectangle([7 * S, 16 * S, 25 * S, 18 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+    draw.rectangle([9 * S, 18 * S, 13 * S, 21 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+    # Gold glint
+    draw.line([(26 * S, 7 * S), (28 * S, 9 * S)], fill=(230, 200, 60, 255), width=S)
+    draw.line([(28 * S, 7 * S), (26 * S, 9 * S)], fill=(230, 200, 60, 255), width=S)
+    save_image(img, output_path, target_size=(32, 32))
+
+
+def generate_bullet_tracer(output_path: str, enemy: bool = False) -> None:
+    """Bright elongated tracer streak (player = warm white-gold, enemy = hot red)."""
+    S = 4
+    W, H = 16 * S, 6 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    core = (255, 244, 200, 255) if not enemy else (255, 120, 90, 255)
+    glow = (255, 200, 80, 160) if not enemy else (220, 40, 30, 160)
+    tail = (255, 170, 60, 90) if not enemy else (180, 30, 24, 90)
+    cy = H // 2
+    draw.line([(1 * S, cy), (9 * S, cy)], fill=tail, width=2 * S)
+    draw.line([(4 * S, cy), (13 * S, cy)], fill=glow, width=int(2.5 * S))
+    draw.line([(8 * S, cy), (15 * S, cy)], fill=core, width=int(1.5 * S))
+    draw.ellipse([13 * S, cy - S, 15 * S, cy + S], fill=(255, 255, 240, 255))
+    save_image(img, output_path, target_size=(16, 6))
+
+
+def generate_rocket_sprite(output_path: str) -> None:
+    """RPG rocket: olive body, dark warhead cone, fins, ink outline."""
+    S = 4
+    W, H = 24 * S, 8 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cy = H // 2
+    draw.rectangle([6 * S, cy - 1 * S, 18 * S, cy + 1 * S], fill=(88, 92, 70, 255), outline=INK_DARK, width=1)
+    draw.polygon([(18 * S, cy - 2 * S), (23 * S, cy), (18 * S, cy + 2 * S)], fill=COLOR_STEEL_DARK, outline=INK_DARK)
+    draw.polygon([(6 * S, cy - 1 * S), (3 * S, cy - 2 * S), (5 * S, cy)], fill=(70, 74, 62, 255), outline=INK_DARK)
+    draw.polygon([(6 * S, cy + 1 * S), (3 * S, cy + 2 * S), (5 * S, cy)], fill=(70, 74, 62, 255), outline=INK_DARK)
+    save_image(img, output_path, target_size=(24, 8))
+
+
+def generate_mortar_prop(output_path: str) -> None:
+    """Top-down mortar pit: circular baseplate, angled tube, sand ring."""
+    S = 4
+    W, H = 48 * S, 48 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx, cy = W // 2, H // 2
+    draw.ellipse([4 * S, 4 * S, W - 4 * S, H - 4 * S], fill=(96, 88, 66, 255), outline=INK_DARK, width=int(1.5 * S))
+    draw.ellipse([10 * S, 10 * S, W - 10 * S, H - 10 * S], fill=(70, 64, 48, 255), outline=INK_DARK, width=S)
+    draw.ellipse([cx - 8 * S, cy - 8 * S, cx + 8 * S, cy + 8 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+    draw.rectangle([cx - 2 * S, cy - 16 * S, cx + 2 * S, cy], fill=(52, 56, 58, 255), outline=INK_DARK, width=S)
+    draw.line([(cx - 6 * S, cy + 2 * S), (cx - 10 * S, cy + 8 * S)], fill=COLOR_STEEL_DARK, width=S)
+    draw.line([(cx + 6 * S, cy + 2 * S), (cx + 10 * S, cy + 8 * S)], fill=COLOR_STEEL_DARK, width=S)
+    img = draw_crosshatch(img, 8 * S, 8 * S, W - 8 * S, H - 8 * S, spacing=5 * S, angle=60, color=INK_FAINT, width=S)
+    save_image(img, output_path, target_size=(48, 48))
+
+
+def generate_mine(output_path: str) -> None:
+    """20x20 anti-personnel mine: dark disc, pressure spider, barely visible."""
+    S = 4
+    W, H = 20 * S, 20 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx, cy = W // 2, H // 2
+    draw.ellipse([3 * S, 3 * S, W - 3 * S, H - 3 * S], fill=(48, 44, 38, 255), outline=INK_DARK, width=S)
+    draw.ellipse([cx - 4 * S, cy - 4 * S, cx + 4 * S, cy + 4 * S], fill=(70, 66, 56, 255), outline=INK_DARK, width=1)
+    for a in range(0, 360, 60):
+        ax = cx + int(6 * S * math.cos(math.radians(a)))
+        ay = cy + int(6 * S * math.sin(math.radians(a)))
+        draw.line([(cx, cy), (ax, ay)], fill=INK_MID, width=1)
+    save_image(img, output_path, target_size=(20, 20))
+
+
+def generate_minefield_sign(output_path: str) -> None:
+    """48x48 minefield warning: two posts + red-bordered triangle with skull."""
+    S = 4
+    W, H = 48 * S, 48 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([10 * S, 18 * S, 13 * S, 42 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=S)
+    draw.rectangle([35 * S, 18 * S, 38 * S, 42 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=S)
+    pts = [(24 * S, 6 * S), (42 * S, 34 * S), (6 * S, 34 * S)]
+    draw.polygon(pts, fill=(222, 214, 190, 255))
+    draw.line(pts + [pts[0]], fill=COLOR_CRO_RED, width=3 * S)
+    # Skull hint
+    draw.ellipse([20 * S, 18 * S, 28 * S, 26 * S], fill=INK_DARK)
+    draw.rectangle([21 * S, 25 * S, 27 * S, 29 * S], fill=INK_DARK)
+    save_image(img, output_path, target_size=(48, 48))
+
+
+def generate_grenade(output_path: str) -> None:
+    """20x20 M75 hand grenade: oval frag body + lever."""
+    S = 4
+    W, H = 20 * S, 20 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([5 * S, 6 * S, 14 * S, 17 * S], fill=(56, 60, 46, 255), outline=INK_DARK, width=S)
+    for i in range(3):
+        y = (8 + i * 3) * S
+        draw.line([(6 * S, y), (13 * S, y)], fill=INK_MID, width=1)
+    for i in range(2):
+        x = (8 + i * 3) * S
+        draw.line([(x, 7 * S), (x, 16 * S)], fill=INK_MID, width=1)
+    draw.arc([8 * S, 2 * S, 16 * S, 10 * S], -90, 90, fill=COLOR_STEEL_LIGHT, width=int(1.5 * S))
+    draw.ellipse([7 * S, 4 * S, 10 * S, 7 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+    save_image(img, output_path, target_size=(20, 20))
+
+
+def generate_warning_circle(output_path: str) -> None:
+    """64x64 dashed red target telegraph circle with inner crosshair ticks."""
+    S = 4
+    W, H = 64 * S, 64 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    r = 28 * S
+    for a in range(0, 360, 12):
+        a0, a1 = math.radians(a), math.radians(a + 7)
+        x0, y0 = W // 2 + r * math.cos(a0), H // 2 + r * math.sin(a0)
+        x1, y1 = W // 2 + r * math.cos(a1), H // 2 + r * math.sin(a1)
+        draw.line([(x0, y0), (x1, y1)], fill=(200, 40, 30, 200), width=2 * S)
+    draw.ellipse([W // 2 - 4 * S, H // 2 - 4 * S, W // 2 + 4 * S, H // 2 + 4 * S], outline=(200, 40, 30, 160), width=S)
+    save_image(img, output_path, target_size=(64, 64))
+
+
+def generate_armor_vest(output_path: str) -> None:
+    """28x28 flak vest pickup: olive vest with plate panels and straps."""
+    S = 4
+    W, H = 28 * S, 28 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    pts = [(8 * S, 4 * S), (20 * S, 4 * S), (24 * S, 10 * S), (22 * S, 24 * S), (6 * S, 24 * S), (4 * S, 10 * S)]
+    draw.polygon(pts, fill=(78, 86, 62, 255))
+    draw.line(pts + [pts[0]], fill=INK_DARK, width=int(1.5 * S))
+    draw.rectangle([10 * S, 8 * S, 18 * S, 16 * S], fill=(62, 68, 50, 255), outline=INK_DARK, width=S)
+    draw.line([(6 * S, 6 * S), (4 * S, 10 * S)], fill=INK_DARK, width=S)
+    draw.line([(22 * S, 6 * S), (24 * S, 10 * S)], fill=INK_DARK, width=S)
+    img = draw_crosshatch(img, 8 * S, 6 * S, 20 * S, 22 * S, spacing=3 * S, angle=45, color=INK_FAINT, width=S)
+    save_image(img, output_path, target_size=(28, 28))
+
+
+def generate_stone_wall(output_path: str) -> None:
+    """64x28 crenellated fortress stone wall segment (Knin ramparts)."""
+    S = 4
+    W, H = 64 * S, 28 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([0, 8 * S, W, 26 * S], fill=(132, 128, 118, 255), outline=INK_DARK, width=int(1.5 * S))
+    # Battlements
+    for bx in range(2 * S, W - 8 * S, 12 * S):
+        draw.rectangle([bx, 2 * S, bx + 8 * S, 10 * S], fill=(120, 116, 106, 255), outline=INK_DARK, width=S)
+    # Stone courses
+    for row, y in enumerate(range(10 * S, 26 * S, 5 * S)):
+        off = 4 * S if row % 2 else 0
+        for x in range(-4 * S + off, W, 10 * S):
+            shade = random.randint(-10, 10)
+            draw.rectangle([x, y, x + 9 * S, y + 4 * S],
+                           fill=(132 + shade, 128 + shade, 118 + shade, 255), outline=INK_MID, width=1)
+    img = draw_crosshatch(img, 0, 8 * S, W, 26 * S, spacing=6 * S, angle=30, color=INK_FAINT, width=S)
+    save_image(img, output_path, target_size=(64, 28))
+
+
+def generate_building_walls(kind: str, output_path: str) -> None:
+    """Front wall band (with door + windows) to sit under a roof sprite and give height."""
+    w = 160 if kind == "tiles" else 140
+    S = 4
+    W, H = w * S, 28 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    plaster = (214, 200, 168, 255) if kind == "tiles" else (168, 160, 142, 255)
+    draw.rectangle([4 * S, 0, (w - 4) * S, H - 4 * S], fill=plaster, outline=INK_DARK, width=int(1.5 * S))
+    # Stone foundation
+    draw.rectangle([4 * S, H - 8 * S, (w - 4) * S, H - 4 * S], fill=(120, 116, 106, 255), outline=INK_DARK, width=S)
+    # Door (dark, arched top)
+    dx = W // 2 - 6 * S
+    draw.rectangle([dx, 8 * S, dx + 12 * S, H - 6 * S], fill=(44, 34, 24, 255), outline=INK_DARK, width=S)
+    draw.arc([dx, 5 * S, dx + 12 * S, 11 * S], 180, 360, fill=INK_DARK, width=S)
+    # Windows with shutters
+    for wx in (W // 4 - 5 * S, 3 * W // 4 - 5 * S):
+        draw.rectangle([wx, 8 * S, wx + 10 * S, 16 * S], fill=(30, 34, 38, 255), outline=INK_DARK, width=S)
+        draw.line([(wx - 2 * S, 8 * S), (wx - 2 * S, 16 * S)], fill=COLOR_WOOD_DARK, width=2 * S)
+        draw.line([(wx + 12 * S, 8 * S), (wx + 12 * S, 16 * S)], fill=COLOR_WOOD_DARK, width=2 * S)
+    img = draw_crosshatch(img, 4 * S, 2 * S, (w - 4) * S, H - 6 * S, spacing=7 * S, angle=45, color=INK_FAINT, width=S)
+    save_image(img, output_path, target_size=(w, 28))
+
+
+def generate_hay_bale(output_path: str) -> None:
+    """28x28 round hay bale top-down with spiral wrap."""
+    S = 4
+    W, H = 28 * S, 28 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx, cy = W // 2, H // 2
+    draw.ellipse([cx - 12 * S, cy - 10 * S, cx + 14 * S, cy + 14 * S], fill=(24, 20, 16, 70))  # shadow
+    draw.ellipse([cx - 11 * S, cy - 11 * S, cx + 11 * S, cy + 11 * S], fill=(196, 168, 92, 255), outline=INK_DARK, width=int(1.5 * S))
+    for r in (8 * S, 5 * S, 2 * S):
+        draw.arc([cx - r, cy - r, cx + r, cy + r], 0, 330, fill=(150, 124, 62, 255), width=S)
+    img = draw_crosshatch(img, cx - 9 * S, cy - 9 * S, cx + 9 * S, cy + 9 * S, spacing=3 * S, angle=60, color=INK_FAINT, width=S)
+    save_image(img, output_path, target_size=(28, 28))
+
+
+def generate_wrecked_car(output_path: str) -> None:
+    """56x28 burnt-out civilian car hulk, top-down."""
+    S = 4
+    W, H = 56 * S, 28 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([6 * S, 16 * S, 50 * S, 30 * S], fill=(20, 16, 14, 90))  # shadow
+    draw.rounded_rectangle([4 * S, 6 * S, 52 * S, 24 * S], radius=5 * S, fill=(52, 48, 44, 255), outline=INK_DARK, width=int(1.5 * S))
+    draw.rectangle([18 * S, 8 * S, 38 * S, 22 * S], fill=(30, 28, 26, 255), outline=INK_DARK, width=S)   # burnt cabin
+    draw.line([(20 * S, 8 * S), (36 * S, 22 * S)], fill=(70, 64, 56, 255), width=S)                      # seat springs
+    draw.line([(36 * S, 8 * S), (20 * S, 22 * S)], fill=(70, 64, 56, 255), width=S)
+    for wx in (10 * S, 44 * S):
+        draw.ellipse([wx - 3 * S, 4 * S, wx + 3 * S, 8 * S], fill=(24, 22, 20, 255), outline=INK_DARK, width=1)
+        draw.ellipse([wx - 3 * S, 22 * S, wx + 3 * S, 26 * S], fill=(24, 22, 20, 255), outline=INK_DARK, width=1)
+    # Rust blooms
+    for _ in range(6):
+        rx, ry = random.randint(6 * S, 50 * S), random.randint(7 * S, 23 * S)
+        draw.ellipse([rx - 2 * S, ry - S, rx + 2 * S, ry + S], fill=(120, 66, 34, 120))
+    save_image(img, output_path, target_size=(56, 28))
+
+
+def generate_telegraph_pole(output_path: str) -> None:
+    """16x32 telegraph pole top-down: wood post dot, crossarm, long shadow."""
+    S = 4
+    W, H = 16 * S, 32 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx = W // 2
+    draw.line([(cx + 4 * S, 8 * S), (cx + 12 * S, 26 * S)], fill=(24, 20, 16, 70), width=2 * S)  # shadow
+    draw.line([(cx - 6 * S, 10 * S), (cx + 6 * S, 10 * S)], fill=COLOR_WOOD_DARK, width=int(1.5 * S))  # crossarm
+    draw.ellipse([cx - 3 * S, 6 * S, cx + 3 * S, 12 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+    draw.ellipse([cx - S, 8 * S, cx + S, 10 * S], fill=INK_DARK)
+    save_image(img, output_path, target_size=(16, 32))
+
+
+def generate_road_sign(output_path: str) -> None:
+    """14x24 rural road sign: post + arrow board."""
+    S = 4
+    W, H = 14 * S, 24 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx = W // 2
+    draw.line([(cx + 3 * S, 6 * S), (cx + 7 * S, 20 * S)], fill=(24, 20, 16, 70), width=S)
+    draw.rectangle([cx - S, 8 * S, cx + S, 22 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=1)
+    pts = [(2 * S, 3 * S), (10 * S, 3 * S), (13 * S, 6 * S), (10 * S, 9 * S), (2 * S, 9 * S)]
+    draw.polygon(pts, fill=(226, 218, 190, 255))
+    draw.line(pts + [pts[0]], fill=INK_DARK, width=S)
+    save_image(img, output_path, target_size=(14, 24))
+
+
+def generate_grass_tuft(output_path: str) -> None:
+    """16x16 grass tuft scatter detail."""
+    S = 4
+    W, H = 16 * S, 16 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx, cy = W // 2, H - 3 * S
+    for i, (ang, ln, c) in enumerate([(-60, 9, (96, 116, 66)), (-30, 11, (110, 130, 76)), (0, 12, (88, 108, 60)),
+                                      (30, 10, (120, 138, 84)), (60, 8, (96, 116, 66))]):
+        a = math.radians(ang - 90)
+        ex = cx + ln * S * math.cos(a) * 0.4 + (i - 2) * S
+        ey = cy - ln * S * 0.9
+        draw.line([(cx + (i - 2) * S, cy), (ex, ey)], fill=(*c, 255), width=int(1.2 * S))
+    save_image(img, output_path, target_size=(16, 16))
+
+
+def generate_stone_scatter(output_path: str) -> None:
+    """20x16 pebble/scree scatter detail."""
+    S = 4
+    W, H = 20 * S, 16 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    for _ in range(7):
+        px, py = random.randint(2 * S, W - 4 * S), random.randint(2 * S, H - 4 * S)
+        r = random.randint(S, 2 * S)
+        shade = random.randint(-15, 15)
+        draw.ellipse([px - r, py - r, px + r, py + r],
+                     fill=(128 + shade, 122 + shade, 110 + shade, 255), outline=INK_MID, width=1)
+    save_image(img, output_path, target_size=(20, 16))
+
+
+# ---------------------------------------------------------------------------
+# 4b. Held Weapon Sprites (for WeaponSprite nodes, drawn facing +X, grip left)
+# ---------------------------------------------------------------------------
+
+def _weapon_canvas(w: int, h: int) -> tuple:
+    S = 4
+    img = Image.new("RGBA", (w * S, h * S), (0, 0, 0, 0))
+    return img, ImageDraw.Draw(img), S
+
+
+def generate_held_weapon(kind: str, output_path: str) -> None:
+    """Slim, dark, readable top-down weapon silhouettes. ~40x14 long guns, 16x10 pistol."""
+    if kind == "php_pistol":
+        img, draw, S = _weapon_canvas(16, 10)
+        draw.rectangle([5 * S, 3 * S, 14 * S, 5 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)  # slide
+        draw.rectangle([5 * S, 5 * S, 9 * S, 8 * S], fill=COLOR_STEEL, outline=INK_DARK, width=S)        # grip
+        draw.rectangle([4 * S, 4 * S, 6 * S, 6 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=S)    # frame rear
+        save_image(img, output_path, target_size=(16, 10))
+        return
+
+    img, draw, S = _weapon_canvas(40, 14)
+    cy = 7 * S
+
+    if kind == "m70_rifle":
+        # Wooden stock + receiver, steel barrel, curved banana magazine
+        draw.rectangle([2 * S, cy - 2 * S, 16 * S, cy + 2 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+        draw.rectangle([16 * S, cy - 1 * S, 34 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.arc([10 * S, cy + 1 * S, 17 * S, cy + 8 * S], 0, 90, fill=INK_DARK, width=int(1.5 * S))  # magazine curve
+        draw.rectangle([1 * S, cy - 1 * S, 4 * S, cy + 2 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=S)
+    elif kind == "hawk_shotgun":
+        # Thick ribbed barrel + wood pump grip
+        draw.rectangle([8 * S, cy - 2 * S, 33 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.line([(8 * S, cy - 2 * S), (33 * S, cy - 2 * S)], fill=COLOR_STEEL_LIGHT, width=S)
+        draw.rectangle([12 * S, cy + 2 * S, 20 * S, cy + 4 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+        draw.rectangle([2 * S, cy - 2 * S, 10 * S, cy + 2 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+    elif kind == "skorpion_smg":
+        # Compact stamped body, folding wire stock, small mag
+        draw.rectangle([6 * S, cy - 2 * S, 24 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.rectangle([24 * S, cy - 1 * S, 30 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.line([(6 * S, cy - 3 * S), (2 * S, cy - 4 * S)], fill=COLOR_STEEL, width=S)  # wire stock
+        draw.line([(6 * S, cy + 3 * S), (2 * S, cy + 4 * S)], fill=COLOR_STEEL, width=S)
+        draw.rectangle([12 * S, cy + 2 * S, 15 * S, cy + 7 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+    elif kind == "m48_mauser":
+        # Long slim bolt-action: full wood stock, slim barrel, bolt knob
+        draw.rectangle([2 * S, cy - 1 * S, 20 * S, cy + 1 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+        draw.rectangle([20 * S, cy - 1 * S, 37 * S, cy], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.ellipse([8 * S, cy + 1 * S, 11 * S, cy + 4 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)  # bolt
+        draw.rectangle([1 * S, cy - 1 * S, 3 * S, cy + 1 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=1)
+    elif kind == "rpg7":
+        # Tube + conical warhead + pistol grips
+        draw.rectangle([6 * S, cy - 1 * S, 30 * S, cy + 1 * S], fill=(70, 74, 62, 255), outline=INK_DARK, width=S)
+        draw.polygon([(30 * S, cy - 3 * S), (37 * S, cy), (30 * S, cy + 3 * S)], fill=COLOR_STEEL_DARK, outline=INK_DARK)
+        draw.rectangle([12 * S, cy + 1 * S, 14 * S, cy + 4 * S], fill=COLOR_WOOD_DARK, outline=INK_DARK, width=1)
+        draw.rectangle([4 * S, cy - 2 * S, 6 * S, cy + 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)  # venturi
+    elif kind == "m72_rpk":
+        # RPK: rifle silhouette + drum magazine + bipod hint + carrying handle
+        draw.rectangle([2 * S, cy - 2 * S, 16 * S, cy + 2 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+        draw.rectangle([16 * S, cy - 1 * S, 35 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)
+        draw.ellipse([10 * S, cy + 1 * S, 18 * S, cy + 8 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=S)  # drum
+        draw.line([(30 * S, cy + 1 * S), (33 * S, cy + 5 * S)], fill=COLOR_STEEL, width=S)  # bipod leg
+        draw.line([(30 * S, cy - 1 * S), (33 * S, cy - 5 * S)], fill=COLOR_STEEL, width=S)
+    elif kind == "m76_dmr":
+        # DMR: long barrel, scope bump, slim wood
+        draw.rectangle([2 * S, cy - 1 * S, 18 * S, cy + 1 * S], fill=COLOR_WOOD, outline=INK_DARK, width=S)
+        draw.rectangle([18 * S, cy - 1 * S, 38 * S, cy], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.rectangle([12 * S, cy - 4 * S, 20 * S, cy - 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)  # scope
+        draw.rectangle([9 * S, cy + 1 * S, 13 * S, cy + 5 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)   # mag
+    elif kind == "m80_zolja":
+        # Disposable tube launcher: plain green tube, rear cone, sight nub
+        draw.rectangle([4 * S, cy - 2 * S, 34 * S, cy + 2 * S], fill=(84, 92, 66, 255), outline=INK_DARK, width=S)
+        draw.polygon([(34 * S, cy - 2 * S), (38 * S, cy), (34 * S, cy + 2 * S)], fill=(64, 70, 50, 255), outline=INK_DARK)
+        draw.rectangle([2 * S, cy - 1 * S, 4 * S, cy + 1 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+        draw.rectangle([26 * S, cy - 4 * S, 29 * S, cy - 2 * S], fill=COLOR_STEEL_DARK, outline=INK_DARK, width=1)
+    else:
+        raise ValueError(f"Unknown held weapon kind: {kind}")
+
+    save_image(img, output_path, target_size=(40, 14))
 
 
 # ---------------------------------------------------------------------------
@@ -1462,43 +1914,107 @@ def generate_stamp_mission_complete(output_path: str) -> None:
     save_image(img, output_path, target_size=(160, 64))
 
 
+def _draw_cloth_shading(img: Image.Image) -> Image.Image:
+    """Soft vertical cloth-wave shading so flags read as fabric, not flat plastic."""
+    W, H = img.size
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw_ov = ImageDraw.Draw(overlay)
+    for x in range(0, W, 8):
+        wave = int(3 * math.sin(x * 0.08))
+        draw_ov.line([(x, 0), (x + wave, H)], fill=(255, 255, 255, 14), width=3)
+        draw_ov.line([(x + 4, 0), (x + 4 + wave, H)], fill=(20, 16, 12, 10), width=2)
+    return Image.alpha_composite(img, overlay)
+
+
+def _shield_polygon(cx: int, top: int, w: int, h: int) -> list:
+    """Heater-shield outline: flat top, straight sides, pointed base."""
+    x0, x1 = cx - w // 2, cx + w // 2
+    return [(x0, top), (x1, top), (x1, top + int(h * 0.55)), (cx, top + h), (x0, top + int(h * 0.55))]
+
+
+def _draw_sahovnica_shield(img: Image.Image, cx: int, top: int, w: int, h: int,
+                           cell_border: int, crown: bool = True) -> Image.Image:
+    """Draws the Croatian coat of arms: blue shield, 5x5 šahovnica starting RED, 5-shield crown."""
+    draw = ImageDraw.Draw(img)
+    shield_pts = _shield_polygon(cx, top, w, h)
+
+    # Crown of five small historical shields in an arc above the main shield
+    if crown:
+        cw = max(2, w // 7)
+        ch = max(2, h // 5)
+        gap = max(1, w // 24)
+        total = 5 * cw + 4 * gap
+        cx0 = cx - total // 2
+        crown_colors = [
+            ((46, 94, 171, 255), (255, 255, 255, 255)),   # star & crescent blue
+            ((240, 240, 235, 255), (196, 34, 28, 255)),   # white w/ red bars
+            ((196, 34, 28, 255), (240, 240, 235, 255)),   # red w/ white dot
+            ((46, 94, 171, 255), (240, 240, 235, 255)),   # blue w/ white stripe
+            ((196, 34, 28, 255), (255, 210, 50, 255)),    # red w/ gold dot
+        ]
+        for i, (base, mark) in enumerate(crown_colors):
+            mx0 = cx0 + i * (cw + gap)
+            my0 = top - ch + abs(i - 2) * max(1, ch // 4)
+            pts = _shield_polygon(mx0 + cw // 2, my0, cw, ch)
+            draw.polygon(pts, fill=base, outline=INK_DARK)
+            draw.point((mx0 + cw // 2, my0 + ch // 3), fill=mark)
+
+    # Blue shield field
+    draw.polygon(shield_pts, fill=(28, 64, 142, 255))
+
+    # 5x5 checkerboard masked to the shield silhouette, starting RED top-left
+    checker = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    draw_ck = ImageDraw.Draw(checker)
+    inset = cell_border
+    cw = (w - 2 * inset) // 5
+    chh = (int(h * 0.62) - inset) // 5
+    x0, y0 = cx - w // 2 + inset, top + inset
+    for row in range(5):
+        for col in range(5):
+            c = COLOR_CRO_RED if (row + col) % 2 == 0 else COLOR_CRO_WHITE
+            draw_ck.rectangle([x0 + col * cw, y0 + row * chh,
+                               x0 + (col + 1) * cw, y0 + (row + 1) * chh], fill=c)
+    mask = Image.new("L", img.size, 0)
+    ImageDraw.Draw(mask).polygon(shield_pts, fill=255)
+    checker.putalpha(ImageChops.multiply(checker.getchannel("A"), mask))
+    img = Image.alpha_composite(img, checker)
+    draw = ImageDraw.Draw(img)
+
+    draw.line(shield_pts + [shield_pts[0]], fill=INK_DARK, width=max(1, w // 22))
+    return img
+
+
 def generate_croatian_flag(output_path: str) -> None:
-    """Generates a proper Croatian flag with 5x5 šahovnica shield (not plain red/white bands)."""
+    """Croatian flag, official 1:2 ratio: red/white/blue thirds + crowned šahovnica shield."""
     S = 4
-    W, H = 48 * S, 32 * S
+    W, H = 96 * S, 48 * S
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     band = H // 3
     draw.rectangle([0, 0, W, band], fill=COLOR_CRO_RED)
     draw.rectangle([0, band, W, band * 2], fill=COLOR_CRO_WHITE)
     draw.rectangle([0, band * 2, W, H], fill=COLOR_CRO_BLUE)
-    # Šahovnica shield centered
-    sh_w, sh_h = 14 * S, 14 * S
-    sx0 = (W - sh_w) // 2
-    sy0 = (H - sh_h) // 2
-    cell = sh_w // 5
-    for row in range(5):
-        for col in range(5):
-            c = COLOR_CRO_RED if (row + col) % 2 == 0 else COLOR_CRO_WHITE
-            draw.rectangle([sx0 + col * cell, sy0 + row * cell,
-                            sx0 + (col + 1) * cell, sy0 + (row + 1) * cell], fill=c)
-    draw.rectangle([sx0, sy0, sx0 + 5 * cell, sy0 + 5 * cell], outline=INK_DARK, width=S)
+    img = _draw_cloth_shading(img)
+    img = _draw_sahovnica_shield(img, W // 2, 11 * S, 22 * S, 26 * S, cell_border=2 * S)
+    draw = ImageDraw.Draw(img)
     draw.rectangle([0, 0, W - 1, H - 1], outline=INK_DARK, width=S)
-    save_image(img, output_path, target_size=(48, 32))
+    save_image(img, output_path, target_size=(96, 48))
 
 
 def generate_svk_flag(output_path: str) -> None:
-    """Generates Serbian / SVK horizontal tricolor (red-blue-white)."""
+    """Serbian / SVK horizontal tricolor, red-blue-white equal thirds, 2:1 cloth."""
     S = 4
-    W, H = 48 * S, 32 * S
+    W, H = 96 * S, 48 * S
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     band = H // 3
     draw.rectangle([0, 0, W, band], fill=COLOR_SVK_RED)
     draw.rectangle([0, band, W, band * 2], fill=COLOR_SVK_BLUE)
     draw.rectangle([0, band * 2, W, H], fill=COLOR_SVK_WHITE)
+    img = _draw_cloth_shading(img)
+    draw = ImageDraw.Draw(img)
     draw.rectangle([0, 0, W - 1, H - 1], outline=INK_DARK, width=S)
-    save_image(img, output_path, target_size=(48, 32))
+    save_image(img, output_path, target_size=(96, 48))
 
 
 def generate_svk_insignia(output_path: str) -> None:
@@ -1520,19 +2036,16 @@ def generate_svk_insignia(output_path: str) -> None:
 
 
 def generate_hv_insignia(output_path: str) -> None:
-    """Generates a compact HV šahovnica insignia badge."""
+    """HV insignia badge: proper pointed šahovnica shield with crown on a dark roundel."""
     S = 4
     W, H = 32 * S, 32 * S
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    cell = 5 * S
-    ox, oy = (W - 5 * cell) // 2, (H - 5 * cell) // 2
-    for row in range(5):
-        for col in range(5):
-            c = COLOR_CRO_RED if (row + col) % 2 == 0 else COLOR_CRO_WHITE
-            draw.rectangle([ox + col * cell, oy + row * cell,
-                            ox + (col + 1) * cell, oy + (row + 1) * cell], fill=c)
-    draw.rectangle([ox, oy, ox + 5 * cell, oy + 5 * cell], outline=INK_DARK, width=S)
+    cx, cy = W // 2, H // 2
+    draw.ellipse([3 * S, 3 * S, W - 3 * S, H - 3 * S], fill=(36, 40, 34, 255), outline=INK_DARK, width=S)
+    img = _draw_sahovnica_shield(img, cx, 9 * S, 16 * S, 17 * S, cell_border=1 * S)
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([3 * S, 3 * S, W - 3 * S, H - 3 * S], outline=(212, 176, 90, 255), width=S)
     save_image(img, output_path, target_size=(32, 32))
 
 
@@ -1574,10 +2087,12 @@ def generate_all_assets() -> None:
     generate_terrain_urban("assets/sprites/terrain/terrain_urban.png")
     generate_terrain_fortress("assets/sprites/terrain/terrain_fortress.png")
 
-    # 4. Props (9 assets)
+    # 4. Props (18 assets)
     print("\n--- 4. Illustrated Props ---")
     generate_building_roof_tiles("assets/sprites/props/building_roof_tiles.png")
     generate_building_roof_tin("assets/sprites/props/building_roof_tin.png")
+    generate_building_walls("tiles", "assets/sprites/props/building_walls_tiles.png")
+    generate_building_walls("tin", "assets/sprites/props/building_walls_tin.png")
     generate_bunker_concrete("assets/sprites/props/bunker_concrete.png")
     generate_sandbag_straight("assets/sprites/props/sandbag_straight.png")
     generate_sandbag_corner("assets/sprites/props/sandbag_corner.png")
@@ -1585,6 +2100,41 @@ def generate_all_assets() -> None:
     generate_fuel_drum("assets/sprites/props/fuel_drum.png")
     generate_barbed_wire("assets/sprites/props/barbed_wire.png")
     generate_tree_ink_sketch("assets/sprites/props/tree_ink_sketch.png")
+    generate_stone_wall("assets/sprites/props/stone_wall.png")
+    generate_hay_bale("assets/sprites/props/hay_bale.png")
+    generate_wrecked_car("assets/sprites/props/wrecked_car.png")
+    generate_telegraph_pole("assets/sprites/props/telegraph_pole.png")
+    generate_road_sign("assets/sprites/props/road_sign.png")
+    generate_grass_tuft("assets/sprites/props/grass_tuft.png")
+    generate_stone_scatter("assets/sprites/props/stone_scatter.png")
+
+    # 4c. Held weapon sprites (9 assets)
+    print("\n--- 4c. Held Weapon Sprites ---")
+    generate_held_weapon("m70_rifle", "assets/sprites/weapons/m70_rifle.png")
+    generate_held_weapon("php_pistol", "assets/sprites/weapons/php_pistol.png")
+    generate_held_weapon("hawk_shotgun", "assets/sprites/weapons/hawk_shotgun.png")
+    generate_held_weapon("skorpion_smg", "assets/sprites/weapons/skorpion_smg.png")
+    generate_held_weapon("m48_mauser", "assets/sprites/weapons/m48_mauser.png")
+    generate_held_weapon("rpg7", "assets/sprites/weapons/rpg7.png")
+    generate_held_weapon("m72_rpk", "assets/sprites/weapons/m72_rpk.png")
+    generate_held_weapon("m76_dmr", "assets/sprites/weapons/m76_dmr.png")
+    generate_held_weapon("m80_zolja", "assets/sprites/weapons/m80_zolja.png")
+
+    # 4d. Pickups & legacy sprite restyles (war-journal style)
+    print("\n--- 4d. Pickups & Legacy Restyles ---")
+    generate_health_kit("assets/sprites/health_kit.png")
+    generate_health_kit("assets/sprites/large_health.png", large=True)
+    generate_ammo_crate_wooden("assets/sprites/ammo_crate.png")
+    generate_weapon_pickup("assets/sprites/weapon_pickup.png")
+    generate_bullet_tracer("assets/sprites/bullet.png")
+    generate_bullet_tracer("assets/sprites/bullet_enemy.png", enemy=True)
+    generate_rocket_sprite("assets/sprites/rocket.png")
+    generate_mortar_prop("assets/sprites/mortar.png")
+    generate_mine("assets/sprites/mine.png")
+    generate_minefield_sign("assets/sprites/minefield.png")
+    generate_grenade("assets/sprites/grenade.png")
+    generate_warning_circle("assets/sprites/warning_circle.png")
+    generate_armor_vest("assets/sprites/armor_vest.png")
 
     # 5. Combat VFX (7 assets)
     print("\n--- 5. Combat VFX ---")

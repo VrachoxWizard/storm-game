@@ -84,6 +84,11 @@ pickup placements across Missions 2–5.
 - `PaperOverlay` moved to `CanvasLayer 0` so HUD/menus sit above the grain.
 - HUD bottom bar re-anchored via an expanding spacer; ammo frame realigned with
   the ammo label.
+- **Results screen fix (7 Sep):** `ResultsScreen` is a `CanvasLayer` (layer 2) so
+  the mission `Camera2D` no longer transforms the report UI; world is hidden on
+  complete. Stamp uses a TrueType font with Croatian glyphs (`ZADAĆA IZVRŠENA`);
+  parchment fold-crease cross removed; stretch uses aspect-cover like Main Menu;
+  detail/debrief labels are authored in-scene with ink-brown colors.
 
 ## Bug audit fixes
 

@@ -4,29 +4,23 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/paper_parchment_bg.png" id="2_parchment"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/stamp_mission_complete.png" id="3_stamp"]
 
-[node name="ResultsScreen" type="Control"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="ResultsScreen" type="CanvasLayer"]
+layer = 2
 visible = false
 script = ExtResource("1_results")
 
 [node name="BackgroundParchment" type="TextureRect" parent="."]
-layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 0
 texture = ExtResource("2_parchment")
 expand_mode = 1
-stretch_mode = 1
+stretch_mode = 6
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
-layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -34,9 +28,9 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="ReportHeader" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
@@ -86,8 +80,15 @@ theme_override_font_sizes/font_size = 20
 text = "Rank: -"
 horizontal_alignment = 1
 
+[node name="DetailLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.32, 0.26, 0.2, 1)
+theme_override_font_sizes/font_size = 13
+text = "Vehicles: 0  |  Emplacements: 0  |  Deaths: 0"
+horizontal_alignment = 1
+
 [node name="StampContainer" type="Control" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(160, 68)
+custom_minimum_size = Vector2(160, 72)
 layout_mode = 2
 
 [node name="CompleteStamp" type="TextureRect" parent="CenterContainer/VBoxContainer/StampContainer"]
@@ -105,6 +106,18 @@ grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(80, 32)
 texture = ExtResource("3_stamp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DebriefLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.28, 0.22, 0.16, 1)
+theme_override_font_sizes/font_size = 14
+text = "Debrief"
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2

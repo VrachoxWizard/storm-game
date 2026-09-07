@@ -60,6 +60,38 @@ COLOR_SVK_OLIVE_DARK = (42, 46, 36, 255)
 COLOR_BEARD = (52, 40, 28, 255)
 
 
+def _project_font_path() -> str:
+    """Bundled OFL DejaVu Sans — Latin Extended for Croatian diacritics."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(root, "assets", "fonts", "DejaVuSans.ttf")
+
+
+def _load_ui_font(size: int) -> ImageFont.ImageFont:
+    """Load a TrueType font with Latin Extended glyphs (Ć/Š). Prefer project-bundled font."""
+    candidates = [
+        _project_font_path(),
+        os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", "DejaVuSans.ttf"),
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    ]
+    for path in candidates:
+        if path and os.path.exists(path):
+            return ImageFont.truetype(path, size)
+    raise FileNotFoundError(
+        "No Latin-Extended UI font found. Vendor DejaVuSans.ttf into assets/fonts/."
+    )
+
+
+def _draw_ink_star(draw: ImageDraw.ImageDraw, cx: int, cy: int, r: int, fill: tuple) -> None:
+    """Five-point star for stamp chrome (avoids missing ★ glyph)."""
+    pts = []
+    for i in range(10):
+        ang = math.radians(-90 + i * 36)
+        rad = r if i % 2 == 0 else r * 0.42
+        pts.append((cx + int(rad * math.cos(ang)), cy + int(rad * math.sin(ang))))
+    draw.polygon(pts, fill=fill)
+
+
 def save_image(img: Image.Image, output_path: str, target_size: tuple = None) -> None:
     """Resamples down with Lanczos if target_size provided, and saves as RGBA PNG."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -1762,9 +1794,7 @@ def generate_paper_parchment_bg(output_path: str) -> None:
     for cx, cy in [(140, 160), (380, 360)]:
         draw_ov.ellipse([cx - 45, cy - 45, cx + 45, cy + 45], outline=(175, 150, 120, 60), width=3)
 
-    # Fold creases
-    draw_ov.line([(0, 256), (512, 256)], fill=(185, 170, 145, 90), width=1)
-    draw_ov.line([(256, 0), (256, 512)], fill=(185, 170, 145, 90), width=1)
+    # No center fold creases — texture must stay seamless for fullscreen / UV tiling.
 
     # 2. Pencil border margin lines & tactical coordinate tick marks
     draw_ov.rectangle([16, 16, 496, 496], outline=(110, 100, 85, 160), width=1)
@@ -1887,14 +1917,10 @@ def generate_stamp_mission_complete(output_path: str) -> None:
     draw.rounded_rectangle([8 * S, 8 * S, W - 8 * S, H - 8 * S], radius=4 * S,
                            outline=stamp_color, width=int(1.5 * S))
 
-    try:
-        font_large = ImageFont.load_default(size=14 * S)
-        font_small = ImageFont.load_default(size=9 * S)
-    except Exception:
-        font_large = ImageFont.load_default()
-        font_small = ImageFont.load_default()
+    font_large = _load_ui_font(14 * S)
+    font_small = _load_ui_font(9 * S)
 
-    text1 = "★ ZADAĆA IZVRŠENA ★"
+    text1 = "ZADAĆA IZVRŠENA"
     text2 = "OPERATION STORM 1995"
 
     bbox1 = draw.textbbox((0, 0), text1, font=font_large)
@@ -1903,7 +1929,14 @@ def generate_stamp_mission_complete(output_path: str) -> None:
     w1, h1 = bbox1[2] - bbox1[0], bbox1[3] - bbox1[1]
     w2, h2 = bbox2[2] - bbox2[0], bbox2[3] - bbox2[1]
 
-    draw.text(((W - w1) // 2, 14 * S), text1, fill=stamp_color, font=font_large)
+    tx1 = (W - w1) // 2
+    ty1 = 14 * S
+    draw.text((tx1, ty1), text1, fill=stamp_color, font=font_large)
+    # Drawn stars (not ★ glyph) so stamp never shows tofu ornaments
+    star_r = 5 * S
+    star_y = ty1 + h1 // 2
+    _draw_ink_star(draw, tx1 - 10 * S, star_y, star_r, stamp_color)
+    _draw_ink_star(draw, tx1 + w1 + 10 * S, star_y, star_r, stamp_color)
     draw.text(((W - w2) // 2, 36 * S), text2, fill=stamp_color, font=font_small)
 
     for _ in range(300):
@@ -1932,32 +1965,59 @@ def _shield_polygon(cx: int, top: int, w: int, h: int) -> list:
     return [(x0, top), (x1, top), (x1, top + int(h * 0.55)), (cx, top + h), (x0, top + int(h * 0.55))]
 
 
+def _draw_crown_mini_mark(draw: ImageDraw.ImageDraw, kind: str, mx: int, my: int,
+                          cw: int, ch: int, mark: tuple) -> None:
+    """Draw a readable emblem mark inside a crown mini-shield."""
+    cx, cy = mx + cw // 2, my + ch // 3
+    if kind == "crescent":
+        draw.ellipse([cx - cw // 4, cy - ch // 5, cx + cw // 5, cy + ch // 4], fill=mark)
+        draw.ellipse([cx - cw // 8, cy - ch // 6, cx + cw // 4, cy + ch // 5], fill=(46, 94, 171, 255))
+        draw.point((cx + cw // 5, cy - ch // 6), fill=mark)
+    elif kind == "bars":
+        for i in range(3):
+            by = my + ch // 4 + i * max(2, ch // 6)
+            draw.rectangle([mx + cw // 4, by, mx + 3 * cw // 4, by + max(1, ch // 10)], fill=mark)
+    elif kind == "marten":
+        draw.ellipse([cx - cw // 5, cy - ch // 8, cx + cw // 5, cy + ch // 5], fill=mark)
+        draw.rectangle([cx - cw // 6, cy + ch // 10, cx + cw // 6, cy + ch // 3], fill=mark)
+    elif kind == "goat":
+        draw.polygon([(cx, cy - ch // 5), (cx + cw // 4, cy + ch // 4), (cx - cw // 4, cy + ch // 4)], fill=mark)
+    else:  # stars / gold
+        r = max(2, cw // 5)
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=mark)
+        draw.point((cx - r - 1, cy), fill=mark)
+        draw.point((cx + r + 1, cy), fill=mark)
+
+
 def _draw_sahovnica_shield(img: Image.Image, cx: int, top: int, w: int, h: int,
                            cell_border: int, crown: bool = True) -> Image.Image:
     """Draws the Croatian coat of arms: blue shield, 5x5 šahovnica starting RED, 5-shield crown."""
     draw = ImageDraw.Draw(img)
     shield_pts = _shield_polygon(cx, top, w, h)
 
-    # Crown of five small historical shields in an arc above the main shield
+    # Crown of five historical regional shields in an arc above the main shield
     if crown:
-        cw = max(2, w // 7)
-        ch = max(2, h // 5)
-        gap = max(1, w // 24)
+        cw = max(4, w // 5)
+        ch = max(5, h // 4)
+        gap = max(1, w // 36)
         total = 5 * cw + 4 * gap
         cx0 = cx - total // 2
-        crown_colors = [
-            ((46, 94, 171, 255), (255, 255, 255, 255)),   # star & crescent blue
-            ((240, 240, 235, 255), (196, 34, 28, 255)),   # white w/ red bars
-            ((196, 34, 28, 255), (240, 240, 235, 255)),   # red w/ white dot
-            ((46, 94, 171, 255), (240, 240, 235, 255)),   # blue w/ white stripe
-            ((196, 34, 28, 255), (255, 210, 50, 255)),    # red w/ gold dot
+        # Oldest known / Dubrovnik / Dalmatia / Istria / Slavonia stylized
+        crown_specs = [
+            ((46, 94, 171, 255), (255, 255, 255, 255), "crescent"),
+            ((240, 240, 235, 255), (196, 34, 28, 255), "bars"),
+            ((196, 34, 28, 255), (240, 240, 235, 255), "marten"),
+            ((46, 94, 171, 255), (240, 240, 235, 255), "goat"),
+            ((196, 34, 28, 255), (255, 210, 50, 255), "stars"),
         ]
-        for i, (base, mark) in enumerate(crown_colors):
+        for i, (base, mark, kind) in enumerate(crown_specs):
             mx0 = cx0 + i * (cw + gap)
-            my0 = top - ch + abs(i - 2) * max(1, ch // 4)
+            # Mild arc: outer shields sit slightly lower
+            my0 = top - ch - max(1, ch // 6) + abs(i - 2) * max(1, ch // 5)
             pts = _shield_polygon(mx0 + cw // 2, my0, cw, ch)
             draw.polygon(pts, fill=base, outline=INK_DARK)
-            draw.point((mx0 + cw // 2, my0 + ch // 3), fill=mark)
+            _draw_crown_mini_mark(draw, kind, mx0, my0, cw, ch, mark)
+            draw.line(pts + [pts[0]], fill=INK_DARK, width=max(1, cw // 8))
 
     # Blue shield field
     draw.polygon(shield_pts, fill=(28, 64, 142, 255))
@@ -1984,6 +2044,98 @@ def _draw_sahovnica_shield(img: Image.Image, cx: int, top: int, w: int, h: int,
     return img
 
 
+def _draw_serbian_coat_of_arms(img: Image.Image, cx: int, top: int, w: int, h: int) -> Image.Image:
+    """Stylized Serbian state coat of arms: red shield, white double-headed eagle, breast shield."""
+    draw = ImageDraw.Draw(img)
+    shield_pts = _shield_polygon(cx, top, w, h)
+    draw.polygon(shield_pts, fill=COLOR_SVK_RED)
+    # Outer gold rim
+    draw.line(shield_pts + [shield_pts[0]], fill=(212, 176, 90, 255), width=max(2, w // 14))
+
+    white = (245, 245, 240, 255)
+    ink = INK_DARK
+    gold = (212, 176, 90, 255)
+
+    # Royal crown resting on the shield top
+    cw = w // 2
+    cy0 = top - max(2, h // 16)
+    draw.rectangle([cx - cw // 2, cy0 + h // 14, cx + cw // 2, cy0 + h // 7], fill=gold, outline=ink)
+    for i, ox in enumerate((-cw // 2, -cw // 6, cw // 6, cw // 2)):
+        tip = cy0 if i in (1, 2) else cy0 + h // 20
+        draw.polygon([
+            (cx + ox - w // 18, cy0 + h // 14),
+            (cx + ox, tip),
+            (cx + ox + w // 18, cy0 + h // 14),
+        ], fill=gold, outline=ink)
+
+    # Twin eagle heads facing outward
+    head_y = top + int(h * 0.22)
+    head_r = max(3, w // 8)
+    for side in (-1, 1):
+        hx = cx + side * int(w * 0.22)
+        draw.ellipse([hx - head_r, head_y - head_r, hx + head_r, head_y + head_r], fill=white, outline=ink)
+        # Beak
+        draw.polygon([
+            (hx + side * head_r, head_y - head_r // 3),
+            (hx + side * (head_r + w // 7), head_y),
+            (hx + side * head_r, head_y + head_r // 2),
+        ], fill=gold)
+        # Eye
+        draw.point((hx + side * head_r // 3, head_y - head_r // 4), fill=ink)
+
+    # Neck / upper body connecting heads
+    neck_y = head_y + head_r // 2
+    draw.polygon([
+        (cx - int(w * 0.22), neck_y),
+        (cx + int(w * 0.22), neck_y),
+        (cx + w // 6, neck_y + h // 6),
+        (cx - w // 6, neck_y + h // 6),
+    ], fill=white, outline=ink)
+
+    # Spread wings
+    wing_y = neck_y + h // 8
+    for side in (-1, 1):
+        draw.polygon([
+            (cx, wing_y),
+            (cx + side * int(w * 0.42), wing_y + h // 10),
+            (cx + side * int(w * 0.38), wing_y + int(h * 0.35)),
+            (cx + side * w // 8, wing_y + int(h * 0.28)),
+        ], fill=white, outline=ink)
+        # Feather lines
+        for fi in range(3):
+            fy = wing_y + h // 10 + fi * (h // 14)
+            draw.line([
+                (cx + side * w // 10, fy),
+                (cx + side * int(w * 0.35), fy + h // 20),
+            ], fill=ink, width=1)
+
+    # Tail
+    tail_y = wing_y + int(h * 0.32)
+    draw.polygon([
+        (cx - w // 10, tail_y),
+        (cx + w // 10, tail_y),
+        (cx, top + int(h * 0.88)),
+    ], fill=white, outline=ink)
+
+    # Breast shield with white cross + four firesteels (ocila)
+    bw, bh = max(5, w // 3), max(6, h // 3)
+    bx0, by0 = cx - bw // 2, neck_y + h // 10
+    breast = [(bx0, by0), (bx0 + bw, by0), (bx0 + bw, by0 + int(bh * 0.55)),
+              (cx, by0 + bh), (bx0, by0 + int(bh * 0.55))]
+    draw.polygon(breast, fill=COLOR_SVK_RED, outline=ink)
+    t = max(1, bw // 5)
+    draw.rectangle([cx - t // 2, by0 + bh // 6, cx + t // 2, by0 + int(bh * 0.72)], fill=white)
+    draw.rectangle([bx0 + bw // 5, by0 + bh // 3, bx0 + 4 * bw // 5, by0 + bh // 3 + t], fill=white)
+    for qx, qy in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+        px = cx + qx * bw // 4
+        py = by0 + bh // 2 + qy * bh // 6
+        # C-shaped firesteel
+        draw.arc([px - t, py - t, px + t, py + t],
+                 200 if qx < 0 else 20, 340 if qx < 0 else 160, fill=white, width=max(1, t))
+
+    return img
+
+
 def generate_croatian_flag(output_path: str) -> None:
     """Croatian flag, official 1:2 ratio: red/white/blue thirds + crowned šahovnica shield."""
     S = 4
@@ -1995,14 +2147,15 @@ def generate_croatian_flag(output_path: str) -> None:
     draw.rectangle([0, band, W, band * 2], fill=COLOR_CRO_WHITE)
     draw.rectangle([0, band * 2, W, H], fill=COLOR_CRO_BLUE)
     img = _draw_cloth_shading(img)
-    img = _draw_sahovnica_shield(img, W // 2, 11 * S, 22 * S, 26 * S, cell_border=2 * S)
+    # Emblem sized for briefing / Mission 5 readability; top inset leaves room for crown
+    img = _draw_sahovnica_shield(img, W // 2, 12 * S, 26 * S, 28 * S, cell_border=2 * S)
     draw = ImageDraw.Draw(img)
     draw.rectangle([0, 0, W - 1, H - 1], outline=INK_DARK, width=S)
     save_image(img, output_path, target_size=(96, 48))
 
 
 def generate_svk_flag(output_path: str) -> None:
-    """Serbian / SVK horizontal tricolor, red-blue-white equal thirds, 2:1 cloth."""
+    """Serbian state-style flag: red-blue-white thirds + coat of arms left of center."""
     S = 4
     W, H = 96 * S, 48 * S
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -2012,26 +2165,25 @@ def generate_svk_flag(output_path: str) -> None:
     draw.rectangle([0, band, W, band * 2], fill=COLOR_SVK_BLUE)
     draw.rectangle([0, band * 2, W, H], fill=COLOR_SVK_WHITE)
     img = _draw_cloth_shading(img)
+    # Arms sit left of center (hoist side), official state-flag placement
+    arms_cx = W // 3
+    img = _draw_serbian_coat_of_arms(img, arms_cx, 8 * S, 20 * S, 32 * S)
     draw = ImageDraw.Draw(img)
     draw.rectangle([0, 0, W - 1, H - 1], outline=INK_DARK, width=S)
     save_image(img, output_path, target_size=(96, 48))
 
 
 def generate_svk_insignia(output_path: str) -> None:
-    """Generates a simple SAO Krajina / SVK shield insignia."""
+    """SVK insignia: Serbian eagle coat of arms on a dark roundel."""
     S = 4
     W, H = 32 * S, 32 * S
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    cx, cy = W // 2, H // 2
-    # Shield outline
-    pts = [(cx, 4 * S), (W - 4 * S, 10 * S), (W - 6 * S, H - 6 * S), (cx, H - 3 * S), (6 * S, H - 6 * S), (4 * S, 10 * S)]
-    draw.polygon(pts, fill=(36, 40, 34, 255), outline=INK_DARK)
-    # Tricolor bands inside shield
-    draw.rectangle([cx - 6 * S, cy - 6 * S, cx + 6 * S, cy - 2 * S], fill=COLOR_SVK_RED)
-    draw.rectangle([cx - 6 * S, cy - 2 * S, cx + 6 * S, cy + 2 * S], fill=COLOR_SVK_BLUE)
-    draw.rectangle([cx - 6 * S, cy + 2 * S, cx + 6 * S, cy + 6 * S], fill=COLOR_SVK_WHITE)
-    draw.rectangle([cx - 6 * S, cy - 6 * S, cx + 6 * S, cy + 6 * S], outline=INK_DARK, width=S)
+    cx = W // 2
+    draw.ellipse([3 * S, 3 * S, W - 3 * S, H - 3 * S], fill=(36, 40, 34, 255), outline=INK_DARK, width=S)
+    img = _draw_serbian_coat_of_arms(img, cx, 6 * S, 18 * S, 22 * S)
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([3 * S, 3 * S, W - 3 * S, H - 3 * S], outline=(212, 176, 90, 255), width=S)
     save_image(img, output_path, target_size=(32, 32))
 
 

@@ -1,0 +1,3 @@
+﻿DejaVu Fonts — Bitstream Vera Copyright + Arev Fonts Copyright + Public Domain changes.
+License: https://dejavu-fonts.github.io/License.html
+Bundled for Croatian Latin-Extended UI glyphs (č ć š ž đ).

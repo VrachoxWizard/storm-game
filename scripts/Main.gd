@@ -3,8 +3,8 @@ extends Node
 ## Root scene — coordinates game flow between menu, briefing, gameplay, and results.
 
 @onready var main_menu: Control = $MainMenu
-@onready var briefing_screen: Control = $BriefingScreen
-@onready var results_screen: Control = $ResultsScreen
+@onready var briefing_screen: CanvasLayer = $BriefingScreen
+@onready var results_screen: CanvasLayer = $ResultsScreen
 @onready var hud: CanvasLayer = $HUD
 @onready var pause_menu: CanvasLayer = $PauseMenu
 @onready var world_container: Node2D = $WorldContainer
@@ -64,6 +64,7 @@ func _on_mission_briefing_requested(mission_index: int) -> void:
 	main_menu.visible = false
 	if _current_world:
 		_current_world.process_mode = Node.PROCESS_MODE_DISABLED
+		_current_world.visible = false
 	if briefing_screen.has_method("show_briefing"):
 		briefing_screen.call("show_briefing", mission_index)
 	else:
@@ -102,4 +103,56 @@ func _on_mission_completed(_mission_index: int) -> void:
 	hud.visible = false
 	if _current_world:
 		_current_world.process_mode = Node.PROCESS_MODE_DISABLED
+		_current_world.visible = false
+	# region agent log
+	_agent_dbg_main_results()
+	# endregion
 	results_screen.show_results()
+
+
+# region agent log
+const _AGENT_LOG_PATH := "C:/Users/user1/OneDrive/Desktop/Moji Osobni projekti/2d-arcade-shooter-desktop/debug-951e11.log"
+
+
+func _agent_dbg_main_results() -> void:
+	var world_visible := _current_world != null and is_instance_valid(_current_world)
+	var world_shown := false
+	var cam_active := false
+	if world_visible:
+		world_shown = _current_world.visible
+		var cam := _current_world.get_node_or_null("Player/Camera2D")
+		if cam == null:
+			cam = _current_world.find_child("Camera2D", true, false)
+		cam_active = cam != null and cam is Camera2D and (cam as Camera2D).is_current()
+	var payload := {
+		"sessionId": "951e11",
+		"runId": "post-fix",
+		"hypothesisId": "C",
+		"location": "Main.gd:_on_mission_completed",
+		"message": "world_state_at_results",
+		"data": {
+			"world_present": world_visible,
+			"world_process_mode": _current_world.process_mode if world_visible else -1,
+			"world_visible_flag": world_shown,
+			"camera_current": cam_active,
+			"results_is_canvas_layer": results_screen is CanvasLayer,
+			"results_layer": results_screen.layer if results_screen is CanvasLayer else -1,
+			"results_visible_before": results_screen.visible,
+			"hud_visible": hud.visible,
+		},
+		"timestamp": Time.get_ticks_msec(),
+	}
+	var f: FileAccess
+	if FileAccess.file_exists(_AGENT_LOG_PATH):
+		f = FileAccess.open(_AGENT_LOG_PATH, FileAccess.READ_WRITE)
+		if f:
+			f.seek_end()
+	else:
+		f = FileAccess.open(_AGENT_LOG_PATH, FileAccess.WRITE)
+	if f == null:
+		push_warning("agent dbg log open failed: %s" % FileAccess.get_open_error())
+		return
+	f.store_line(JSON.stringify(payload))
+	f.close()
+	print("[agent-dbg] C world_state_at_results")
+# endregion

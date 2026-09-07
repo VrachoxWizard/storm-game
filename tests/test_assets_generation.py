@@ -182,20 +182,37 @@ class TestFactionFlags(unittest.TestCase):
             _hue_assert(self, px[8, 5], "r", "HR top band must be RED")
             _hue_assert(self, px[8, 24], "white", "HR middle band must be WHITE")
             _hue_assert(self, px[8, 43], "b", "HR bottom band must be BLUE")
-            # Šahovnica checker top-left field must be RED (shield center x=48, checker starts ~39,14)
+            # Šahovnica checker top-left field must be RED (shield center x=48)
             _hue_assert(self, px[40, 14], "r", "Šahovnica top-left field must start RED")
-            # Crown: pixels above the shield (y ~7) around center must be opaque (5 mini shields)
-            crown_opaque = sum(1 for x in range(36, 61) if px[x, 7][3] > 100)
-            self.assertGreater(crown_opaque, 8, "Crown of 5 shields missing above šahovnica")
+            # Crown: pixels above the shield around center must be opaque (5 mini shields)
+            crown_opaque = sum(1 for x in range(30, 67) for y in range(1, 10) if px[x, y][3] > 100)
+            self.assertGreater(crown_opaque, 20, "Crown of 5 shields missing above šahovnica")
 
     def test_svk_flag_tricolor_order(self):
         with Image.open("assets/sprites/factions/svk_flag.png") as img:
             px = img.load()
             self.assertEqual(img.size, (96, 48), "SVK flag must be 2:1 ratio")
-            # Serbian tricolor: RED top, BLUE middle, WHITE bottom
-            _hue_assert(self, px[20, 5], "r", "SVK top band must be RED")
-            _hue_assert(self, px[20, 24], "b", "SVK middle band must be BLUE")
-            _hue_assert(self, px[20, 43], "white", "SVK bottom band must be WHITE")
+            # Serbian tricolor: RED top, BLUE middle, WHITE bottom (sample far right, away from arms)
+            _hue_assert(self, px[88, 5], "r", "SVK top band must be RED")
+            _hue_assert(self, px[88, 24], "b", "SVK middle band must be BLUE")
+            _hue_assert(self, px[88, 43], "white", "SVK bottom band must be WHITE")
+
+    def test_svk_flag_has_coat_of_arms(self):
+        with Image.open("assets/sprites/factions/svk_flag.png") as img:
+            px = img.load()
+            # Arms sit left of center (~x=32). Count non-band emblem pixels (white eagle / gold).
+            emblem = 0
+            for y in range(6, 42):
+                for x in range(18, 48):
+                    r, g, b, a = px[x, y]
+                    if a < 180:
+                        continue
+                    # White eagle plumage or gold crown accents on red shield
+                    if min(r, g, b) > 180:
+                        emblem += 1
+                    elif r > 160 and g > 120 and b < 100:
+                        emblem += 1
+            self.assertGreater(emblem, 40, "SVK state coat of arms missing left of center")
 
     def test_hv_insignia_has_shield_and_crown(self):
         with Image.open("assets/sprites/factions/hv_insignia.png") as img:
@@ -211,6 +228,48 @@ class TestFactionFlags(unittest.TestCase):
                         whites += 1
             self.assertGreater(reds, 5, "Insignia lacks red checker fields")
             self.assertGreater(whites, 5, "Insignia lacks white checker fields")
+
+
+class TestResultsUiAssets(unittest.TestCase):
+    """Mission-complete stamp + parchment must not show tofu glyphs or center cross seams."""
+
+    def test_ui_font_supports_croatian_glyphs(self):
+        from tools.generate_war_journal_assets import _load_ui_font
+        from PIL import ImageDraw, Image as PILImage
+
+        font = _load_ui_font(40)
+        draw = ImageDraw.Draw(PILImage.new("RGBA", (64, 64)))
+        w_c = draw.textbbox((0, 0), "C", font=font)[2] - draw.textbbox((0, 0), "C", font=font)[0]
+        w_ca = draw.textbbox((0, 0), "Ć", font=font)[2] - draw.textbbox((0, 0), "Ć", font=font)[0]
+        w_s = draw.textbbox((0, 0), "S", font=font)[2] - draw.textbbox((0, 0), "S", font=font)[0]
+        w_sa = draw.textbbox((0, 0), "Š", font=font)[2] - draw.textbbox((0, 0), "Š", font=font)[0]
+        self.assertGreater(w_ca, w_c * 0.7, "Ć glyph missing / notdef from UI font")
+        self.assertGreater(w_sa, w_s * 0.7, "Š glyph missing / notdef from UI font")
+
+    def test_stamp_top_band_has_dense_ink(self):
+        with Image.open("assets/sprites/ui/stamp_mission_complete.png") as img:
+            px = img.load()
+            red = 0
+            for y in range(10, 34):
+                for x in range(15, 145):
+                    r, g, b, a = px[x, y]
+                    if a > 80 and r > 140 and r > g + 40 and r > b + 40:
+                        red += 1
+            self.assertGreater(red, 400, "Stamp text band too sparse — likely missing glyphs")
+            # Notdef tofu boxes are denser square blobs; real letterforms leave more gaps.
+            self.assertLess(red, 900, "Stamp text band suspiciously dense — possible notdef boxes")
+
+    def test_parchment_has_no_center_fold_crease(self):
+        with Image.open("assets/sprites/ui/paper_parchment_bg.png") as img:
+            px = img.load()
+
+            def lum(p):
+                return 0.3 * p[0] + 0.59 * p[1] + 0.11 * p[2]
+
+            h_darker = sum(1 for x in range(0, 512, 4) if lum(px[x, 256]) < lum(px[x, 250]) - 2)
+            v_darker = sum(1 for y in range(0, 512, 4) if lum(px[256, y]) < lum(px[250, y]) - 2)
+            self.assertLess(h_darker, 40, f"Horizontal center crease still present ({h_darker})")
+            self.assertLess(v_darker, 40, f"Vertical center crease still present ({v_darker})")
 
 
 if __name__ == "__main__":

@@ -91,7 +91,11 @@ func _run() -> void:
 		return
 	var briefing = briefing_scene.instantiate()
 	root.add_child(briefing)
-	if not briefing.has_node("BackgroundParchment"):
+	if not (briefing is CanvasLayer):
+		print("FAIL: BriefingScreen root must be CanvasLayer")
+		quit(1)
+		return
+	if not briefing.has_node("Root/BackgroundParchment"):
 		print("FAIL: BriefingScreen missing BackgroundParchment")
 		quit(1)
 		return

@@ -1,14 +1,15 @@
-extends Control
+extends CanvasLayer
 
 ## Journal-style mission briefing screen with HV / SVK authenticity metadata.
+## CanvasLayer so the active mission Camera2D cannot transform this UI.
 
 const Briefings = preload("res://scripts/missions/MissionBriefings.gd")
 const HV_FACTION: FactionResource = preload("res://resources/factions/hv_faction.tres")
 const SVK_FACTION: FactionResource = preload("res://resources/factions/svk_faction.tres")
 
-@onready var mission_title: Label = $MarginContainer/VBoxContainer/MissionTitle
-@onready var mission_desc: RichTextLabel = $MarginContainer/VBoxContainer/MissionDesc
-@onready var start_button: Button = $MarginContainer/VBoxContainer/StartButton
+@onready var mission_title: Label = $Root/MarginContainer/VBoxContainer/MissionTitle
+@onready var mission_desc: Label = $Root/MarginContainer/VBoxContainer/MissionDesc
+@onready var start_button: Button = $Root/MarginContainer/VBoxContainer/StartButton
 
 var _meta_label: Label
 var _hv_icon: TextureRect
@@ -21,7 +22,7 @@ func _ready() -> void:
 
 
 func _ensure_meta_ui() -> void:
-	var vbox := $MarginContainer/VBoxContainer
+	var vbox := $Root/MarginContainer/VBoxContainer
 	_meta_label = vbox.get_node_or_null("MetaLabel") as Label
 	if _meta_label == null:
 		_meta_label = Label.new()

@@ -85,8 +85,8 @@ res://
 ├── tests/               # Automated test suites (visual, systems, asset validation)
 ├── tools/               # Procedural asset generator (generate_war_journal_assets.py)
 ├── docs/                # Documentation and design specs
-├── Run_Game.bat         # Windows play launcher (auto-finds Godot 4, first-run import)
-├── Open_In_Godot.bat    # Windows editor launcher
+├── Run_Game.bat / Run_Game.sh       # Play launcher (Windows / macOS; auto-finds Godot 4, first-run import)
+├── Open_In_Godot.bat / Open_In_Godot.sh  # Editor launcher
 └── project.godot        # Godot project file
 ```
 
@@ -121,12 +121,17 @@ The campaign follows the real chronology of Operation Storm (Aug 4-7, 1995). Eac
 
 **macOS**
 ```bash
-chmod +x Run_Game.sh Open_In_Godot.sh   # first time only
-./Run_Game.sh                           # play (auto-imports assets on first run)
-./Open_In_Godot.sh                      # editor (recommended once after clone)
+bash Run_Game.sh              # play (auto-imports assets on first run)
+bash Open_In_Godot.sh         # editor (recommended once after clone)
+
+# Optional: make them double-click / ./ runnable
+chmod +x Run_Game.sh Open_In_Godot.sh
+./Run_Game.sh
 ```
 
-If audio or scripts fail on a fresh clone, run `./Open_In_Godot.sh` once so Godot finishes importing, then `./Run_Game.sh` again.
+Prefer `bash Run_Game.sh` if the project was synced from Windows/OneDrive (execute bits are often stripped). If Godot is installed somewhere unusual: `GODOT_BIN="/path/to/Godot.app/Contents/MacOS/Godot" bash Run_Game.sh`.
+
+If audio or scripts fail on a fresh clone, run `bash Open_In_Godot.sh` once so Godot finishes importing, then `bash Run_Game.sh` again.
 
 ### Running Automated Tests
 

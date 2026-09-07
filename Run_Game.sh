@@ -136,15 +136,51 @@ fi
 echo "Starting Operation Storm..."
 echo "Using: $GODOT"
 
-# Fresh clones have no .godot/ (gitignored). Use --import so Godot finishes
-# importing before quit — do NOT pair with a short --quit-after (that aborts import).
-if [[ ! -d "$ROOT/.godot/imported" ]] || [[ ! -f "$ROOT/.godot/global_script_class_cache.cfg" ]]; then
-  echo "First-time setup: importing project assets (may take a minute)..."
-  if ! "$GODOT" --headless --import --path "$ROOT"; then
-    echo "Import with --import failed; retrying editor import pass..."
-    "$GODOT" --headless --editor --quit-after 120 --path "$ROOT" \
-      || echo "Warning: import reported an error; launching anyway..."
-  fi
+# Runtime (--path without editor) cannot reimport missing .godot/imported files.
+# Always run --import first; if the cache is half-built (common after a short
+# quit-after / crashed first run), wipe .godot and import cleanly.
+run_import() {
+  "$GODOT" --headless --import --path "$ROOT"
+}
+
+imports_ok() {
+  local base f found
+  [[ -d "$ROOT/.godot/imported" ]] || return 1
+  [[ -f "$ROOT/.godot/global_script_class_cache.cfg" ]] || return 1
+  # Critical assets that previously failed on macOS fresh clones.
+  # Require real imported blobs (.sample / .ctex), not just .md5 sidecars.
+  for base in \
+    "ambient_wind.wav:sample" \
+    "paper_parchment_bg.png:ctex" \
+    "shoot.wav:sample" \
+    "music_title.wav:sample" \
+    "player_torso.png:ctex"
+  do
+    local name="${base%%:*}"
+    local ext="${base##*:}"
+    found=0
+    shopt -s nullglob
+    for f in "$ROOT/.godot/imported/${name}-"*."${ext}"; do
+      if [[ -f "$f" && -s "$f" ]]; then
+        found=1
+        break
+      fi
+    done
+    shopt -u nullglob
+    if [[ "$found" -ne 1 ]]; then
+      echo "Missing imported file for: $name (*.$ext)" >&2
+      return 1
+    fi
+  done
+  return 0
+}
+
+echo "Importing project assets (safe to re-run; only updates what changed)..."
+if ! run_import || ! imports_ok; then
+  echo "Import incomplete — clearing .godot cache and retrying..."
+  rm -rf "$ROOT/.godot"
+  run_import || die "Godot asset import failed. Try: bash Open_In_Godot.sh"
+  imports_ok || die "Critical imported assets are still missing after import."
 fi
 
 exec "$GODOT" --path "$ROOT"

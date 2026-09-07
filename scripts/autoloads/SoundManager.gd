@@ -84,6 +84,12 @@ func _ensure_music_lowpass() -> void:
 
 
 func _safe_load_stream(path: String) -> AudioStream:
+	# Prefer decoding source WAVs directly so a missing .godot/imported/*.sample
+	# (common on fresh macOS clones) does not hard-fail or spam errors.
+	if path.ends_with(".wav"):
+		var wav := _load_wav_from_file(path)
+		if wav != null:
+			return wav
 	if not ResourceLoader.exists(path):
 		push_warning("SoundManager: missing audio %s" % path)
 		return null
@@ -92,6 +98,55 @@ func _safe_load_stream(path: String) -> AudioStream:
 		return res as AudioStream
 	push_warning("SoundManager: failed to load audio %s" % path)
 	return null
+
+
+func _load_wav_from_file(path: String) -> AudioStreamWAV:
+	if not FileAccess.file_exists(path):
+		return null
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+	var bytes: PackedByteArray = file.get_buffer(file.get_length())
+	file.close()
+	if bytes.size() < 44:
+		return null
+	# Minimal PCM WAV reader (RIFF/WAVE/fmt/data) for missing-import recovery.
+	if bytes.slice(0, 4).get_string_from_ascii() != "RIFF":
+		return null
+	if bytes.slice(8, 12).get_string_from_ascii() != "WAVE":
+		return null
+	var offset: int = 12
+	var channels: int = 1
+	var sample_rate: int = 44100
+	var bits_per_sample: int = 16
+	var format_tag: int = 1
+	var data_bytes: PackedByteArray = PackedByteArray()
+	while offset + 8 <= bytes.size():
+		var chunk_id: String = bytes.slice(offset, offset + 4).get_string_from_ascii()
+		var chunk_size: int = bytes.decode_u32(offset + 4)
+		var chunk_data_start: int = offset + 8
+		var chunk_data_end: int = mini(chunk_data_start + chunk_size, bytes.size())
+		if chunk_id == "fmt " and chunk_size >= 16:
+			format_tag = bytes.decode_u16(chunk_data_start)
+			channels = bytes.decode_u16(chunk_data_start + 2)
+			sample_rate = bytes.decode_u32(chunk_data_start + 4)
+			bits_per_sample = bytes.decode_u16(chunk_data_start + 14)
+		elif chunk_id == "data":
+			data_bytes = bytes.slice(chunk_data_start, chunk_data_end)
+			break
+		offset = chunk_data_end
+		if chunk_size % 2 == 1:
+			offset += 1
+	if format_tag != 1 or data_bytes.is_empty():
+		return null
+	var stream := AudioStreamWAV.new()
+	stream.format = (
+		AudioStreamWAV.FORMAT_8_BITS if bits_per_sample == 8 else AudioStreamWAV.FORMAT_16_BITS
+	)
+	stream.mix_rate = sample_rate
+	stream.stereo = channels > 1
+	stream.data = data_bytes
+	return stream
 
 
 func apply_saved_volumes() -> void:

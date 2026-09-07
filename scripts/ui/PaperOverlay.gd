@@ -11,6 +11,20 @@ func _ready() -> void:
 	_setup_overlay()
 
 
+func _load_parchment_texture() -> Texture2D:
+	const PATH := "res://assets/sprites/ui/paper_parchment_bg.png"
+	# Decode the source PNG first so a missing/stale .ctex import cannot hard-fail.
+	if FileAccess.file_exists(PATH):
+		var img := Image.new()
+		if img.load(PATH) == OK:
+			return ImageTexture.create_from_image(img)
+	var imported: Resource = ResourceLoader.load(PATH, "", ResourceLoader.CACHE_MODE_REUSE)
+	if imported is Texture2D:
+		return imported as Texture2D
+	push_warning("PaperOverlay: parchment texture unavailable (%s)" % PATH)
+	return null
+
+
 func _setup_overlay() -> void:
 	if _mat != null:
 		return
@@ -24,8 +38,13 @@ func _setup_overlay() -> void:
 	add_child(copy)
 
 	_mat = ShaderMaterial.new()
-	_mat.shader = load("res://assets/shaders/paper_overlay.gdshader")
-	var parchment_tex: Texture2D = load("res://assets/sprites/ui/paper_parchment_bg.png")
+	var shader_res: Resource = load("res://assets/shaders/paper_overlay.gdshader")
+	if shader_res is Shader:
+		_mat.shader = shader_res as Shader
+	else:
+		push_warning("PaperOverlay: paper_overlay.gdshader failed to load")
+	# Prefer ImageTexture from source PNG so a missing .ctex import cannot hard-fail.
+	var parchment_tex: Texture2D = _load_parchment_texture()
 	if parchment_tex:
 		_mat.set_shader_parameter("paper_texture", parchment_tex)
 

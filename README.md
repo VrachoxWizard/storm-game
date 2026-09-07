@@ -131,7 +131,7 @@ chmod +x Run_Game.sh Open_In_Godot.sh
 
 Prefer `bash Run_Game.sh` if the project was synced from Windows/OneDrive (execute bits are often stripped). If Godot is installed somewhere unusual: `GODOT_BIN="/path/to/Godot.app/Contents/MacOS/Godot" bash Run_Game.sh`.
 
-If audio or scripts fail on a fresh clone, run `bash Open_In_Godot.sh` once so Godot finishes importing, then `bash Run_Game.sh` again.
+`Run_Game.sh` always runs a Godot `--import` pass and will clear a broken `.godot/` cache if critical assets are missing. If audio/textures still fail after a pull, delete the local `.godot` folder and run `bash Run_Game.sh` again (or `bash Open_In_Godot.sh` once).
 
 ### Running Automated Tests
 
